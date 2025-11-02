@@ -82,7 +82,15 @@ Clone this repository into your MyDU server root folder:
 
 ```bash
 cd /path/to/your/mydu/server/root
-git clone <repository-url> MarketBrowserMod
+git clone https://github.com/NorthIndustries/DU_WebMarketBrowser.git MarketBrowserMod
+cd MarketBrowserMod
+```
+
+Or using SSH:
+
+```bash
+cd /path/to/your/mydu/server/root
+git clone git@github.com:NorthIndustries/DU_WebMarketBrowser.git MarketBrowserMod
 cd MarketBrowserMod
 ```
 
