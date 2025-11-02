@@ -1,0 +1,6 @@
+{
+  "refreshIntervalMinutes": 5,
+  "webServerPort": 8080,
+  "maxDistanceKm": 1000000,
+  "profitMarginThreshold": 0.1
+}

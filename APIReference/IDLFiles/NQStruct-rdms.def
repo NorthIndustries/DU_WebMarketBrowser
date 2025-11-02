@@ -1,0 +1,252 @@
+section RDMS
+
+extern ConstructId
+extern ElementId
+extern EntityId
+extern ItemId
+extern OrganizationId
+extern TerritoryTileIndex
+
+#****************************
+#       GLOBAL / COMMON
+#****************************
+
+type ItemTypeId uint64
+
+// /!\ don't change the ids, they are used in db (Except Count)
+enum Right [enumclass]
+    ConstructBuild                  = 0
+    ConstructManeuver               = 1
+    ConstructRename                 = 2
+    ConstructBlueprint              = 3
+    ConstructTokenize               = 4
+    ConstructAbandon                = 5
+    ConstructParent                 = 6
+    ConstructBoard                  = 7
+    ConstructSnapshot               = 8
+    ConstructRepair                 = 9
+    ConstructUseJetpack             = 10
+    ConstructCreate                 = 11
+
+    ElementUse                      = 12
+    ElementEdit                     = 13
+    ElementRename                   = 14
+
+    TerritoryDig                    = 15
+    TerritoryMine                   = 16
+    TerritoryHarvest                = 17
+    TerritoryRemove                 = 18
+    TerritoryMiningUnit             = 19
+
+    ItemSell                        = 20
+    ItemBarter                      = 21
+    ItemDeploy                      = 22
+    ItemDestroy                     = 23
+
+    WalletConsult                   = 24
+    WalletAdd                       = 25
+    WalletTake                      = 26
+
+    OrganizationRecruit             = 27
+    OrganizationFire                = 28
+    OrganizationViewTerritories     = 29
+
+    DeployOnConstruct               = 30
+    DeployOverlapConstruct          = 31
+    DeployStaticOnTerritory         = 32
+    DeployDynamicOnTerritory        = 33
+
+    ContainerView                   = 34
+    ContainerPut                    = 35
+    ContainerRetrieve               = 36
+
+    AssetTag                        = 37
+
+    SPSConnect                      = 38
+
+    IndustryEditRecipeBank          = 39
+    WalletEdit                      = 40
+
+    Count                           = 41
+end
+
+struct RightList
+    vector<Right> rights
+end
+
+#****************************
+#           TAG
+#****************************
+
+// Do not reorder the enum:
+// It is used by the database storage
+enum TagType [enumclass,enumAutoIncrement]
+    Custom          // Player made TagId
+    ItemHierarchy   // ItemHierarchy id
+    All             // No id required
+    AllItems        // No id required
+    Composite       // See optional<CompositeTag>
+    Organization // No id required
+end
+
+struct TagId
+    uint64 tagId
+    TagType type
+end
+
+struct TagSelector
+    EntityId owner
+    TagId tagId
+end
+
+struct TagIdList
+    vector<TagId> tags
+end
+
+struct CompositeTag
+    TagId mainTag
+    TagId precisionTag
+end
+
+struct TagData
+    EntityId owner
+    TagId tagId
+    string name
+    string description
+    optional<CompositeTag> composite
+end
+
+struct TagDataList
+    vector<TagData> tags
+end
+
+#****************************
+#           ASSET
+#****************************
+
+// Do not reorder the enum:
+// It is used by the database storage
+enum AssetType [enumclass,enumAutoIncrement]
+    Construct
+    Element
+    Territory
+    Item
+    Organization
+end
+
+struct AssetId
+    AssetType type
+    ConstructId construct
+    ElementId element
+    TerritoryTileIndex territory
+    ItemId item
+    OrganizationId organization
+end
+
+struct AssetInfo
+    AssetId assetId
+    ItemTypeId elementType
+    string assetName
+end
+
+struct AssetInfoList
+    vector<AssetInfo> assets
+end
+
+struct AssetSelector
+    EntityId owner
+    AssetId asset
+end
+
+struct AssetTagData
+    AssetId asset
+    vector<TagData> tags
+    bool useItemHierarchy
+end
+
+struct AssetUpdateTags
+    AssetId asset
+    vector<TagId> tags
+    bool useItemHierarchy
+end
+
+#****************************
+#       ACTOR
+#****************************
+
+// Do not reorder the enum:
+// It is used by the database storage
+enum ActorType [enumclass,enumAutoIncrement]
+    Custom // ActorId
+
+    Player                          // Player Id
+    Organization                    // Organization Id
+    OrganizationMemberOnly          // Organization Id
+    OrganizationLegateOnly          // Organization Id
+    OrganizationSuperLegateOnly     // Organization Id
+
+    All         // No Id
+    Friends     // No Id
+end
+
+struct ActorId
+    uint64 actorId
+    ActorType type
+end
+
+struct ActorSelector
+    EntityId owner
+    ActorId actorId
+end
+
+struct ActorData
+    EntityId owner
+    ActorId actorId
+    string name
+    string description
+    vector<ActorId> subActors
+end
+
+struct ActorDataList
+    vector<ActorData> actors
+end
+
+#****************************
+#           POLICY
+#****************************
+
+struct PolicyId
+    uint64 policyId
+end
+
+struct PolicySelector
+    EntityId owner
+    PolicyId policyId
+end
+
+struct PolicyData
+    EntityId owner
+    PolicyId policyId
+    string name
+    string description
+    vector<ActorId> actors
+    vector<Right> rights
+    vector<TagId> tags
+end
+
+struct PolicyDataList
+    vector<PolicyData> policies
+end
+
+#****************************
+#           REGISTRY
+#****************************
+
+struct Registry
+    EntityId owner
+    vector<ActorData> actors
+    vector<PolicyData> policies
+    vector<TagData> tags
+end
+
+endsection

@@ -1,0 +1,759 @@
+// we have to [skipgo] otherwise we get a dupplicated symbol definition.
+// When we have a proper import statement, that will go away.
+type ConstructUid uint64 [skipgo]
+
+# Those are defined in NQStruct-base.def
+# TODO: introduce `include` like directive (should be fairly easy to do)
+extern ConstructId
+extern ConstructInfo
+extern Currency [hashAble]
+extern DeltaQuantity
+extern DetailedLocation
+extern ElementId
+extern ElementInfo
+extern ElementLOD [isEnum]
+extern ElementLocation
+extern ElementSkins
+extern EntityId
+extern ItemId
+extern ItemInfo
+extern ItemQuantity [hashAble]
+extern LoginResponse
+extern NamedEntity
+extern PlayerInfo
+extern PlayerSpawnState
+extern PropertyValue
+extern RelativeLocation
+extern TalentAndLevel
+extern TerritoryTileIndex
+extern TimePoint
+extern Vec3 [hashAble]
+extern LinkBatchEdit
+
+
+enum LoginResponseKind [enumclass]
+    Ok = 0
+    CreationNeeded = 1
+    TerritoryReserveNeeded = 2
+    FtueStartNeeded = 3
+    FtueLandNeeded = 4
+end
+
+struct ScanPoint
+    uint64 targetId
+    uint64 pointIndex
+    uint64 pointCount
+    Vec3 pointPosition
+end
+
+struct DSATRequest
+    uint64 elementId
+    uint64 asteroidId
+end
+
+struct ElementPropertyUpdate [skipcpp]
+    string name
+    PropertyValue value
+    uint64 elementId
+    ConstructUid constructId
+    TimePoint timePoint
+    bool relative
+end
+
+struct ConstructInfoList
+    vector<ConstructInfo> constructInfos
+end
+
+struct ConstructRequest
+    ConstructInfo construct
+    ElementInfo element
+    ItemId fromInventory
+end
+
+struct ElementList
+    uint64 constructId
+    ElementLOD lod
+    vector<ElementInfo> elements
+end
+
+struct ElementDeploy
+    ElementInfo element
+    ItemId fromInventory
+end
+
+variant ElementOperationData
+    ElementInfo add
+    ElementId remove
+    ElementLocation move
+    ElementPropertyUpdate update
+    LinkBatchEdit editLinks
+end
+
+struct ElementOperation
+    ConstructUid constructId
+    ElementLOD LOD
+    ElementOperationData data
+end
+
+
+
+struct BarterItem
+    ItemInfo item
+    ItemQuantity quantity
+end
+
+struct BarterState
+    bool accepted
+    vector<BarterItem> items
+    Currency money
+end
+
+struct BarterSessionState
+    BarterState mine
+    BarterState peer
+end
+
+struct ItemAndQuantity
+    ItemInfo item
+    DeltaQuantity quantity
+end
+
+struct ItemAndQuantityList
+    vector<ItemAndQuantity> content
+end
+
+struct InventoryGiveOperation
+    uint64 containerId
+    vector<ItemAndQuantity> give
+    int64 money
+    bool allowPartial
+end
+
+struct InventoryTransaction
+    vector<InventoryGiveOperation> operation
+end
+
+struct StorageTransaction
+    uint64 id
+    vector<ItemAndQuantity> remaining
+    vector<ItemInfo> manifest
+end
+
+enum HTTPMethod
+    METHOD_GET = 1
+    METHOD_PUT = 2
+    METHOD_POST = 3
+    METHOD_DELETE = 4
+end
+
+struct GameplayRequest
+    HTTPMethod method
+    string path
+    data payload
+end
+
+struct GameplayResponse
+    int32 status
+    data payload
+end
+
+struct ConstructKeyUse
+    uint64 constructId
+    EntityId  newOwner
+    ItemInfo key
+    uint64  storageId
+end
+
+struct DispenserParameters
+    uint64 dispenserId
+    uint64 delaySeconds
+    uint64 claimLimit
+    string tag
+    uint64 cost
+    EntityId moneyRecipient
+    bool autoFillBlueprintRequirements
+    bool bypassPrimaryContainer
+end
+
+struct DispenserStatus
+    uint64 elementId
+    DispenserParameters parameters
+    uint64 usedCount
+    uint64 lastUsedTime
+    double batchVolume
+end
+
+struct PlayerSkin
+    string skin
+    string variation
+end
+
+struct PetDefinition
+    string family
+    string name
+end
+
+struct Reward
+    uint64 money
+    uint64 talentPoints
+    vector<ItemAndQuantity> items
+    vector<ElementSkins> skins
+    vector<string> blueprints
+    string packageName
+    vector<string> titles
+    vector<PetDefinition> pets
+    vector<string> emotes
+    vector<PlayerSkin> playerSkins
+end
+
+enum RewardSource
+    REWARD_SOURCE_UNKNOWN = 0
+    REWARD_SOURCE_RAF = 1
+    REWARD_SOURCE_PLEDGE = 2
+end
+
+struct SourcedItemAndQuantity
+    RewardSource source
+    ItemAndQuantity iaq
+end
+
+struct SourcedElementSkins
+    RewardSource source
+    ElementSkins skins
+end
+
+struct SourcedPet
+    RewardSource source
+    PetDefinition pet
+end
+
+struct SourcedPlayerSkin
+    RewardSource source
+    PlayerSkin playerSkin
+end
+
+struct SourcedEmote
+    RewardSource source
+    string emote
+end
+
+struct CommunityReward
+    uint64 money
+    uint64 talentPoints
+    vector<SourcedItemAndQuantity> items
+    vector<SourcedElementSkins> skins
+    vector<SourcedPet> pets
+    vector<SourcedPlayerSkin> playerSkins
+    vector<SourcedEmote> emotes
+    vector<string> blueprints
+end
+
+enum RewardReason
+    REWARD_REASON_COMMUNITY_RAF = 1
+    REWARD_REASON_RECONNECTION = 2
+    REWARD_REASON_2FA = 3
+    REWARD_REASON_COMPENSATION = 4 // post-wipe beta players compensation
+    REWARD_REASON_COMMUNITY_PLEDGE = 5
+    REWARD_REASON_TITLE = 6
+end
+
+struct RewardReceived
+    RewardReason reason
+    Reward reward
+end
+struct TutorialName
+    string name
+end
+
+struct TutorialMetadata
+    string name
+    string description
+    Reward reward
+    bool isMarket
+    uint64 initialWallet
+    uint64 recurringRewardInterval
+    string kind // tutorial challenge permabox arena
+end
+
+struct TutorialInfo
+    string fileName
+    TutorialMetadata metadata
+    uint64 completed
+    bool willGetReward
+    TimePoint nextReward
+end
+
+struct TutorialInfos
+    vector<TutorialInfo> tutorials
+end
+
+struct TutorialExit
+    RelativeLocation location
+    TutorialInfo tutorialInfo
+end
+
+struct AchievementUnlock
+    string achievementId
+    uint64 talentPoints
+end
+
+struct Asteroid
+    uint64 constructId
+    string name
+    uint64 nearestPlanetConstructId
+    uint64 tier
+    TimePoint createdAt
+    double radius
+    int64 size
+    bool inSafeZone
+    optional<TimePoint> discoveredAt
+    optional<TimePoint> publishedAt
+    optional<Vec3> position
+end
+
+struct AsteroidList
+    vector<Asteroid> asteroids
+end
+
+enum ModActionContext
+    Global = 0
+    Construct = 1
+    Element = 2
+    Avatar = 3
+end
+
+struct ModActionDefinition
+    uint64 id
+    string label
+    ModActionContext context
+end
+
+struct ModInfo
+    string name
+    vector<ModActionDefinition> actions
+end
+
+struct ModInfoList
+    vector<ModInfo> mods
+end
+
+struct ModAction
+    string modName
+    uint64 actionId
+    uint64 constructId
+    uint64 elementId
+    uint64 playerId
+    string payload
+end
+
+struct ModTriggerHudEvent
+    string eventName
+    string eventPayload
+end
+
+struct ModEventRegistration
+    string eventGlob
+    string modName
+    uint64 modAction
+    uint64 registrationId
+end
+
+// Information needed by a player to enter the world
+struct PlayerLoginState [skippy]
+    LoginResponse loginResponse
+    PlayerInfo info
+
+    PlayerSpawnState spawnState
+
+    string itemBankUrl
+    string itemBankSign
+
+    string userContentBaseUrl
+    uint64 referrer
+
+    ModInfoList mods
+end
+
+struct LoginResponseOrCreation [skippy]
+    LoginResponseKind kind
+    PlayerLoginState optState
+    string displayName
+
+    // this is the netId.  It is only needed when doing the connection over http.
+    // this is a bit like a connection id.
+    uint64 netid
+end
+
+struct IndustryRecipeBank
+  vector<ItemInfo> items
+end
+
+// Do not reorder, enum in DB
+enum MissionType [enumclass]
+    Haul = 1
+    Buy = 2
+    Sell = 3
+    SOS = 4
+    Taxi = 5
+    PvP = 6
+    Other = 7
+end
+
+enum MissionTypeFlags [enumclass]
+    Haul = 1
+    Buy = 2
+    Sell = 4
+    SOS = 8
+    Taxi = 16
+    PvP = 32
+    Other = 64
+end
+
+enum MissionStatus [enumclass]
+    Active = 1
+    Completed = 2
+    Timeout = 3
+    Aborted = 4
+end
+
+struct MissionId
+    uint64 missionId
+end
+
+struct MissionReputation
+    uint64 issued
+    double issuerRating
+    uint64 responded
+    double respondentRating
+end
+
+struct MissionCreation
+    MissionType missionType
+    string title
+    string description
+    uint64 orgOnly
+    uint64 durationHours
+    string reward
+    optional<RelativeLocation> fixedPosition
+    bool nqMission // can't be set by players oc
+    bool noResponses
+end
+
+struct MissionStats
+    MissionReputation reputation
+    uint64 nCreatedLive
+    uint64 nCreatedCompleted
+    uint64 nCreatedAbandoned
+    uint64 nCreatedTimeout
+    uint64 nTakenLive
+    uint64 nTakenCompleted
+    uint64 nTakenAbandoned
+    uint64 nTakenTimeout
+end
+
+struct MissionBrief
+    uint64 missionId
+    NamedEntity issuer
+    MissionReputation issuerReputation
+    MissionType type
+    string name
+    string description
+    string reward
+    uint64 orgOnly
+    string orgName  // name of orgOnly if non-zero
+    uint64 nRespondents
+    TimePoint startDate
+    optional<TimePoint> endDate
+    optional<RelativeLocation> location
+    MissionStatus status
+    bool isNQMission
+    optional<NamedEntity> assignedTo
+    bool allowResponses
+    bool issuerWasRewarded
+    bool respondentWasRewarded
+end
+
+struct MissionBriefs
+    vector<MissionBrief> missions
+end
+
+struct MissionsActive
+    vector<MissionBrief> created
+    vector<MissionBrief> responded
+end
+
+struct MissionHistory
+    MissionReputation reputation
+    vector<MissionBrief> created
+    vector<MissionBrief> responded
+end
+
+struct MissionVisibility
+    bool publicMissions
+    vector<uint64> organizationIds
+end
+
+struct Mission
+    MissionBrief brief
+    bool issuerOnline
+    vector<NamedEntity> orgsInCommon
+end
+
+struct Missions
+    vector<Mission> missions
+end
+
+struct MissionRespondent
+    NamedEntity entity
+    MissionReputation reputation
+    DetailedLocation location
+    bool missionAssigned
+    TimePoint respondedAt
+end
+
+struct MissionRespondents
+    vector<MissionRespondent> respondents
+end
+
+struct MissionMessage
+    NamedEntity entity
+    TimePoint date
+    string message
+end
+
+struct MissionMessages
+    vector<MissionMessage> messages
+end
+
+struct MissionPostMessage
+    uint64 missionId
+    string message
+end
+
+struct MissionUpdate
+    uint64 missionId
+    string description
+    string reward
+    MissionStatus status
+    uint64 completedBy
+    bool thumbUp
+    uint64 transferReward // money to transfer to 'completedBy' as reward
+end
+
+struct MissionAccepted
+    uint64 missionId
+    NamedEntity respondent
+end
+
+struct PermaboxInformation
+    uint64 constructId
+end
+
+struct MarketStorageSlotEx
+    uint64 marketId
+    int32 position
+    ItemAndQuantity itemAndQuantity
+    bool purchased
+end
+
+struct MarketStorageInfoEx
+    vector<MarketStorageSlotEx> slots
+end
+
+struct FormalMissionId
+    uint64 missionId
+end
+
+struct FormalMissionIdList
+    vector<uint64> missionIds
+end
+
+enum FormalMissionType [enumclass]
+   Hauling = 1
+end
+
+enum FormalMissionTargetType [enumclass]
+    MissionContainer = 1
+    MarketContainer = 2
+end
+
+struct FormalMissionTarget
+    FormalMissionTargetType type
+    uint64 id  // Element id or market id
+    DetailedLocation location
+    string name // element or market name
+end
+
+enum FormalMissionStatus
+    Active = 1
+    Taken = 2
+    PickedUp = 3
+    Completed = 4
+    Aborted = 5
+    Timeouted = 6
+end
+
+struct FormalMission
+    uint64 formalMissionId
+    FormalMissionType missionType
+    TimePoint startDate
+    optional<TimePoint> endDate
+    NamedEntity issuer
+    string title
+    string description
+    uint64 reward
+    uint64 collateral
+    uint64 orgOnly
+    string orgName
+    uint64 packageId
+    double packageVolume
+    double packageMass
+    string packageName
+    FormalMissionTarget source
+    FormalMissionTarget destination
+    FormalMissionStatus status
+    optional<NamedEntity> assignedTo
+    uint64 autoSellUnitPrice
+    uint64 autoSellOrderDurationDays
+    bool isNQMission
+    MissionReputation issuerReputation
+    bool issuerWasRewarded
+    bool respondentWasRewarded
+end
+
+struct FormalMissionCreation
+    FormalMissionType missionType
+    string title
+    string description
+    uint64 reward
+    uint64 collateral
+    uint64 orgOnly
+    uint64 packageId
+    FormalMissionTarget source
+    FormalMissionTarget destination
+    uint64 durationHours
+    uint64 autoSellUnitPrice
+    uint64 autoSellOrderDurationDays
+    bool isNQMission
+end
+
+struct FormalMissionList
+    vector<FormalMission> missions
+end
+
+struct MissionContainer
+    uint64 elementId
+    string elementName
+    uint64 constructId
+    string constructName
+    NamedEntity constructOwner
+    DetailedLocation location
+end
+
+struct FormalMissionActive
+    vector<FormalMission> created
+    vector<FormalMission> responded
+end
+
+struct FormalMissionHistory
+    MissionReputation reputation
+    vector<FormalMission> created
+    vector<FormalMission> responded
+end
+
+struct FormalMissionUpdate
+    uint64 formalMissionId
+    string description
+end
+
+struct MissionPendingRating
+    uint64 missionId
+    MissionStatus missionStatus
+    uint64 formalMissionId
+    FormalMissionStatus formalMissionStatus
+    string missionTitle
+    bool iAmIssuer
+    string respondentDisplayName
+end
+
+struct MissionPendingRatingList
+    vector<MissionPendingRating> missions
+end
+
+struct MissionContainerList
+    vector<MissionContainer> containers
+end
+
+struct FormalMissionRating
+    uint64 formalMissionId
+    uint64 missionId
+    double rating
+end
+
+enum MiningUnitState [enumclass]
+    STOPPED = 0
+    RUNNING = 1
+    JAMMED_OUTPUT_FULL = 2
+    JAMMED_NO_OUTPUT_CONTAINER = 3
+end
+
+struct MiningUnitOreList
+    uint64 elementId
+    vector<uint64> ores
+end
+
+struct OrePool
+    uint64 ore
+    double pool
+end
+
+struct OrePoolList
+    TerritoryTileIndex tile
+    vector<OrePool> pools
+end
+
+#struct MissionSearch
+#    string text
+#    optional<MissionVisibility> visibility // all accessible if unset
+#    bool issuerIsOnline // false means don't care, not offline
+#    uint64 typeFlags // or-ed combination of MissionTypeFlags, 0 also means all
+#    double maxDistance // 0 for don't care
+#    uint64 lessThanRemainingHours
+#    bool hasReward // false: don't care true: reward is not empty
+#end
+
+struct WarpRequest
+    ConstructId construct
+    ElementId container
+    ItemAndQuantity warpCellConsumed
+    // the following data are more for leaving info to gp logs
+    RelativeLocation origin
+    RelativeLocation destination
+    double distance
+end
+
+struct PlayerPropertyUpdate [skipcpp]
+    string name
+    PropertyValue value
+    uint64 playerId
+    bool relative
+end
+
+struct AssetManifest
+    string secretKey
+    vector<string> nqdef
+    vector<string> file
+    vector<string> sound
+    vector<string> locale
+    vector<string> elementsLoad
+    bool voxelReload
+end
+
+struct DynamicInterestPoint
+    uint64 planetId
+    int32  markType
+    uint64 uniqueId
+    DetailedLocation location
+    string name
+    string description
+end

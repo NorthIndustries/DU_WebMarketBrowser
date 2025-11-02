@@ -1,0 +1,4 @@
+orleans:
+  local_silo: True
+  gateway_port: 30000
+  local_silo_address: "127.0.0.1"

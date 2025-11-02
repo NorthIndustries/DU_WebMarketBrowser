@@ -1,0 +1,5174 @@
+---
+
+#
+# Channel Data
+#
+# name (string)
+#    - Unique name of the channel
+#
+# delay_window - optional
+#  -> actions (uint)
+#  -> duration_ms (uint)
+#    - Indicate how many 'actions' can be done over 'duration_ms' milliseconds
+#
+
+channels:
+  - name: ElementOperation
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: ElementUse
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: ElementLink
+    delay_window:
+      actions: 10
+      duration_ms: 1000
+
+  - name: Voxel
+    delay_window:
+      actions: 10
+      duration_ms: 1000
+      # allowing concurrent request in the flow control just let the voxel stack the time to boot.
+      # voxel request are still serialized in the NodeAPlayer.
+      concurrency: 5
+
+  - name: ConstructPiloting
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: TerritoryUpdateOperation # claim, release and update
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: TerritorySubscription # sub and unsub
+    delay_window:
+      actions: 6
+      duration_ms: 1000
+
+  - name: MarketDataFlow # getting orders and item lists
+    delay_window:
+      actions: 10
+      duration_ms: 1000
+
+  # TODO: we are forced to do this channel because the Client is sending multiple request at once
+  - name: MarketContainer # Accessing container
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: MarketAction # buying and selling
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: Bookmark
+    delay_window:
+      actions: 4
+      duration_ms: 1000
+
+  - name: Blueprint
+    delay_window:
+      actions: 3
+      duration_ms: 1000
+
+  - name: Recipe
+    delay_window:
+      actions: 5
+      duration_ms: 1000
+
+  - name: RadarIdentification
+    delay_window:
+      actions: 30
+      duration_ms: 2000
+      concurrency: 10
+
+  - name: Weapon
+    delay_window:
+      actions: 20
+      duration_ms: 2000
+      concurrency: 10
+
+  - name: IndustryManagement
+    delay_window:
+      actions: 10
+      duration_ms: 1000
+      concurrency: 10
+
+#
+# Request Data
+#
+# name (string)
+#    - Unique name of the request, used to generate method names
+#
+# nqstruct_req (string)
+#    - Associated NQStruct sent with the request
+#      Can be prefixed with a list of string separated with dot (exemple: A.B.NQStructType)
+#      This is used to add required additional includes and
+#      prefix classname with correct namespaces
+#
+# nqstruct_res - (string)
+#    - Associated NQStruct sent with the response
+#      Can be prefixed with a list of string separated with dot (exemple: A.B.NQStructType)
+#      This is used to add required additional includes and
+#      prefix classname with correct namespaces
+#
+# channel (string) - optional
+#    - Name of a channel
+#
+# delay_window - optional
+#  -> actions (uint)
+#  -> duration_ms (uint)
+#    - Indicate how many 'actions' can be done over 'duration_ms' milliseconds
+#
+# operation_id (string or array of string)
+#    - If not set or set to 'NONE', no opid will be set (only the channel limits the request)
+#    - If set to 'DEFAULT', the opid will block two concurrent requests
+#    - If set to an array of string (each string being a variable or getter of the 'nqstruct_req') the opid
+#      will be a hash of those fields
+#
+# direction can be             ClientToServer, ServerToClient, Both, ServerInternal
+#       It specifies where we can expect to find that request/message.  If not specified, this is assumed to be
+#       ClientToServer.
+#
+# pubsub - optional
+#         dict containing:
+#             - type: in SUBSCRIBE, UNSUBSCRIBE if we add or remove a subscription
+#             - topic: name of the topic to which subscription is done
+#             - key: for the topic generation
+#
+# route: can be a string
+#       Node
+#            forward the request to the Node
+#       NotImplemented
+#                 A suitable error message is answered (for a request)
+#       Custom
+#               there must be a business handler registered in the FrontAPlayer
+#       Empty
+#               replies an EmptyStruct to the client telling that the message is correctly processed
+#  route can also be a dict like:
+#
+    # route:
+    #   kind:             WebService
+    #   url:              barter/{playerId}/start/{id}
+    #   method:           POST
+    #   dropIncoming:     true
+#
+#  routing to orleans happens with a route block like this
+#
+#     route:
+#       kind:             Orleans
+#       orleans:
+#         grain_type:       NQ.Interfaces.IPlayerGrain
+#         grain_method:     HandleAnticheatMessage
+#         grain_key:        playerId
+#         args:             [v]
+#   grain_type/grain_key are used to compute the grain reference from the GrainFactory.
+#   In the example, we deduce the code `_client.GetPlayerGrain(v)`
+#   grain_key is optional.  It can be any string that will be injected as the arguments of the factory method
+#   If it is not there, it is the same as the empty string
+#   TODO:
+#      we should have an explicit `grain_factory` (here that would be `GetPlayerGrain`)
+#
+# clientRoute: Default|GRPC
+#   The default is "Default"
+#   When "GRPC", This instructs the client to use GRPC as the transport for the given request.
+#
+
+# This is only usefull for WebService, in that case you must specify the "url" key.
+# POST is the method if unspecified
+
+# Additional includes
+includes:
+  - path: "dustruct/gen/RDMS/NQStructRdmsAmalgated.hpp"
+
+requests:
+
+  # Security
+
+  # should be fire and forget
+  - name:             AnticheatMessageSent
+    nqstruct_req:     AnticheatMessage
+    operation_id:     NONE
+    clientRoute:      GRPC
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     HandleAnticheatMessage
+        grain_key:        playerId
+    technicalMessage: true
+
+  - name:             AnticheatNotification
+    direction:        ServerToClient
+    nqstruct_req:     AnticheatMessage
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  # also done in go
+  - name:             AnticheatAck
+    nqstruct_req:     AnticheatAck
+    operation_id:     NONE
+    clientRoute:      GRPC
+    route:            Custom
+    technicalMessage: true
+
+
+  # LoginSequence
+  # also done in go
+  - name:             PlayerLogin
+    nqstruct_req:     PlayerQueueingResponse
+    nqstruct_res:     LoginResponseOrCreation
+    route:            Custom
+    player_log:       Player {playerId} logged in
+
+
+  - name:             PlayerCreationData
+    nqstruct_req:     PlayerCreationInfo
+    nqstruct_res:     PlayerLoginState
+    route:            Custom
+    technicalMessage: true
+
+  # also done in go
+  - name:             PlayerDisconnect
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     DisconnectionNotification
+    route:            Custom
+    player_log:       Player {playerId} disconnected
+
+
+  # also done in go
+  - name:             Ping
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     TimePoint
+    route:            Custom
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  # Player
+
+  # also done in go
+  - name:             PlayerUpdate
+    nqstruct_req:     PlayerUpdate
+    direction:        Both
+    operation_id:     NONE
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  - name:             ConstructUpdate
+    nqstruct_req:     ConstructUpdate
+    direction:        Both
+    operation_id:     NONE
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  - name:             GetWallet
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     Currency
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetWallet
+        grain_key:        playerId
+    technicalMessage: true
+
+  - name:             PlayerGetToolbar
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     ToolbarInfo
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetToolbar
+        grain_key:        playerId
+    technicalMessage: true
+
+  - name:             PlayerSetToolbar
+    nqstruct_req:     ToolbarInfo
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     SetToolbar
+        grain_key:        playerId
+        args:             [v]
+    technicalMessage: true
+
+  - name:             PlayerPropertyUpdateRequest
+    nqstruct_req:     PlayerPropertyUpdate
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     UpdatePlayerProperty
+        grain_key:        playerId
+        args:             [v]
+    player_log:       Player {playerId} Updated property {request.name}
+
+  - name:             PlayerTeleportToReferrer
+    nqstruct_req:     PlayerId
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     TeleportToReferrer
+        grain_key:        playerId
+        args:             [v.id]
+    player_log:       Player {playerId} teleported to location {request}
+
+  - name:             ConstructCanWarp
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     CanWarp
+        grain_key:        v.constructId
+        args:             []
+    player_log:       Player {playerId} checks if {request.constructId} can warp
+
+  - name:             ConstructWarpStart
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     WarpStart
+        grain_key:        v.constructId
+        args:             [playerId]
+    player_log:       Player {playerId} start warping construct {request.constructId}
+
+  - name:             ConstructWarpEnd
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     WarpEnd
+        grain_key:        v.constructId
+        args:             [playerId]
+    player_log:       Player {playerId} cancelled construct {request.constructId} warping
+
+  - name:             ConstructConsumeWarpCells
+    nqstruct_req:     WarpRequest
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     ConsumeWarpCells
+        grain_key:        playerId
+    player_log:       Player {playerId} consumed {request.warpCellConsumed} warp cells
+
+
+  - name:             ReplaceElement
+    nqstruct_req:     ElementInConstruct
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IElementManagementGrain
+        grain_method:     ReplaceElement
+        grain_key:        0
+        args:             [playerId, v]
+    player_log:       Player {playerId} is replacing element {request.elementId}
+
+  - name:             PlayerAchievementUnlock
+    nqstruct_req:     AchievementUnlock
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     AchievementCompleted
+        grain_key:        playerId
+    player_log:       Player {playerId} unlocked achievement {request.achievementId}
+
+  - name:             PlayerInfoGet
+    nqstruct_req:     PlayerId
+    nqstruct_res:     PlayerInfo
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetPlayerInfo
+        grain_key:        v.id
+        args: []
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    technicalMessage: true
+
+  - name:             PlayerInfoGetByName
+    nqstruct_req:     PlayerName
+    nqstruct_res:     PlayerInfo
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerDirectoryGrain
+        grain_method:     GetPlayerInfo
+        grain_key:        0
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    technicalMessage: true
+
+  - name:             PlayerInfoUpdated
+    direction:        ServerToClient
+    nqstruct_req:     PlayerInfo
+    technicalMessage: true
+
+  - name:             PlayerInfoSet
+    nqstruct_req:     PlayerInfo
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     SetPlayerInfo
+        grain_key:        playerId
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} changed his skin
+
+  - name:             PlayerHardRespawn
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   PlayerHardRespawn
+        grain_key:      playerId
+        args:           []
+    player_log:       Player {playerId} force respawned
+
+    # Element operations
+
+  - name:             ElementSalvage
+    nqstruct_req:     ElementId
+    nqstruct_res:     ItemAndQuantity
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IElementManagementGrain
+        grain_method:   SalvageElement
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} is salvaging element {request}
+
+  - name:             ElementSalvageFromStorage
+    nqstruct_req:     StorageDrop 
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   SalvageElement
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} is salvaging element from storage {request}
+
+  - name:             ElementAdd
+    nqstruct_req:     ElementDeploy
+    nqstruct_res:     ElementInfo
+    channel:          ElementOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementAdd
+        args:         [playerId, v]
+    player_log:       Player {playerId} added element {response.elementId} of type {response.elementType} to construct {response.constructId}
+
+  - name:             ElementDelete
+    nqstruct_req:     ElementInConstruct
+    nqstruct_res:     ElementInfo
+    channel:          ElementOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementDelete
+        args:         [playerId, v]
+    player_log:       Player {playerId} deleted element {response.elementId} of type {response.elementType} from construct {response.constructId}
+
+  - name:             ElementDestroy
+    nqstruct_req:     ElementInConstruct
+    nqstruct_res:     ElementInfo
+    channel:          ElementOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementDestroy
+        args:         [playerId, v]
+    player_log:       Player {playerId} destroyed element {response.elementId} of type {response.elementType} from construct {response.constructId}
+
+  - name:             ElementMove
+    nqstruct_req:     ElementLocation
+    nqstruct_res:     ElementInfo
+    channel:          ElementOperation
+    player_log:       Player {playerId} moved element {response.elementId} of type {response.elementType} in construct {response.constructId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: MoveElement
+        grain_key:    0
+        args:         [playerId, v]
+
+
+  # Can change the Element LOD 3 times per seconds per Construct
+  - name:             ElementGet
+    doc: |
+      TODO: To remove
+      This message won't be used in the near future since the client is using HTTP.
+    nqstruct_req:     ElementLODSubscriptionLevel
+    nqstruct_res:     ElementList
+    operation_id:     [constructId]
+    route:
+      kind:            Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IConstructElementsGrain
+        grain_key:    v.constructId
+        grain_method: GetVisibleAt
+        args: ["v.lod"]
+
+    delay_window:
+      actions: 3
+      duration_ms: 1000
+    technicalMessage: true
+
+  - name:             ElementSetCollidingElements
+    nqstruct_req:     ElementColliding
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IConstructElementCollisionGrain
+        grain_method:   SetCollidingElements
+        grain_key:      v.element.constructId
+    technicalMessage: true
+
+  - name:             ConstructSetCollidingElements
+    nqstruct_req:     ElementCollidingList
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IConstructElementCollisionGrain
+        grain_method:   SetCollidingElementList
+        grain_key:      v.construct.constructId
+    technicalMessage: true
+
+  - name:             ConstructSubscribe
+    doc:              Explicit subscription by the clients
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    technicalMessage: true
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          ConstructDetailsUpdate
+      key:            v.constructId
+    route:            Empty
+
+  - name:             ConstructUnsubscribe
+    doc:              Explicit subscribtion for the Periscope
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    technicalMessage: true
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          ConstructDetailsUpdate
+      key:            v.constructId
+    route:            Empty
+
+  - name:             StreamElementPropertyUpdated
+    direction:        ServerToClient
+    doc: |
+        Stream properties are like regular properties but they go unchecked through a fast path.
+        The client should
+
+    nqstruct_req:     ElementPropertyUpdate
+    technicalMessage: true
+
+  - name:             ElementsChanged
+    doc: |
+      Represent a change about the element collection.  It will replace all the previous messages
+      ElementDeleted, ElementAdded, ElementMoved, ElementPropertyUpdated.
+    direction:        ServerToClient
+    nqstruct_req:     ElementOperation
+    technicalMessage: true
+
+  - name:             ElementUseStopped
+    direction:        ServerToClient
+    nqstruct_req:     ElementUse
+    technicalMessage: true
+
+  - name:             ElementPropertyUpdate
+    nqstruct_req:     ElementPropertyUpdate
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementPropertyUpdate
+        grain_key:    0
+        args:         [playerId, v]
+    technicalMessage: true
+
+  - name:             StreamElementPropertyUpdate
+    nqstruct_req:     ElementPropertyUpdate
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  - name:             ElementPropertyGet
+    nqstruct_req:     ElementPropertyId
+    nqstruct_res:     PropertyValue
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IConstructElementsGrain
+        grain_key:    v.constructId
+        grain_method: GetPropertyValue
+        args: ["v"]
+
+
+    technicalMessage: true
+
+  - name:             ElementDamageRequest
+    nqstruct_req:     ElementDamageOperation
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       IConstructDamageElementsGrain
+        grain_method:     ApplyElementDamage
+        grain_key:        v.constructId
+        args:             [playerId, v]
+    player_log:       "Player {playerId} applied damage to elements of construct {request.constructId}"
+
+  - name:             ElementUseStart
+    nqstruct_req:     ElementUse
+    nqstruct_res:     EmptyStruct
+    channel:          ElementUse
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IPlayerUsageGrain
+        grain_method: ElementUseStart
+        grain_key:    playerId
+        args:         [v]
+    player_log:       Player {playerId} started using element {request.elementId} from construct {request.constructId}
+
+  - name:             ElementUseStop
+    nqstruct_req:     ElementUse
+    nqstruct_res:     EmptyStruct
+    channel:          ElementUse
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IPlayerUsageGrain
+        grain_method: ElementUseStop
+        grain_key:    playerId
+        args:         [v]
+    player_log:       Player {playerId} stopped using element {request.elementId} from construct {request.constructId}
+
+  - name:             ElementLinkCreate
+    nqstruct_req:     LinkInfo
+    nqstruct_res:     EmptyStruct
+    channel:          ElementLink
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementLinkCreate
+        args:         [playerId, v]
+    player_log:       Player {playerId} created a link from element {request.fromElementId} to {request.toElementId} in construct {request.constructId}
+
+  - name:             ElementLinkDelete
+    nqstruct_req:     LinkInfo
+    nqstruct_res:     EmptyStruct
+    channel:          ElementLink
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementLinkDelete
+        args:         [playerId, v]
+    player_log:       Player {playerId} deleted a link from element {request.fromElementId} to {request.toElementId} in construct {request.constructId}
+
+  - name:             ElementLinkBatchEdit
+    nqstruct_req:     LinkBatchEdit
+    nqstruct_res:     EmptyStruct
+    channel:          ElementLink
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IElementManagementGrain
+        grain_method: ElementLinkBatchEdit
+        args:         [playerId, v]
+    player_log:       Player {playerId} edited a batch of links between elements of construct {request.constructId}
+
+  - name:             ConstructUpgrade
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       ITalentGrain
+        grain_method:     UpgradeConstruct
+        grain_key:        playerId
+        args:
+          - v.constructId
+    player_log:       Player {playerId} upgraded construct {request.constructId}
+
+  - name:             ElementUpgrade
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       ITalentGrain
+        grain_method:     UpgradeElement
+        grain_key:        playerId
+        args:
+          - v.elementId
+    player_log:       Player {playerId} upgraded element {request.elementId}
+
+  - name:             ToggleDRMRequest
+    nqstruct_req:     ToggleDRM
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     ToggleDRMFlag
+        grain_key:        playerId
+    player_log:       Player {playerId} set DRM flag of {request.elementId} to {request.enableDRM}
+
+  # Voxel subscriptions
+
+  # also done in go
+  - name:             VoxelSubscribeAndGet
+    nqstruct_req:     CellSubsribe
+    nqstruct_res:     VoxelContent
+    operation_id:     NONE
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  # Voxel operations
+
+  - name:             VoxelModify
+    nqstruct_req:     VoxelEdit
+    nqstruct_res:     VoxelEditResult
+    channel:          Voxel
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IDirectServiceGrain
+        grain_method:     VoxelEditRequest
+        grain_key:        0
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} did a voxel operation on construct {request.constructId}
+
+  - name:             VoxelCsgApplied
+    direction:        ServerToClient
+    nqstruct_req:     VoxelEdit
+    technicalMessage: true
+
+  # Construct management
+
+  - name:             ConstructCreate
+    nqstruct_req:     ConstructRequest
+    nqstruct_res:     ConstructCreation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructCreatorGrain
+        grain_method:     CreateConstruct
+        grain_key:        0
+        args:
+          - playerId
+          - v
+    delay_window:
+      actions:        4
+      duration_ms:    2000
+    player_log:       Player {playerId} created a construct {response.constructId}
+
+  - name:             ConstructDelete
+    nqstruct_req:     ConstructDeletion
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:      NQ.Interfaces.IConstructGrain
+        grain_method:    ConstructDelete
+        grain_key:       v.constructId
+        args:            [playerId, v]
+    delay_window:
+      actions:        4
+      duration_ms:    2000
+    player_log:       Player {playerId} deleted construct {request.constructId}
+
+  - name:             ConstructCountGet
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     ConstructCount
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:      NQ.Interfaces.IPlayerGrain
+        grain_method:    GetConstructCount
+        grain_key:       playerId
+    delay_window:
+      actions:        4
+      duration_ms:    2000
+    technicalMessage: true
+
+  - name:             ConstructTreeGet
+    nqstruct_req:     ConstructId
+    nqstruct_res:     ConstructTree
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:      NQ.Interfaces.IScenegraphGrain
+        grain_method:    GetConstructTree
+        grain_key:       0
+    delay_window:
+      actions:        5
+      duration_ms:    1000
+    technicalMessage: true
+
+  - name:             ConstructOwnedPositionGet
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     OwnedConstructDataList
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     ConstructOwnedPositionGet
+        grain_key:        playerId
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    technicalMessage: true
+
+  - name:             ConstructWarpDestinationGet
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     OwnedConstructDataList
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetWarpDestinations
+        grain_key:        playerId
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    technicalMessage: true
+
+  - name:             ConstructRename
+    nqstruct_req:     ConstructNameSet
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     RenameConstruct
+        grain_key:        v.constructId
+        args:             [playerId, v.newName]
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} set the name of construct {request.constructId}
+
+  - name:             ConstructUnparentConstruct
+    nqstruct_req:     UnparentConstructRequest
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IConstructParentingGrain
+        grain_method:     UnparentConstruct
+        grain_key:        0
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} asked to unparent construct {request.construct.constructId} from {request.from.constructId}
+
+  - name:             ConstructUnparentPlayer
+    nqstruct_req:     UnparentPlayerRequest
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IConstructParentingGrain
+        grain_method:     UnparentPlayer
+        grain_key:        0
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} asked to unparent player {request.player.id} from {request.from.constructId}
+
+  - name:             ConstructUnparentRequest
+    direction:        ServerToClient
+    nqstruct_req:     UnparentConstructRequest
+    player_log:       Construct {request.construct.constructId} kicked out {request.from.constructId}
+
+  - name:             PlayerUnparentRequest
+    direction:        ServerToClient
+    nqstruct_req:     UnparentPlayerRequest
+    player_log:       Player {request.player.id} kicked out {request.from.constructId}
+
+  - name:             ConstructStartBuildMode
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     EnterBuildMode
+        grain_key:        v.constructId
+        args:             [playerId]
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} entered build mode for construct {request.constructId}
+
+  - name:             ConstructStopBuildMode
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     ExitBuildMode
+        grain_key:        v.constructId
+        args:             [playerId]
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} exited build mode for construct {request.constructId}
+
+
+  # Message sent by server when he is ready, will be renamed when login refactor takes place
+  - name:             ConnectionReady
+    direction:        ServerToClient
+    nqstruct_req:     PlayerConnectionReady
+    technicalMessage: true
+
+  - name:             ConstructBuildForceStop
+    direction:        ServerToClient
+    nqstruct_req:     ConstructId
+    technicalMessage: true
+
+  # Those are message Server->Client
+  # maybe one way message should go to a separate section.
+
+  - name:             PlayerUpdates
+    direction:        ServerToClient
+    nqstruct_req:     PlayerUpdateList
+    technicalMessage: true
+
+  - name:             ConstructUpdates
+    direction:        ServerToClient
+    nqstruct_req:     ConstructUpdateList
+    technicalMessage: true
+
+  - name:             PlayerDied
+    direction:        ServerToClient
+    nqstruct_req:     PlayerDeathInfo
+    player_log:       Player {playerId} died due to reason {request.reason}
+
+  - name:             PlayerRewardReceived
+    direction:        ServerToClient
+    nqstruct_req:     RewardReceived
+
+  - name:             ConstructAppear
+    direction:        ServerToClient
+    nqstruct_req:     ConstructAppear
+    technicalMessage: true
+
+  - name:             ConstructDisappear
+    direction:        ServerToClient
+    nqstruct_req:     ConstructDisappear
+    technicalMessage: true
+
+  - name:             ConstructDeleted
+    direction:        ServerToClient
+    nqstruct_req:     ConstructId
+    technicalMessage: true
+
+  - name:             ConstructPlayersMassUpdate
+    direction:        ServerToClient
+    nqstruct_req:     ConstructPlayerMassList
+    technicalMessage: true
+
+  - name:             TerritoryClaimed
+    direction:        ServerToClient
+    nqstruct_req:     TerritoryOwner
+    technicalMessage: true
+
+  - name:             TerritoryReleased
+    direction:        ServerToClient
+    nqstruct_req:     TerritoryTileIndex
+    technicalMessage: true
+
+  - name:             TerritoryUpdated
+    direction:        ServerToClient
+    nqstruct_req:     TerritoryTileIndex
+    technicalMessage: true
+
+  - name:             StorageUpdated
+    direction:        ServerToClient
+    nqstruct_req:     StorageUpdate
+    technicalMessage: true
+
+  - name:             ChangeSettings
+    direction:        ServerToClient
+    nqstruct_req:     DeltaSettings
+    technicalMessage: true
+
+  - name:             WalletUpdated
+    direction:        ServerToClient
+    nqstruct_req:     Currency
+    technicalMessage: true
+
+  - name:             PlayerSpawn
+    direction:        ServerToClient
+    nqstruct_req:     PlayerSpawnState
+    technicalMessage: true
+
+  - name:             PopupReceived
+    direction:        ServerToClient
+    nqstruct_req:     PopupMessage
+    technicalMessage: true
+
+  - name:             Disconnected
+    direction:        ServerToClient
+    nqstruct_req:     DisconnectionNotification
+    technicalMessage: true
+
+  - name:             MessageReceived
+    direction:        ServerToClient
+    nqstruct_req:     MessageContent
+    technicalMessage: true
+
+  - name:             ChannelPlayerJoined
+    direction:        ServerToClient
+    nqstruct_req:     ChatJoinInfo
+    technicalMessage: true
+
+  - name:             ChannelPlayerLeft
+    direction:        ServerToClient
+    nqstruct_req:     MessageChannel
+    technicalMessage: true
+
+  - name:             FriendlistStateChanged
+    direction:        ServerToClient
+    nqstruct_req:     FriendStatus
+    technicalMessage: true
+
+  - name:             FriendRequestAnswerReceived
+    direction:        ServerToClient
+    nqstruct_req:     FriendResponse
+    technicalMessage: true
+
+  - name:             FriendRemoved
+    direction:        ServerToClient
+    nqstruct_req:     FriendStatus
+    technicalMessage: true
+
+  # RDMS {Actor,Policy,Tag} {Creation,Deletion,Update}
+
+  - name:             RDMSTagCreated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::TagData
+    technicalMessage: true
+
+  - name:             RDMSTagUpdated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::TagData
+    technicalMessage: true
+
+  - name:             RDMSTagDeleted
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::TagSelector
+    technicalMessage: true
+
+  - name:             RDMSActorCreated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::ActorData
+    technicalMessage: true
+
+  - name:             RDMSActorUpdated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::ActorData
+    technicalMessage: true
+
+  - name:             RDMSActorDeleted
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::ActorSelector
+    technicalMessage: true
+
+  - name:             RDMSAssetTagUpdated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::AssetTagData
+    technicalMessage: true
+
+  - name:             RDMSPolicyCreated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::PolicyData
+    technicalMessage: true
+
+  - name:             RDMSPolicyUpdated
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::PolicyData
+    technicalMessage: true
+
+  - name:             RDMSPolicyDeleted
+    direction:        ServerToClient
+    nqstruct_req:     RDMS::PolicySelector
+    technicalMessage: true
+
+  - name:             RDMSChange
+    direction:        ServerToClient
+    nqstruct_req:     EntityId
+    technicalMessage: true
+
+  - name:             OrganizationMembershipChanged
+    direction:        ServerToClient
+    nqstruct_req:     OrganizationMembershipChange
+    technicalMessage: true
+
+  - name:             FriendRequestsReceived
+    direction:        ServerToClient
+    nqstruct_req:     FriendRequest
+    technicalMessage: true
+
+  - name:             ChangeFront
+    direction:        ServerToClient
+    nqstruct_req:     PlayerFrontChange
+    technicalMessage: true
+
+  - name:             MissionChatMessage
+    direction:        ServerToClient
+    nqstruct_req:     MissionMessage
+    technicalMessage: true
+  # Construct piloting
+
+  - name:             ConstructTakeOver
+    nqstruct_req:     ConstructControl
+    nqstruct_res:     ConstructUpdate
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     PilotingTakeOver
+        grain_key:        v.constructId
+        args:             [playerId, v.isStrongControl]
+    player_log:       "Player {playerId} took over construct {request.constructId} with control (isStrong: {request.isStrongControl})"
+
+  - name:             ConstructChangeControl
+    nqstruct_req:     ConstructControl
+    nqstruct_res:     ConstructId
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     PilotingControlChange
+        grain_key:        v.constructId
+        args:             [playerId, v.isStrongControl]
+    player_log:       "Player {playerId} changed control of construct {request.constructId} to (isStrong: {request.isStrongControl})"
+
+  - name:             ConstructLeave
+    nqstruct_req:     ConstructId
+    nqstruct_res:     ConstructId
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     PilotingStop
+        grain_key:        v.constructId
+        args:             [playerId]
+    player_log:       Player {playerId} released control of construct {request.constructId}
+
+  - name:             ConstructTeleportRequest
+    nqstruct_req:     ConstructTeleport
+    nqstruct_res:     EmptyStruct
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     FetchConstruct
+        grain_key:        v.constructId
+        args:             [playerId, v]
+    player_log:       Player {playerId} teleported construct {request.constructId} to construct {request.baseId}
+
+  - name:             ConstructSetOwner
+    nqstruct_req:     ConstructOwnerSet
+    nqstruct_res:     EmptyStruct
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     ConstructSetOwner
+        grain_key:        v.constructId
+        args:             [playerId, v]
+    player_log:       Player {playerId} set the owner of construct {request.constructId} to {request.ownerId}
+
+  - name:             ConstructCreateKey
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     ConstructCreateKey
+        grain_key:        v.constructId
+        args:             [playerId]
+    player_log:       Player {playerId} created a construct key for construct {request.constructId}
+
+  - name:             ConstructUseKey
+    nqstruct_req:     ConstructKeyUse
+    nqstruct_res:     EmptyStruct
+    channel:          ConstructPiloting
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IConstructGrain
+        grain_method:     ConstructUseKey
+        grain_key:        v.constructId
+        args:             [playerId, v]
+    player_log:       Player {playerId} used a construct key {request.key} of construct {request.constructId} from storage {request.storageId} for new owner {request.newOwner}
+
+  - name:             ConstructRequisitionRequest
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     RequisitionConstruct
+        grain_key:        playerId
+    player_log:       Player {playerId} is requisitioning construct {request.constructId}
+
+  - name:             ConstructRequisitionCancelRequest
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     CancelRequisitionConstruct
+        grain_key:        playerId
+    player_log:       Player {playerId} is canceling requisition of construct {request.constructId}
+
+
+  - name:             ConstructTransferControl
+    direction:        ServerToClient
+    nqstruct_req:     ConstructUpdate
+    channel:          ConstructPiloting
+    technicalMessage: true
+
+  - name:             ConstructForceLeft
+    direction:        ServerToClient
+    nqstruct_req:     ConstructId
+    channel:          ConstructPiloting
+    technicalMessage: true
+
+  # Territory management
+
+  - name:             TerritoryUpdateBalanceRequest
+    nqstruct_req:     TerritoryBalanceUpdate
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     TerritoryMoneyTransfer
+        grain_key:        playerId
+    player_log:       Player {playerId} is updating territory balance
+
+  - name:             TerritoryTokenizeRequest
+    nqstruct_req:     TerritoryTileIndex
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     TokenizeTerritory
+        grain_key:        playerId
+    player_log:       Player {playerId} is tokenizing territory
+
+  - name:             TerritoryConsumeKeyRequest
+    nqstruct_req:     TerritoryKeyConsumption
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             FORWARD
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     ConsumeTerritoryKey
+        grain_key:        playerId
+    player_log:       Player {playerId} is consuming territory balance
+
+  - name:             TerritoryMyTerritoriesRequest
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     TerritoryList
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             SIMPLE
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     MyTerritories
+        grain_key:        playerId
+        args:             []
+    technicalMessage:   true
+
+  - name:             TerritoryReserveRequest
+    nqstruct_req:     TerritoryClaim
+    nqstruct_res:     TerritoryDetails
+    channel:          TerritoryUpdateOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:             COMPLEX
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     ReserveTerritory
+        grain_key:        playerId
+        args:
+          - v
+    player_log:       Player {playerId} reserved territory {response.tileIndex} on planet {response.planetId}
+
+  - name:             TerritoryClaimRequest
+    nqstruct_req:     TerritoryClaim
+    nqstruct_res:     TerritoryDetails
+    channel:          TerritoryUpdateOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlanetTerritoryGrain
+        grain_method:     ClaimTerritory
+        grain_key:        v.planetId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} claimed territory {response.tileIndex} on planet {response.planetId}
+
+  - name:             TerritoryReleaseRequest
+    nqstruct_req:     TerritoryRelease
+    nqstruct_res:     EmptyStruct
+    channel:          TerritoryUpdateOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlanetTerritoryGrain
+        grain_method:     ReleaseTerritory
+        grain_key:        v.tile.planetId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} released territory {request.tile.tileIndex} on planet {request.tile.planetId}
+
+  - name:             TerritoryUpdateRequest
+    nqstruct_req:     TerritoryUpdate
+    nqstruct_res:     OwnedTerritoriesInfo
+    channel:          TerritoryUpdateOperation
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlanetTerritoryGrain
+        grain_method:     UpdateTerritory
+        grain_key:        v.planetId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} updated territory {request.tileIndex} on planet {request.planetId}
+
+  - name:             TerritoryGet
+    nqstruct_req:     TerritoryTileIndex
+    nqstruct_res:     TerritoryDetails
+    operation_id:     NONE
+    delay_window:
+      actions:        15
+      duration_ms:    2000
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlanetTerritoryGrain
+        grain_method:     GetTerritoryTile
+        grain_key:        v.planetId
+        args:
+          - v.tileIndex
+    technicalMessage: true
+
+  - name:             TerritoryMapSubscribe
+    nqstruct_req:     ConstructId
+    nqstruct_res:     TerritoryMap
+    channel:          TerritorySubscription
+    operation_id:     NONE
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          Territory
+      key:            v.constructId
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlanetTerritoryGrain
+        grain_method:     GetTerritoryMap
+        grain_key:        v.constructId
+        args:             []
+    technicalMessage: true
+
+  - name:             TerritoryMapGet
+    nqstruct_req:     ConstructId
+    nqstruct_res:     TerritoryMap
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlanetTerritoryGrain
+        grain_method:     GetTerritoryMap
+        grain_key:        v.constructId
+        args:             []
+    technicalMessage: true
+
+  - name:             TerritoryMapUnsubscribe
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    channel:          TerritorySubscription
+    operation_id:     NONE
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          Territory
+      key:            v.constructId
+    route:            Empty
+    technicalMessage: true
+
+  # Market
+
+  - name:             MarketGetList
+    nqstruct_req:     ConstructId
+    nqstruct_res:     MarketList
+    channel:          MarketDataFlow
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketGetList
+        grain_key:        0
+        args:
+          - v
+          - playerId
+    technicalMessage: true
+
+  - name:             MarketOpen
+    nqstruct_req:     MarketAccessPoint
+    nqstruct_res:     MarketInfo
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} opened market {request.marketId} from pod {request.podElementId} / unit {request.marketElementId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketOpen
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketClose
+    nqstruct_req:     MarketAccessPoint
+    nqstruct_res:     EmptyStruct
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} closed market {request.marketId} from pod {request.podElementId} / unit {request.marketElementId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketClose
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketSelectItem
+    nqstruct_req:     MarketSelectRequest
+    nqstruct_res:     MarketOrders
+    channel:          MarketDataFlow
+    operation_id:     NONE
+    technicalMessage: true
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketSelectItem
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketGetMyOrders
+    nqstruct_req:     MarketSelectRequest
+    nqstruct_res:     MarketOrders
+    delay_window:
+      actions: 10
+      duration_ms: 1000
+    operation_id:     NONE
+    technicalMessage: true
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketGetMyOrders
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketInstantOrder
+    nqstruct_req:     MarketRequest
+    nqstruct_res:     MarketOrders
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} made an instant order to market {request.marketId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketInstantOrder
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketPlaceOrder
+    nqstruct_req:     MarketRequest
+    nqstruct_res:     MarketOrder
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} made an order to market {request.marketId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketPlaceOrder
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketUpdateOrder
+    nqstruct_req:     MarketRequest
+    nqstruct_res:     MarketOrder
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} updated an order to market {request.marketId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketUpdateOrder
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketCancelOrder
+    nqstruct_req:     MarketOrder
+    nqstruct_res:     EmptyStruct
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} canceled order {request.orderId} to market {request.marketId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketCancelOrder
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketContainerGetMyContent
+    nqstruct_req:     MarketSelectRequest
+    nqstruct_res:     MarketStorageInfoEx
+    channel:          MarketContainer
+    operation_id:     NONE
+    technicalMessage: true
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketContainerGetMyContent
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketStorageMove
+    nqstruct_req:     MarketStorageMoveInfo
+    nqstruct_res:     MarketStorageMoveInfo
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} retrieved an item from market {request.marketId} storage
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     MarketStorageMove
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketPackageCreate
+    nqstruct_req:     PackageMarketCreate
+    nqstruct_res:     ElementId
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} created package in market {request.marketId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     CreatePackage
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketPackageExpand
+    nqstruct_req:     PackageMarketExpand
+    nqstruct_res:     EmptyStruct
+    channel:          MarketAction
+    operation_id:     NONE
+    player_log:       Player {playerId} expanded package in market {request.marketId}
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IMarketGrain
+        grain_method:     ExpandPackage
+        grain_key:        0
+        args:
+          - v
+          - playerId
+
+  - name:             MarketContainerContent
+    direction:        ServerToClient
+    nqstruct_req:     MarketStorageInfoEx
+    technicalMessage: true
+
+  - name:             MarketStatsUpdate
+    direction:        ServerToClient
+    nqstruct_req:     MarketStats
+    technicalMessage: true
+
+  - name:             MarketOrdersUpdate
+    nqstruct_req:     MarketOrders
+    technicalMessage: true
+
+  # Bookmark
+
+  - name:             BookmarkGetList
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     BookmarkList
+    channel:          Bookmark
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBookmarkGrain
+        grain_method:     GetBookmarkList
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:
+          - playerId
+    technicalMessage: true
+
+  - name:             BookmarkAdd
+    nqstruct_req:     Bookmark
+    nqstruct_res:     EmptyStruct
+    channel:          Bookmark
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBookmarkGrain
+        grain_method:     AddBookmark
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} added a bookmark {request.name} on construct {request.constructId}
+
+  - name:             BookmarkRemove
+    nqstruct_req:     BookmarkId
+    nqstruct_res:     EmptyStruct
+    channel:          Bookmark
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBookmarkGrain
+        grain_method:     RemoveBookmark
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} removed a bookmark {request.name}
+
+  # Blueprint
+
+  - name:             BlueprintCreation
+    nqstruct_req:     BlueprintCreate
+    nqstruct_res:     BlueprintId
+    channel:          Blueprint
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBlueprintGrain
+        grain_method:     Create
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:             [v, playerId]
+    player_log:       Player {playerId} created a blueprint for construct {request.constructId}
+
+  - name:             BlueprintCompaction
+    nqstruct_req:     BlueprintCreate
+    nqstruct_res:     BlueprintId
+    channel:          Blueprint
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBlueprintGrain
+        grain_method:     CompactConstruct
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:             [v, playerId]
+    player_log:       Player {playerId} compacted construct {request.constructId}
+
+  - name:             BlueprintSnapshotCreation
+    nqstruct_req:     SnapshotCreate
+    nqstruct_res:     EmptyStruct
+    channel:          Blueprint
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBlueprintGrain
+        grain_method:     Snapshot
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:             [v.blueprint, playerId, v.autoSlot]
+    player_log:       Player {playerId} created a snapshot of construct {request.blueprint.constructId} (auto {request.autoSlot})
+
+  - name:             BlueprintInfo
+    nqstruct_req:     BlueprintId
+    nqstruct_res:     BlueprintProperties
+    channel:          Blueprint
+    operation_id:     NONE
+
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBlueprintGrain
+        grain_method:     GetBlueprintInfo
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:             [v.blueprintId]
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          Blueprint
+      key:            v.blueprintId
+    technicalMessage: true
+
+  - name:             BlueprintPropertiesUpdate
+    direction:        ServerToClient
+    nqstruct_req:     BlueprintPropertiesUpdate
+    doc:  |
+      This is sent when the blueprint changes on the server.  At the moment this is only used to notify the client
+      about the computation of the mesh.
+
+  - name:             BlueprintUse
+    nqstruct_req:     BlueprintDeploy
+    nqstruct_res:     ConstructId
+    channel:          Blueprint
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBlueprintGrain
+        grain_method:     Use
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:             [v, playerId]
+    player_log:       Player {playerId} deployed blueprint {request.blueprintId} as new construct {response.constructId}
+
+  - name:             BlueprintSplitRequest
+    nqstruct_req:     BlueprintSplit
+    nqstruct_res:     EmptyStruct
+    channel:          Blueprint
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IBlueprintGrain
+        grain_method:     Split
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:             [playerId, v]
+    player_log:       Player {playerId} splitting blueprint {request.blueprintId}
+
+  # Resurrection Nodes
+
+  - name:             ResurrectionNodeListGet
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     ResurrectionNodeList
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IResurrectionNodeGrain
+        grain_method:     GetResurrectionNodeList
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:
+          - playerId
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    technicalMessage: true
+
+  - name:             ResurrectionNodeAdd
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IResurrectionNodeGrain
+        grain_method:     AddResurrectionNode
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:
+          - playerId
+          - v
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} added resurrection node {request.elementId} to list
+
+  - name:             ResurrectionNodeRemove
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IResurrectionNodeGrain
+        grain_method:     RemoveResurrectionNode
+        grain_key:        0 # we don't have a way to say Guid.Empty
+        args:
+          - playerId
+          - v
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    player_log:       Player {playerId} removed resurrection node {request.elementId} from list
+
+  - name:             ResurrectionNodeListUpdate
+    direction:        ServerToClient
+    nqstruct_req:     ResurrectionNodeList
+    technicalMessage: true
+
+  # Recipe
+
+  - name:             RecipeGetQueue
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     RecipeQueue
+    channel:          Recipe
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IRecipeGrain
+        grain_method:     GetQueue
+        grain_key:        playerId
+    technicalMessage: true
+
+  - name:             RecipeEnqueue
+    nqstruct_req:     RecipeRequest
+    nqstruct_res:     RecipeStatus
+    channel:          Recipe
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IRecipeGrain
+        grain_method:     Enqueue
+        grain_key:        playerId
+        args:
+          - v
+    player_log:       player {playerId} added bulk {request.bulk} of recipe {request.id} to the nanocrafter queue
+
+  - name:             RecipeResume
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     RecipeStatus
+    channel:          Recipe
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IRecipeGrain
+        grain_method:     Resume
+        grain_key:        playerId
+    player_log:       player {playerId} resumed nanocrafter recipe crafting
+
+  - name:             RecipeAbort
+    nqstruct_req:     RecipeStatusId
+    nqstruct_res:     EmptyStruct
+    channel:          Recipe
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IRecipeGrain
+        grain_method:     Abort
+        grain_key:        playerId
+    player_log:       player {playerId} aborted nanocrafter batch {request.id}
+
+  - name:             RecipeCollect
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     EmptyStruct
+    channel:          Recipe
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IRecipeGrain
+        grain_method:     Collect
+        grain_key:        playerId
+    player_log:       player {playerId} collected the products of last completed nanocrater batch
+
+  - name:             RecipeMove
+    nqstruct_req:     RecipeMoveAfter
+    nqstruct_res:     EmptyStruct
+    channel:          Recipe
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IRecipeGrain
+        grain_method:     Move
+        grain_key:        playerId
+        args:
+            - v
+    player_log:       player {playerId} moved batch {request.id} after batch {request.afterId}
+
+  - name:             RecipeStatusChanged
+    nqstruct_req:     RecipeStatus
+    direction:        ServerToClient
+    technicalMessage: true
+
+  # Barter
+
+  - name:             BarterRequest
+    nqstruct_req:     PlayerId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: BarterStart
+        grain_key:    0
+        args:         [playerId, v]
+    player_log:       Player {playerId} requested to barter with {request.id}
+
+  - name:             BarterCancel
+    nqstruct_req:     PlayerId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: BarterCancel
+        grain_key:    0
+        args:         [playerId]
+    player_log:       Player {playerId} cancelled barter with {request.id}
+
+  - name:             BarterUpdate
+    nqstruct_req:     BarterSessionState
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: BarterUpdate
+        grain_key:    0
+        args:         [playerId, v]
+    player_log:       Player {playerId} changed his barter offer (accepted {request.mine.accepted}) with {playerId}
+
+  - name:             BarterRequested
+    nqstruct_req:     PlayerId
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  - name:             BarterUpdated
+    nqstruct_req:     BarterSessionState
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  - name:             BarterDone
+    nqstruct_req:     BarterSessionState
+    operation_id:     NONE
+    direction:        ServerToClient
+    player_log:       Player {playerId} completed the barter session
+
+  - name:             BarterCanceled
+    nqstruct_req:     EmptyStruct
+    operation_id:     NONE
+    direction:        ServerToClient
+    player_log:       Player {playerId} was notified that the barter session was cancelled
+
+    # Player Position
+
+  - name:             PlayerPositionSubscribe
+    nqstruct_req:     PlayerId
+    nqstruct_res:     PlayerPositionUpdate
+    operation_id:     [id]
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          PlayerPosition
+      key:            v.id
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetPositionUpdate
+        grain_key:        v.id
+        args:             []
+    technicalMessage: true
+
+  - name:             PlayerPositionUnsubscribe
+    nqstruct_req:     PlayerId
+    nqstruct_res:     EmptyStruct
+    operation_id:     [id]
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          PlayerPosition
+      key:            v.id
+    route:            Empty
+    technicalMessage: true
+
+  - name:             PlayerPosition
+    nqstruct_req:     PlayerPositionUpdate
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  - name:             PlayerPlanetPosition
+    nqstruct_req:     PlayerId
+    nqstruct_res:     ConstructId
+    operation_id:     [id]
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetPlanet
+        grain_key:        v.id
+        args:             []
+    technicalMessage: true
+
+  - name:             GetEntityName
+    nqstruct_req:     EntityId
+    nqstruct_res:     NamedEntity
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IEntityGrain
+        grain_method:     GetName
+        grain_key:        v
+        args:             []
+    technicalMessage: true
+
+
+    # Construct Position
+
+  - name:             MonitorConstruct
+    nqstruct_req:     MonitorConstruct
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  - name:             MonitorPlayer
+    nqstruct_req:     MonitorPlayer
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  - name:             MonitorPSA
+    nqstruct_req:     MonitorPSA
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  # Friend List
+
+  - name:             FriendListSubscribe
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     FriendList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IFriendGrain
+        grain_method:     GetFriendList
+        grain_key:        playerId
+        args:             []
+    technicalMessage: true
+
+# not sure what it still does
+  - name:             FriendListUnsubscribe
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     EmptyStruct
+    route:            Empty
+    technicalMessage: true
+
+  - name:             FriendMakeRequest
+    nqstruct_req:     FriendRequest
+    nqstruct_res:     FriendRequest
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IFriendGrain
+        grain_method:     MakeRequest
+        grain_key:        playerId
+        args:             [v.to]
+    player_log:       Player {playerId} made a friend request to player {request.to} {request.toUsername}
+
+  - name:             FriendAnswerRequest
+    nqstruct_req:     FriendRequestResponse
+    nqstruct_res:     FriendStatus
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IFriendGrain
+        grain_method:     AnswerRequest
+        grain_key:        playerId
+        args:             [v.to, v.accepted]
+    player_log:       Player {playerId} answered friend request from {request.from} answer {request.accepted}
+
+  - name:             FriendRemove
+    nqstruct_req:     PlayerId
+    nqstruct_res:     FriendStatus
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IFriendGrain
+        grain_method:     RemoveFriendship
+        grain_key:        playerId
+    player_log:       Player {playerId} removed player {request} from his friend list
+
+  # Talent
+
+  - name:             PurchaseTalent
+    nqstruct_req:     TalentAndLevel
+    nqstruct_res:     TalentAndLevelPoints
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       ITalentGrain
+        grain_method:     Purchase
+        grain_key:        playerId
+    player_log:       Player {playerId} purchased talent {request.talent} at level {request.level}
+
+  - name:             GetTalentState
+    nqstruct_res:     PlayerTalentState
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       ITalentGrain
+        grain_method:     Status
+        grain_key:        playerId
+        args:             []
+    technicalMessage: true
+
+  - name:             ChangeTalentQueue
+    nqstruct_req:     TalentQueue
+    nqstruct_res:     TalentAndLevelPoints
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       ITalentGrain
+        grain_method:     Queue
+        grain_key:        playerId
+    player_log:       Player {playerId} changed its talent queue
+
+  - name:             TalentAcquired
+    nqstruct_req:     TalentAndLevelPoints
+    direction:        ServerToClient
+    player_log:       player {playerId} acquire talent {request.talent} at level {request.level}
+
+  - name:             TalentPointsAcquired
+    direction:        ServerToClient
+    nqstruct_req:     TalentPoints
+    technicalMessage: true
+
+  - name:               TalentsRespecialize
+    nqstruct_req:       EmptyStruct
+    nqstruct_res:       EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     ITalentGrain
+        grain_method:   Respecialize
+        grain_key:      playerId
+    player_log:         player {playerId} respecialized his talents
+
+  # Notifications
+  - name:             GetAllNotifications
+    nqstruct_res:     PlayerNotificationStateList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   AllNotifications
+        args: []
+    technicalMessage: true
+
+  - name:             GetAllUnsentNotifications
+    nqstruct_res:     PlayerNotificationStateList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   AllUnsentNotifications
+        args: []
+    technicalMessage: true
+
+  - name:             NotificationMarkRead
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   MarkRead
+        args: []
+    technicalMessage: true
+
+  - name:             AddNewNotification
+    nqstruct_req:     NotificationMessage
+    nqstruct_res:     PlayerNotificationState
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   AddNewNotification
+    technicalMessage: true
+
+  - name:             DeleteNotification
+    nqstruct_req:     NotificationId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   DeleteNotification
+        args: [v.id]
+    technicalMessage: true
+
+  - name:             DeleteExpiredNotifications
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   DeleteExpiredNotifications
+        args: []
+    technicalMessage: true
+
+  - name:             DeleteAllNotifications
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   DeleteAllNotifications
+        args: []
+    technicalMessage: true
+
+  - name:             AcknowledgeNotification
+    nqstruct_req:     NotificationId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.INotificationGrain
+        grain_key:      playerId
+        grain_method:   AcknowledgeNotification
+    technicalMessage: true
+
+  - name:             NotificationNewNotification
+    nqstruct_req:     PlayerNotificationState
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+# Radar
+  - name:             RadarScanStart
+    nqstruct_req:     RadarScan
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:            Node
+    player_log:       Player {playerId} started scanning with radar element {request.radarId} from construct {request.constructId}
+
+  - name:             RadarScanStop
+    nqstruct_req:     RadarScan
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:            Node
+    player_log:       Player {playerId} stopped scanning with radar element {request.radarId} from construct {request.constructId}
+
+
+  - name:             RadarScanStart2
+    nqstruct_req:     RadarScan
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRadarGrain
+        grain_method:   ScanStart
+        grain_key:      v.radarId.elementId
+        args:           [playerId, v]
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          Radar
+      key:            v.radarId.elementId
+    player_log:       Player {playerId} started scanning with radar element {request.radarId} from construct {request.constructId}
+
+  - name:             RadarScanStop2
+    nqstruct_req:     RadarScan
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRadarGrain
+        grain_method:   ScanStop
+        grain_key:      v.radarId.elementId
+        args:           [playerId, v]
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          Radar
+      key:            v.radarId.elementId
+    player_log:       Player {playerId} stopped scanning with radar element {request.radarId} from construct {request.constructId}
+
+  - name:             RadarScanResult
+    doc:    |
+      future deprecated message regularly sent by the server to notify the client about the
+      radar content.
+    direction:        ServerToClient
+    nqstruct_req:     ScanResult
+    technicalMessage: true
+
+  - name:             RadarIdentifyStart
+    nqstruct_req:     RadarIdentifyTarget
+    nqstruct_res:     EmptyStruct
+    operation_id:     [targetConstructId]
+    channel:          RadarIdentification
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:            Node
+    player_log:       Player {playerId} started identifying construct {request.targetConstructId} with radar element {request.sourceRadarElementId} on construct {request.sourceConstructId}
+
+  - name:             RadarIdentifyStop
+    nqstruct_req:     RadarIdentifyTarget
+    nqstruct_res:     EmptyStruct
+    operation_id:     [targetConstructId]
+    channel:          RadarIdentification
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:            Node
+    player_log:       Player {playerId} stopped identifying construct {request.targetConstructId} with radar element {request.sourceRadarElementId} on construct {request.sourceConstructId}
+
+  - name:             RadarIdentifyStart2
+    nqstruct_req:     RadarIdentifyTarget
+    nqstruct_res:     EmptyStruct
+    operation_id:     [targetConstructId]
+    channel:          RadarIdentification
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRadarGrain
+        grain_method:   IdentifyStart
+        grain_key:      v.sourceRadarElementId
+        args:           [playerId, v]
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          ConstructDetailsUpdate
+      key:            v.targetConstructId
+    player_log:       Player {playerId} started identifying construct {request.targetConstructId} with radar element {request.sourceRadarElementId} on construct {request.sourceConstructId}
+
+  - name:             RadarIdentifyStop2
+    nqstruct_req:     RadarIdentifyTarget
+    nqstruct_res:     EmptyStruct
+    operation_id:     [targetConstructId]
+    channel:          RadarIdentification
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRadarGrain
+        grain_method:   IdentifyStop
+        grain_key:      v.sourceRadarElementId
+        args:           [playerId, v]
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          ConstructDetailsUpdate
+      key:            v.targetConstructId
+    player_log:       Player {playerId} stopped identifying construct {request.targetConstructId} with radar element {request.sourceRadarElementId} on construct {request.sourceConstructId}
+
+  - name:             TransponderSetTag
+    nqstruct_req:     RadarTransponderTagList
+    nqstruct_res:     EmptyStruct
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IConstructGrain
+        grain_key:      v.constructId
+        grain_method:   UpdateTransponderTags
+        args:           [playerId, v]
+    player_log:       Player {playerId} changed the Transponder element {request.transponderElementId} tags on construct {request.constructId}
+
+  - name:             TransponderSwitchActive
+    nqstruct_req:     RadarTransponderActiveState
+    nqstruct_res:     EmptyStruct
+    delay_window:
+      actions:        2
+      duration_ms:    1000
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IConstructGrain
+        grain_key:      v.constructId
+        grain_method:   SetTransponderState
+        args:           [playerId, v]
+    player_log:       Player {playerId} switched the Transponder element {request.transponderElementId} on construct {request.constructId} to {request.activeState}
+
+  - name:             ConstructIdentifyInfos
+    doc: |
+        future deprecated message sent by the server regularly about identified constructs.
+    direction:        ServerToClient
+    nqstruct_req:     ConstructIdentifyInfoList
+    technicalMessage: true
+
+  - name:             TargetingAlertInfos
+    doc: |
+        targeting alerts sent by the server when they changed.
+    direction:        ServerToClient
+    nqstruct_req:     TargetingAlertInfoList
+    technicalMessage: true
+
+  - name:           GetTargetingAlertInfos
+    doc: |
+       retrieve the current alterting infos
+    nqstruct_req:     ConstructId
+    nqstruct_res:     TargetingAlertInfoList
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IConstructGrain
+        grain_method:   GetTargetingAlertInfos
+        grain_key:      v.constructId
+        args:           []
+
+# Fight
+
+  - name:             WeaponAttackStart
+    nqstruct_req:     AttackOrderTarget
+    nqstruct_res:     EmptyStruct
+    operation_id:     [targetConstructId]
+    channel:          RadarIdentification
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IWeaponGrain
+        grain_method:   AttackStart
+        grain_key:      v.weaponElementId
+        args:           [playerId, v]
+    player_log:       Player {playerId} started attacking construct {request.targetConstructId} with weapon element {request.weaponElementId} from construct {request.sourceConstructId}
+
+  - name:             WeaponAttackStop
+    nqstruct_req:     AttackOrderTarget
+    nqstruct_res:     EmptyStruct
+    operation_id:     [targetConstructId]
+    channel:          RadarIdentification
+    delay_window:
+      actions:        3
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IWeaponGrain
+        grain_method:   AttackStop
+        grain_key:      v.weaponElementId
+        args:           [playerId, v]
+    player_log:       Player {playerId} stopped attacking construct {request.targetConstructId} with weapon element {request.weaponElementId} from construct {request.sourceConstructId}
+
+  - name:             WeaponShot
+    direction:        ServerToClient
+    nqstruct_req:     WeaponShot
+    technicalMessage: true
+
+  - name:             WeaponFireOnce
+    nqstruct_req:     WeaponFire
+    nqstruct_res:     WeaponFireResult
+    operation_id:     [weaponId]
+    channel:          Weapon
+    delay_window:
+      actions:        6
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IWeaponGrain
+        grain_method:   WeaponFireOnce
+        grain_key:      v.weaponId
+        args:           [playerId, v]
+    player_log:       Player {playerId} fired at {request.targetId} with weapon element {request.weaponId} from construct {request.constructId}. Hit {response.hit}
+
+  - name:             WeaponReload
+    nqstruct_req:     WeaponLoad
+    nqstruct_res:     EmptyStruct
+    operation_id:     [weaponId]
+    channel:          Weapon
+    delay_window:
+      actions:        6
+      duration_ms:    2000
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IWeaponGrain
+        grain_method:   WeaponReload
+        grain_key:      v.weaponId
+        args:           [playerId, v]
+    player_log:       Player {playerId} reloaded weapon element {request.weaponId} using ammo container {request.ammoContainerId} on construct {request.constructId} with ammo {request.ammoType}
+
+  - name:             PvpShieldToggle
+    nqstruct_req:     PvpShieldToggleRequest
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:           COMPLEX
+        grain_type:     NQ.Interfaces.IConstructFightGrain
+        grain_method:   ShieldToggle
+        grain_key:      v.constructId.constructId
+        args:           [playerId, v]
+    player_log:       Player {playerId} changed shield state to {request.shieldOn} on construct {request.constructId}
+
+  - name:             PvpShieldSetResistances
+    nqstruct_req:     PvpShieldResistance
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:           COMPLEX
+        grain_type:     NQ.Interfaces.IConstructFightGrain
+        grain_method:   SetResistances
+        grain_key:      v.constructId.constructId
+        args:           [playerId, v]
+    player_log:       Player {playerId} changed resistances on construct {request.constructId}
+
+  - name:             PvpShieldStartVenting
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:           COMPLEX
+        grain_type:     NQ.Interfaces.IConstructFightGrain
+        grain_method:   StartVenting
+        grain_key:      v.constructId
+        args:           [playerId]
+    player_log:       Player {playerId} started venting on {request.constructId}
+
+  - name:             PvpShieldStopVenting
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:           COMPLEX
+        grain_type:     NQ.Interfaces.IConstructFightGrain
+        grain_method:   StopVenting
+        grain_key:      v.constructId
+        args:           [playerId]
+    player_log:       Player {playerId} stopped venting on {request.constructId}
+
+  - name:             PvpBaseShieldSetLockdownExitTime
+    nqstruct_req:     LockdownExitTime
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.IConstructFightGrain
+        grain_method: SetLockdownExitTime
+        grain_key:    v.constructId
+        args:         [playerId, v.minutesFromMidnightUtc]
+    player_log:       Player {playerId} sets {request.constructId} lockdown exit time
+
+  # Industry
+  - name: IndustrySetRecipeFC
+    nqstruct_req:     IndustrySetRecipe
+    nqstruct_res:     EmptyStruct
+    channel:          IndustryManagement
+    route:
+      kind:           Orleans
+      orleans:
+        type:           SIMPLE
+        grain_type:     IIndustryUnitGrain
+        grain_method:   SetRecipe
+        grain_key:      v.elementId
+        args:           [v.recipeId, playerId]
+    player_log:       Player {playerId} has set recipe {request.recipeId} on industy {request.elementId}
+
+  - name: IndustryStatus
+    nqstruct_req:     ElementId
+    nqstruct_res:     IndustryStatus
+    route:
+      kind:           Orleans
+      orleans:
+        type:           SIMPLE
+        grain_type:     IIndustryUnitGrain
+        grain_method:   Status
+        grain_key:      v.elementId
+        args:           []
+    technicalMessage: true
+
+  - name: IndustryStartRequest
+    nqstruct_req:     IndustryStart
+    nqstruct_res:     EmptyStruct
+    channel:          IndustryManagement
+    route:
+      kind:           Orleans
+      orleans:
+        type:           COMPLEX
+        grain_type:     IIndustryUnitGrain
+        grain_method:   Start
+        grain_key:      v.elementId
+        args:           [playerId, v]
+    player_log:       Player {playerId} started industy {request.elementId}
+
+  - name: IndustryStopSoft
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    channel:          IndustryManagement
+    route:
+      kind:           Orleans
+      orleans:
+        type:           SIMPLE
+        grain_type:     IIndustryUnitGrain
+        grain_method:   StopSoft
+        grain_key:      v.elementId
+        args:           []
+    player_log:       Player {playerId} soft stopped industy {request.elementId}
+
+  - name: InudstryStopHard
+    nqstruct_req:     IndustryStopRequest
+    nqstruct_res:     EmptyStruct
+    channel:          IndustryManagement
+    route:
+      kind:           Orleans
+      orleans:
+        type:           SIMPLE
+        grain_type:     IIndustryUnitGrain
+        grain_method:   StopHard
+        grain_key:      v.elementId
+        args:           [v.allowIngredientLoss]
+    player_log:       Player {playerId} hard stopped industy {request.elementId}
+
+  - name: InudstrySetClaimProducts
+    nqstruct_req:     IndustryClaimProducts
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:           SIMPLE
+        grain_type:     IIndustryUnitGrain
+        grain_method:   SetClaimProducts
+        grain_key:      v.elementId
+        args:           [v.claimProducts]
+    player_log:       Player {playerId} has set autoclaim on industy {request.elementId} value {request.claimProducts}
+
+  - name: InudstrySetNotifications
+    nqstruct_req:     IndustrySetNotificationsState
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:           SIMPLE
+        grain_type:     IIndustryUnitGrain
+        grain_method:   SetNotifications
+        grain_key:      v.elementId
+        args:           [v.enable]
+    player_log:       Player {playerId} has set notification on industy {request.elementId} value {request.enable}
+  
+  - name: SetSchematicContainer
+    nqstruct_req:     ElementInConstruct
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:         SIMPLE
+        grain_type:   IDirectServiceGrain
+        grain_method: SetSchematicContainer
+        grain_key:    0
+        args:         [playerId, v.elementId, v.constructId]
+    player_log:       Player {playerId} has set schematic container {request.elementId} on {request.constructId}
+
+  - name: ResearchStateRequest
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     ResearchState
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerResearchGrain
+        grain_method:   State
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+
+  - name: ResearchSetSlot
+    nqstruct_req:     ResearchSlot
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerResearchGrain
+        grain_method:   SetResearchSlot
+        grain_key:      playerId
+        args:           [v.itemTypeId, v.batchSize]
+    player_log: Player {playerId} sets research slot {request.slot} to {request.itemTypeId}
+
+  - name: ResearchCollectSlot
+    nqstruct_req:     ResearchSlot
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerResearchGrain
+        grain_method:   Collect
+        grain_key:      playerId
+        args:           [v.slot]
+    player_log: Player {playerId} collects research slot {request.slot}
+
+  - name: ResearchCancelSlot
+    nqstruct_req:     ResearchSlot
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerResearchGrain
+        grain_method:   Cancel
+        grain_key:      playerId
+        args:           [v.slot]
+    player_log: Player {playerId} cancels research slot {request.slot}
+
+# Storage
+  - name: InventoryGet
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     StorageInfo
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IInventoryGrain
+        grain_method:   Get
+        grain_key:      playerId
+        args:           [playerId]
+    technicalMessage: true
+
+  - name: InventoryReady
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   InventoryReady
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+
+  - name: StorageOpMove
+    nqstruct_req:     StorageMove
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageMove
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} moved items from slot {request.fromSlot} of storage {request.fromContainer} to slot {request.toSlot} of storage {request.toContainer}
+
+  - name: StorageOpSwap
+    nqstruct_req:     StorageSwap
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageSwap
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} swapped items from slot {request.fromSlot} of storage {request.fromContainer} and slot {request.toSlot} of storage {request.toContainer}
+
+  - name: StorageOpDrop
+    nqstruct_req:     StorageDrop
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageDrop
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} dropped items from slot {request.slot} of storage {request.containerId}
+
+  - name: StorageOpDropProperties
+    nqstruct_req:     StorageDropProperties
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageDropProperties
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} dropped properties from slots {request.slots} of storage {request.containerId}
+
+  - name: StorageOpClaim
+    nqstruct_req:     StorageClaim
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageClaim
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} claimed items from slot {request.slot} of storage {request.containerId} for new owner {request.owner}
+
+  - name: StorageSetPrimaryContainer
+    nqstruct_req:     ElementId
+    nqstruct_res:     LinkedContainerStatus
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerInventoryGrain
+        grain_method:   SetPrimaryContainer
+        grain_key:      playerId
+        args:           [v, 'false']
+    player_log:       Player {playerId} has set container {request.elementId} as primary container
+
+  - name:             LinkedContainerStateChanged
+    direction:        ServerToClient
+    nqstruct_req:     LinkedContainerStatus
+    player_log:       Player {playerId} primary container state changed
+
+  - name:             LinkedContainerGetState
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     LinkedContainerStatus
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerInventoryGrain
+        grain_method:   GetPrimaryContainerState
+        grain_key:      playerId
+        args:           []
+    player_log:       Player {playerId} requested the state of linked container
+
+  - name:             ContainerRootChanged
+    nqstruct_req:     ContainerRootChanged
+    operation_id:     NONE
+    direction:        ServerToClient
+    technicalMessage: true
+
+  - name:             SetPrimaryContainerDefaultState
+    nqstruct_req:     LinkedContainerDefaultState
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerInventoryGrain
+        grain_method:   ChangeDefaultStatus
+        grain_key:      playerId
+        args:           [v.isDefault]
+    player_log:       Player {playerId} has set his container default status as {request.isDefault}
+
+  - name: StorageOpStack
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageStack
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} stacked all items of container {request.elementId}
+
+  - name: StorageOpSetAutoClaim
+    nqstruct_req:     ContainerAutoClaim
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IContainerGrain
+        grain_method:   SetAutoClaim
+        grain_key:      v.containerId
+        args:           [playerId, v.mode]
+    player_log:       Player {playerId} has set container {request.containerId} to autoclaim mode {request.mode}
+
+  - name: DataItemCreation
+    nqstruct_req:     DataItemCreate
+    nqstruct_res:     DataItemIds
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   DataItemCreate
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} created a dataItem of type {request.type} in storage {request.containerId}
+
+  - name: StoragePackageCreate
+    nqstruct_req:     PackageCreate
+    nqstruct_res:     ElementId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   PackageCreate
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} created a package in {request.containerId}
+
+  - name: StoragePackageExpand
+    nqstruct_req:     PackageExpand
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   PackageExpand
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} expanded a package in {request.containerId}
+
+  - name:             ContainerGet
+    nqstruct_req:     ElementId
+    nqstruct_res:     StorageInfo
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageContainerGet
+        grain_key:      0
+        args:           [playerId, v]
+    technicalMessage: true
+
+  - name:             ContainerOpen
+    nqstruct_req:     ElementId
+    nqstruct_res:     StorageInfo
+    operation_id:     NONE
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          Container
+      key:            v.elementId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDirectServiceGrain
+        grain_method:   StorageContainerGet
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} opened container {request.elementId}
+
+  - name:             ContainerClose
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          Container
+      key:            v.elementId
+    route:            Empty
+    player_log:       Player {playerId} closed container {request.elementId}
+
+  - name:             GetStorageParent
+    nqstruct_req:     ElementId
+    nqstruct_res:     ElementId
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IContainerGrain
+        grain_method:   GetRootContainerId
+        grain_key:      v
+        args:           []
+    player_log:       Player {playerId} requested root container of {request.elementId}
+
+
+  # RDMS
+
+  - name:             RDMSRegistrySubscribe
+    nqstruct_req:     EntityId
+    nqstruct_res:     RDMS::Registry
+    operation_id:     NONE
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          RightManagementEntityRegistry
+      key:            v
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   GetRegistry
+        grain_key:      v
+        args:           []
+    technicalMessage: true
+
+  - name:             RDMSRegistryUnsubscribe
+    nqstruct_req:     EntityId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          RightManagementEntityRegistry
+      key:            v
+    route:            Empty
+    technicalMessage: true
+
+  # RDMS Actor Routes
+
+  - name:             RDMSActorCreate
+    nqstruct_req:     RDMS::ActorData
+    nqstruct_res:     RDMS::ActorId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   CreateActor
+        grain_key:      v.owner
+    player_log:       Player {playerId} created RDMS actor {request.name} (id={response.actorId}) in registry {request.owner}
+
+  - name:             RDMSActorDelete
+    nqstruct_req:     RDMS::ActorSelector
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   DeleteActor
+        grain_key:      v.owner
+        args:           [v.actorId]
+    player_log:       Player {playerId} deleted RDMS actor {request.actorId} in registry {request.owner}
+
+  - name:             RDMSActorUpdate
+    nqstruct_req:     RDMS::ActorData
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   UpdateActor
+        grain_key:      v.owner
+    player_log:       Player {playerId} updated RDMS actor {request.name} (id={request.actorId}) in registry {request.owner}
+
+  # RDMS Tag Routes
+
+  - name:             RDMSTagCreate
+    nqstruct_req:     RDMS::TagData
+    nqstruct_res:     RDMS::TagId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   CreateTag
+        grain_key:      v.owner
+    player_log:       Player {playerId} created RDMS tag {request.name} (id={response.tagId}) in registry {request.owner}
+
+  - name:             RDMSTagCreateOrGet
+    nqstruct_req:     RDMS::TagData
+    nqstruct_res:     RDMS::TagId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   CreateOrGetTag
+        grain_key:      v.owner
+    player_log:       Player {playerId} created (or fetched) RDMS tag {request.name} (id={request.tagId}) in registry {request.owner}
+
+  - name:             RDMSTagUpdate
+    nqstruct_req:     RDMS::TagData
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   UpdateTag
+        grain_key:      v.owner
+    player_log:       Player {playerId} updated RDMS tag {request.name} (id={request.tagId}) in registry {request.owner}
+
+  - name:             RDMSTagDelete
+    nqstruct_req:     RDMS::TagSelector
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   DeleteTag
+        grain_key:      v.owner
+        args:           [v.tagId]
+    player_log:       Player {playerId} deleted RDMS tag {request.tagId} in registry {request.owner}
+
+  # RDMS Asset Tags
+
+  - name:             RDMSAssetSubscribe
+    nqstruct_req:     RDMS::AssetId
+    nqstruct_res:     RDMS::AssetTagData
+    operation_id:     NONE
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          RightManagementAsset
+      key:            v
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSAssetGrain
+        grain_method:   GetTagList
+        grain_key:      v
+        args:           [v]
+    technicalMessage: true
+
+  - name:             RDMSAssetUnsubscribe
+    nqstruct_req:     RDMS::AssetId
+    nqstruct_res:     EmptyStruct
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          RightManagementAsset
+      key:            v
+    route:            Empty
+    technicalMessage: true
+
+  - name:             RDMSAssetUpdate
+    nqstruct_req:     RDMS::AssetUpdateTags
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSAssetGrain
+        grain_method:   UpdateTags
+        grain_key:      v.asset
+        args:           [playerId, v]
+    player_log:       Player {playerId} updated RDMS tags for asset {request.asset}
+
+  - name:             RDMSAssetGetTagList
+    nqstruct_req:     RDMS::AssetId
+    nqstruct_res:     RDMS::AssetTagData
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSAssetGrain
+        grain_method:   GetTagList
+        grain_key:      v
+        args:           [v]
+    technicalMessage: true
+
+  - name:             RDMSAssetGetListFromTag
+    nqstruct_req:     RDMS::TagSelector
+    nqstruct_res:     RDMS::AssetInfoList
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   GetAssetListFromTag
+        grain_key:      v.owner
+        args:           [v.tagId]
+    technicalMessage: true
+
+  # RDMS Policy Routes
+
+  - name:             RDMSPolicyCreate
+    nqstruct_req:     RDMS::PolicyData
+    nqstruct_res:     RDMS::PolicyId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   CreatePolicy
+        grain_key:      v.owner
+    player_log:       Player {playerId} created RDMS policy {request.name} (id={response.policyId}) in registry {request.owner}
+
+  - name:             RDMSPolicyDelete
+    nqstruct_req:     RDMS::PolicySelector
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   DeletePolicy
+        grain_key:      v.owner
+        args:           [v.policyId]
+    player_log:       Player {playerId} deleted RDMS policy {request.policyId} in registry {request.owner}
+
+  - name:             RDMSPolicyUpdate
+    nqstruct_req:     RDMS::PolicyData
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRegistryGrain
+        grain_method:   UpdatePolicy
+        grain_key:      v.owner
+    player_log:       Player {playerId} updated RDMS policy {request.name} (id={request.policyId}) in registry {request.owner}
+
+  # RDMS Get Right Route
+
+  - name:             RDMSGetRights
+    nqstruct_req:     RDMS::AssetId
+    nqstruct_res:     RDMS::RightList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRDMSRightGrain
+        grain_method:   GetRightsForPlayerOnAssetNoOverride
+        grain_key:      playerId
+        args:           [v]
+    delay_window:
+      actions:      20
+      duration_ms:  1000
+    technicalMessage: true
+
+  - name:             PlayerDirectorySearch
+    nqstruct_req:     PlayerName
+    nqstruct_res:     PlayerDescList
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IPlayerDirectoryGrain
+        grain_method: FindPlayers
+        grain_key:    0
+    technicalMessage: true
+
+  - name:             LocalizationQuery
+    nqstruct_req:     LocationRequest
+    nqstruct_res:     DetailedLocation
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.ILocatorGrain
+        grain_method: Get
+        grain_key:    v.descriptor
+        args:         [playerId, v.location]
+    technicalMessage: true
+
+  - name:             LocalizationQueryAll
+    nqstruct_req:     LocationRequest
+    nqstruct_res:     DetailedLocations
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.ILocatorGrain
+        grain_method: GetAll
+        grain_key:    v.descriptor
+        args:         [playerId]
+    technicalMessage: true
+
+  # Organizations
+  - name:             OrganizationDescribe
+    nqstruct_req:     OrganizationStateRequest
+    nqstruct_res:     Organization
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   State
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.withWallet
+    technicalMessage: true
+
+  - name:             OrganizationSetDescription
+    nqstruct_req:     OrganizationDescription
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   SetDescription
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.description
+    player_log:       Player {playerId} updated organization {request.organizationId} description
+
+  - name:             OrganizationSetLogo
+    nqstruct_req:     OrganizationDescription
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   SetLogo
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.description
+    player_log:       Player {playerId} updated organization {request.organizationId} logo
+
+  - name:             OrganizationUpdate
+    nqstruct_req:     OrganizationCreationData
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   Update
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} updated organization {request.organizationId}
+
+  - name:             OrganizationJoinRequest
+    nqstruct_req:     JoinRequest
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   JoinRequest
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.joiner.id
+          - v.message
+    player_log:       Player {playerId} sent a join request to organization {request.organizationId}
+
+  - name:             OrganizationJoinRequestCancel
+    nqstruct_req:     JoinRequest
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   JoinRequestCancel
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.joiner.id
+    player_log:       Player {playerId} canceled a join request to organization {request.organizationId}
+
+  - name:             OrganizationGetJoinRequests
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     JoinRequests
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   GetJoinRequests
+        grain_key:      v.organizationId
+        args:
+          - playerId
+    technicalMessage: true
+
+  - name:             OrganizationJoinResponse
+    nqstruct_req:     JoinResponse
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   JoinResponse
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.entityId
+          - v.response
+    player_log:       Player {playerId} answered a join request from organization {request.organizationId}
+
+  - name:             OrganizationRemoveMember
+    nqstruct_req:     OrganizationKickMember
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   RemoveMember
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.entityId
+    player_log:       Player {playerId} removed a member from organization {request.organizationId}
+
+  - name:             OrganizationCreateVote
+    nqstruct_req:     VoteDefinition
+    nqstruct_res:     VoteId
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   CreateVote
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.kind
+          - v.target.id
+          - v.message
+    player_log:       Player {playerId} created a vote on organization {request.organizationId}
+
+  - name:             OrganizationGetLiveVotes
+    nqstruct_req:     PastVotes
+    nqstruct_res:     Votes
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   GetLiveVotes
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.viewer
+    technicalMessage: true
+
+  - name:             OrganizationGetPastVotes
+    nqstruct_req:     PastVotes
+    nqstruct_res:     Votes
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   GetPastVotes
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.limit
+          - v.viewer
+    technicalMessage: true
+
+  - name:             OrganizationJoinOrganizationResponse
+    nqstruct_req:     JoinResponse
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   JoinResponseOrganization
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.entityId.organizationId
+          - v.response
+    player_log:       Player {playerId} answered join request for organization {request.organizationId}
+
+  - name:             OrganizationMemberSearchReq
+    nqstruct_req:     OrganizationMemberSearch
+    nqstruct_res:     OrganizationMembers
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   SearchMembers
+        grain_key:      v.organizationId
+    technicalMessage: true
+
+  - name:             OrganizationCreate
+    nqstruct_req:     OrganizationCreationData
+    nqstruct_res:     OrganizationId
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   CreateOrganization
+        grain_key:      playerId
+    player_log:       Player {playerId} created organization {request.name}
+
+  - name:             OrganizationCastVote
+    nqstruct_req:     VoteCast
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IVoteGrain
+        grain_method:   CastVote
+        grain_key:      v.voteId
+        args:
+          - playerId
+          - v.voter
+          - v.vote
+    player_log:       Player {playerId} cast vote {request.voteId} in organization {request.voter.organizationId}
+
+  - name:             OrganizationRecruitRequest
+    nqstruct_req:     RecruitingOffer
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   RecruitOffer
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.recruitee.id
+          - v.message
+    player_log:       Player {playerId} sent recruit invitation from organization {request.organizationId} to player {request.recruitee.name}
+
+  - name:             OrganizationRecruitRequestCancel
+    nqstruct_req:     RecruitingOffer
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   RecruitOfferCancel
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.recruitee.id
+    player_log:       Player {playerId} canceled recruit invitation from organization {request.organizationId} to player {request.recruitee.name}
+
+  - name:             OrganizationDelete
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   Delete
+        grain_key:      v.organizationId
+        args:
+          - playerId
+    player_log:       Player {playerId} deleted organization {request.organizationId}
+
+  - name:             OrganizationRecruitReply
+    nqstruct_req:     JoinResponse
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   RecruitResponse
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.entityId
+          - v.response
+    player_log:       Player {playerId} has set recruit only on organization {request.organizationId}
+
+  - name:             OrganizationRecruitOfferList
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     RecruitingOffers
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   GetRecruitingOffers
+        grain_key:      v.organizationId
+        args:
+          - playerId
+    technicalMessage: true
+
+  - name:             OrganizationSearchRequest
+    nqstruct_req:     OrganizationSearch
+    nqstruct_res:     Organizations
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationDirectoryGrain
+        grain_method:   Search
+        grain_key:      0
+    technicalMessage: true
+
+  - name:             OrganizationMyOrganizations
+    nqstruct_req:     EntityId
+    nqstruct_res:     OrganizationAndRoles
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationDirectoryGrain
+        grain_method:   EntityOrganizations
+        grain_key:      0
+    technicalMessage: true
+
+  - name:             OrganizationMyOrganizationRequests
+    nqstruct_req:     EntityId
+    nqstruct_res:     OrganizationPendingRequests
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationDirectoryGrain
+        grain_method:   MyRequests
+        grain_key:      0
+        args:
+          - playerId
+          - v
+    technicalMessage: true
+
+  - name:             OrganizationEnrolments
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     PastEnrolments
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   GetPastEnrolments
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - "25"
+    technicalMessage: true
+
+  - name:             OrganizationNewsGetRequest
+    nqstruct_req:     OrganizationNewsSearch
+    nqstruct_res:     OrganizationNewsList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   NewsGet
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v
+    technicalMessage: true
+
+  - name:             OrganizationNewsMarkReadRequest
+    nqstruct_req:     OrganizationNewsRead
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   NewsMarkRead
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} marked news for organization {request.organizationId} as read
+
+  - name:             OrganizationNewsPostRequest
+    nqstruct_req:     OrganizationNewsPost
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   NewsPost
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} posted a news post for organization {request.organizationId}
+
+  - name:             OrganizationNewsPinRequest
+    nqstruct_req:     OrganizationNewsPin
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   NewsPin
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} pinned news post {request.postId} in organization {request.organizationId}
+
+  - name:             OrganizationNewsDeleteRequest
+    nqstruct_req:     OrganizationNewsDelete
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   NewsDelete
+        grain_key:      v.organizationId
+        args:
+          - playerId
+          - v.postId
+    player_log:       Player {playerId} deleted news post {request.postId} in organization {request.organizationId}
+
+  - name:             OrganizationAlliancesRequest
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   Alliances
+        grain_key:      v.organizationId
+        args: []
+    technicalMessage: true
+
+  - name:             OrganizationKickHistory
+    nqstruct_req:     OrganizationKickHistoryRequest
+    nqstruct_res:     OrganizationKickHistory
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:   KickHistory
+        grain_key:      v.organizationId
+    technicalMessage: true
+
+  - name:             OrganizationInCommon
+    nqstruct_req:     PlayerId
+    nqstruct_res:     OrganizationMemberships
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   OrganizationsInCommon
+        grain_key:      playerId
+        args: [v.id]
+    technicalMessage: true
+
+  - name:             OrganizationsWithWalletRights
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     OrganizationAndRights
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     OrganizationsWithWalletRights
+        grain_key:        playerId
+        args:             []
+    technicalMessage:     true
+
+  - name:             OrganizationConstructLimitInfo
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     OrganizationConstructInfo
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:     ConstructInformation
+        grain_key:        v.organizationId
+        args:             []
+    technicalMessage:     true
+
+  - name:             PlayerAllocateOrgConstructSlot
+    nqstruct_req:     ConstructSlotAllocation
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     AllocateOrgConstructSlots
+        grain_key:        playerId
+        args:             [v]
+    player_log:       Player {playerId} allocating construct slots
+
+  - name:             PlayerGetAllocatedOrgConstructSlot
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     ConstructSlotAllocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetOrgConstructAllocation
+        grain_key:        playerId
+        args:             []
+    technicalMessage:     true
+
+  - name:             PlayerGetAllocatedOrgConstructSlotLog
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     ConstructSlotAllocationLog
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.IPlayerGrain
+        grain_method:     GetOrgConstructAllocationLog
+        grain_key:        playerId
+        args:             [v.organizationId]
+    technicalMessage:     true
+
+  - name:             OrgGetLastAbandonment
+    nqstruct_req:     OrganizationId
+    nqstruct_res:     AbandonedConstructInfoList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:       NQ.Interfaces.Organization.IOrganizationGrain
+        grain_method:     LastAbandonment
+        grain_key:        v.organizationId
+        args:             []
+    technicalMessage:     true
+
+  - name:             DispenserConfigure
+    nqstruct_req:     DispenserParameters
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDispenserGrain
+        grain_method:   Configure
+        grain_key:      v.dispenserId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} configured dispenser {request.dispenserId}
+
+  - name:             DispenserUseRequest
+    nqstruct_req:     DispenserUse
+    nqstruct_res:     InventoryGiveOperation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDispenserGrain
+        grain_method:   Use
+        grain_key:      v.elementId
+        args:
+          - playerId
+          - v.orgWallet
+    player_log:       Player {playerId} used dispenser {request}
+
+  - name:             DispenserStatus
+    nqstruct_req:     ElementId
+    nqstruct_res:     DispenserStatus
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IDispenserGrain
+        grain_method:   Status
+        grain_key:      v.elementId
+        args:
+          - playerId
+    technicalMessage: true
+
+  - name:             SandboxEnterRequest
+    nqstruct_req:     SandboxEnter
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   EnterSandbox
+        grain_key:      playerId
+        args:
+          - v.currentLocation
+          - v.sandboxName
+    player_log:       Player {playerId} entered tutorial sandbox {request.sandboxName}
+
+  - name:             SandboxLeaveRequest
+    nqstruct_req:     SandboxLeave
+    nqstruct_res:     TutorialExit
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   LeaveAndCleanSandbox
+        grain_key:      playerId
+        args: [v.completed, 'false']
+    player_log:       Player {playerId} left a tutorial sandbox
+
+  - name:             PermaboxEnterRequest
+    nqstruct_req:     RelativeLocation
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   EnterPermabox
+        grain_key:      playerId
+    player_log:       Player {playerId} entered permabox
+
+  - name:             PermaboxLeaveRequest
+    nqstruct_req:     RelativeLocation
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   LeavePermabox
+        grain_key:      playerId
+    player_log:       Player {playerId} left permabox
+
+  - name:             PermaboxInfoRequest
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     PermaboxInformation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   PermaboxInfo
+        grain_key:      playerId
+        args:           []
+    player_log:       Player {playerId} queried permabox
+  # Surrogates
+  - name:             SurrogateSearch
+    nqstruct_req:     SPSSearch
+    nqstruct_res:     SPSSearchResult
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.ISPSGrain
+        grain_method:   Search
+        grain_key:      playerId
+    technicalMessage: true
+
+  - name:             SurrogateEnter
+    nqstruct_req:     SPSEnter
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.ISPSGrain
+        grain_method:   Enter
+        grain_key:      playerId
+        args: [v.currentLocation, v.elementId]
+    player_log:       Player {playerId} started a surrogate session {request.elementId}
+
+  - name:             SurrogateLeave
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.ISPSGrain
+        grain_method:   Leave
+        grain_key:      playerId
+        args: []
+    player_log:       Player {playerId} left a surrogate session
+
+  - name:             SurrogateDisconnectionWarning
+    direction:        ServerToClient
+    nqstruct_req:     EmptyStruct
+    player_log:       Player {playerId} was warned of surrogate disconnection
+
+  - name:             SurrogateDisconnected
+    direction:        ServerToClient
+    nqstruct_req:     EmptyStruct
+    player_log:       Player {playerId} was disconnected from surrogate session
+
+  # Chat
+
+  - name:             ChatJoinChannel
+    nqstruct_req:     MessageChannel
+    nqstruct_res:     ChatJoinInfo
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:           FORWARD
+        grain_type:     NQ.Interfaces.IChatGrain
+        grain_method:   ChannelJoin
+        grain_key:      playerId
+    player_log:       Player {playerId} joined channel {request.targetId}/{request.channelFilter}
+
+  - name:             ChatLeaveChannel
+    nqstruct_req:     MessageChannel
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:           FORWARD
+        grain_type:     NQ.Interfaces.IChatGrain
+        grain_method:   ChannelLeave
+        grain_key:      playerId
+    player_log:       Player {playerId} left channel {request.targetId}/{request.channelFilter}
+
+  - name:             ChatMessageSend
+    nqstruct_req:     MessageContent
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:             Orleans
+      orleans:
+        type:           FORWARD
+        grain_type:     NQ.Interfaces.IChatGrain
+        grain_method:   SendMessage
+        grain_key:      playerId
+    player_log:       Player {playerId} sent a message on channel {request.channel.targetId}/{request.channel.channelFilter}
+
+  - name:             PopupSend
+    nqstruct_req:     PopupMessage
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IPlayerDirectoryGrain
+        grain_method: SendPopup
+        grain_key:    0
+        args: [playerId, v]
+    player_log:       Player {playerId} sent a popup
+
+  - name:             SandboxInfoRequest
+    nqstruct_req:     TutorialName
+    nqstruct_res:     TutorialInfo
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   GetTutorialInfo
+        grain_key:      playerId
+        args: [v.name]
+    technicalMessage: true
+
+# Mission
+  - name:             MissionStats
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     MissionStats
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Statistics
+        grain_key:      playerId
+        args:           []
+  - name:             MissionCreate
+    nqstruct_req:     MissionCreation
+    nqstruct_res:     MissionId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Create
+        grain_key:      playerId
+  - name:             MissionMyActive
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     MissionsActive
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   MyActive
+        grain_key:      playerId
+        args:           []
+  - name:             MissionHistoryRequest
+    nqstruct_req:     PlayerId
+    nqstruct_res:     MissionHistory
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   History
+        grain_key:      playerId
+        args:           [v.id]
+  - name:             MissionsListActive
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     Missions
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Live
+        grain_key:      playerId
+        args:           []
+  - name:             MissionsListRespondents
+    nqstruct_req:     MissionId
+    nqstruct_res:     MissionRespondents
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Respondents
+        grain_key:      playerId
+  - name:             MissionChatHistory
+    nqstruct_req:     MissionId
+    nqstruct_res:     MissionMessages
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   ChatHistory
+        grain_key:      playerId
+  - name:             MissionPostChat
+    nqstruct_req:     MissionPostMessage
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Post
+        grain_key:      playerId
+  - name:             MissionApply
+    nqstruct_req:     MissionId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Apply
+        grain_key:      playerId
+  - name:             MissionUpdateRequest
+    nqstruct_req:     MissionUpdate
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Update
+        grain_key:      playerId
+  - name:             MissionAssignRequest
+    nqstruct_req:     MissionAccepted
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerMissionGrain
+        grain_method:   Assign
+        grain_key:      playerId
+  - name:             MissionAcceptedRequest
+    nqstruct_req:     MissionAccepted
+    direction:        ServerToClient
+    technicalMessage: true
+  - name:             MissionChatSubscribe
+    nqstruct_req:     MissionId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    pubsub:
+      type:           SUBSCRIBE
+      topic:          MissionChat
+      key:            v.missionId
+    route:            Empty
+    player_log:       Player {playerId} opened chat {request.missionId}
+  - name:             MissionChatUnsubscribe
+    nqstruct_req:     MissionId
+    nqstruct_res:     EmptyStruct
+    operation_id:     NONE
+    pubsub:
+      type:           UNSUBSCRIBE
+      topic:          MissionChat
+      key:            v.missionId
+    route:            Empty
+    player_log:       Player {playerId} closed chat {request.missionId}
+
+  - name:             SandboxListRequest
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     TutorialInfos
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerSandboxGrain
+        grain_method:   ListTutorials
+        grain_key:      playerId
+        args: []
+    technicalMessage: true
+
+  - name:             FormalMissionCreate
+    nqstruct_req:     FormalMissionCreation
+    nqstruct_res:     FormalMissionId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Create
+        grain_key:      playerId
+  - name:             FormalMissionApply
+    nqstruct_req:     FormalMissionId
+    nqstruct_res:     FormalMissionId
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Apply
+        grain_key:      playerId
+  - name:             FormalMissionActiveList
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     FormalMissionActive
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   MyActive
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+  - name:             FormalMissionHistoryList
+    nqstruct_req:     PlayerId
+    nqstruct_res:     FormalMissionHistory
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   History
+        grain_key:      playerId
+        args:           [v.id]
+    technicalMessage: true
+  - name:             FormalMissionLive
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     FormalMissionList
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Live
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+  - name:             FormalMissionPickup
+    nqstruct_req:     FormalMissionId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Pickup
+        grain_key:      playerId
+  - name:             FormalMissionDeliver
+    nqstruct_req:     FormalMissionId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Deliver
+        grain_key:      playerId
+  - name:             FormalMissionPendingRatings
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     MissionPendingRatingList
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   PendingRatings
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+  - name:             FormalMissionRate
+    nqstruct_req:     FormalMissionRating
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Rate
+        grain_key:      playerId
+  - name:             FormalMissionAbort
+    nqstruct_req:     FormalMissionId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Abort
+        grain_key:      playerId
+  - name:             FormalMissionContainers
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     MissionContainerList
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   MyMissionContainers
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+  - name:             FormalMissionStats
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     MissionStats
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Statistics
+        grain_key:      playerId
+        args:           []
+    technicalMessage: true
+  - name:             FormalMissionUpdateRequest
+    nqstruct_req:     FormalMissionUpdate
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerFormalMissionGrain
+        grain_method:   Update
+        grain_key:      playerId
+# ASTEROIDS
+  - name:             AsteroidDSATStart
+    nqstruct_req:     DSATRequest
+    nqstruct_res:     ScanPoint
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IAsteroidTrackerGrain
+        grain_method:   StartTracking
+        grain_key:      v.elementId
+        args:           [playerId, v.asteroidId]
+    player_log:       Player {playerId} starts DSAT on {request.elementId}
+  - name:             AsteroidDSATScan
+    nqstruct_req:     ElementId
+    nqstruct_res:     ScanPoint
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IAsteroidTrackerGrain
+        grain_method:   Scan
+        grain_key:      v.elementId
+        args: [playerId]
+    player_log:       Player {playerId} requests DSAT scan
+  - name:             AsteroidDSATNext
+    nqstruct_req:     ElementId
+    nqstruct_res:     ScanPoint
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IAsteroidTrackerGrain
+        grain_method:   NextScanPoint
+        grain_key:      v.elementId
+        args: []
+    technicalMessage: true
+  - name:             AsteroidGATList
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     AsteroidList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IAsteroidManagerGrain
+        grain_method:   GATList
+        grain_key:      0
+        args: []
+    technicalMessage: true
+  - name:             AsteroidDiscover
+    nqstruct_req:     ConstructId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IAsteroidManagerGrain
+        grain_method:   MaybeDiscover
+        grain_key:      0
+        args: [v.constructId]
+    player_log:       Player {playerId} is discovering asteroid {request.constructId}
+
+  - name:             WreckList
+    message_type_req: NQ_WRECK_LIST
+    message_type_res: NQ_WRECK_LIST_OK
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     ScanResult
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IWreckManagerGrain
+        grain_method:   ScanWrecks 
+        grain_key:      0
+    technicalMessage: true
+  # unused
+  - name:             PlayerReconnectedElsewhere
+    nqstruct_req:     EmptyStruct
+    route:            Custom
+
+  - name:             PlayerGetSkins
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     PlayerSkins
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IElementManagementGrain
+        grain_method:   GetAllSkins
+        grain_key:      0
+        args: [playerId]
+    technicalMessage: true
+
+  - name:             ElementRepair
+    nqstruct_req:     ScrapRepair
+    nqstruct_res:     ScrapRepairResult
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IElementManagementGrain
+        grain_method:   ElementRepair
+        grain_key:      0
+        args: [playerId, v]
+    technicalMessage: true
+
+  - name:             ClientRequest
+    nqstruct_req:     ClientTrackerMessage
+    operation_id:     NONE
+
+  # this is only there so that the NQStruct Error can be transcoded/manipulated generically.
+  # nobody is supposed to use this message, hence its ugly name.
+  # There has been a bit of confusion between the description of the protocol and the description of the messages.
+  # Everything happens here.  So if we want to introspect an  NQStruct, it has be part of the protocol and
+  # be used by at least one message.
+  - name:             ErrorHackDontUse
+    nqstruct_req:     Error
+    nqstruct_res:     Error
+
+  - name:             RepairUnitScanRequest
+    nqstruct_req:     ElementId
+    nqstruct_res:     RepairUnitScanResult
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRepairUnitGrain
+        grain_method:   Scan
+        grain_key:      v.elementId
+        args:
+          - playerId
+    technicalMessage: true
+
+  - name:             RepairUnitDiffRequest
+    nqstruct_req:     RepairUnitOperation
+    nqstruct_res:     RepairUnitDiff
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRepairUnitGrain
+        grain_method:   DiffWithSnapshot
+        grain_key:      v.repairUnitId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} asked for a repair snapshot diff of construct {request.targetConstructId} using repair unit {request.repairUnitId}
+
+  - name:             RepairUnitStartRequest
+    nqstruct_req:     RepairUnitOperation
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRepairUnitGrain
+        grain_method:   StartRepairing
+        grain_key:      v.repairUnitId
+        args:
+          - playerId
+          - v
+    player_log:       Player {playerId} started repairing construct {request.targetConstructId} using repair unit {request.repairUnitId}
+
+  - name:             RepairUnitCancelRequest
+    nqstruct_req:     RepairUnitOperation
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRepairUnitGrain
+        grain_method:   Cancel
+        grain_key:      v.repairUnitId
+        args:
+          - playerId
+          - v.force
+    player_log:       Player {playerId} canceled repairing construct {request.targetConstructId} using repair unit {request.repairUnitId} (force {request.force})
+
+  - name:             RepairUnitFinalizeRequest
+    nqstruct_req:     RepairUnitOperation
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRepairUnitGrain
+        grain_method:   FinalizeRepair
+        grain_key:      v.repairUnitId
+        args:
+          - playerId
+          - v.force
+    player_log:       Player {playerId} finalized repairing construct {request.targetConstructId} using repair unit {request.repairUnitId} (force {request.force})
+
+  - name:             RepairUnitSnapshotInfo
+    nqstruct_req:     SnapshotsInfoRequest
+    nqstruct_res:     SnapshotsInfo
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IRepairUnitGrain
+        grain_method:   GetSnapshotsInfo
+        grain_key:      v.repairUnitId
+        args:
+          - playerId
+          - v.constructId
+    technicalMessage: true
+
+  - name:             MiningUnitStart
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IMiningUnitGrain
+        grain_method:   Start
+        grain_key:      v.elementId
+        args:
+          - playerId
+    player_log:       Player {playerId} started mining unit {request.elementId}
+  - name:             MiningUnitStop
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IMiningUnitGrain
+        grain_method:   Stop
+        grain_key:      v.elementId
+        args:
+          - playerId
+    player_log:       Player {playerId} stopped mining unit {request.elementId}
+  - name:             MiningUnitSetOre
+    nqstruct_req:     MiningUnitOre
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IMiningUnitGrain
+        grain_method:   SetOre
+        grain_key:      v.elementId
+        args:
+          - playerId
+          - v.ore
+  - name:             MiningUnitPoolAvailable
+    nqstruct_req:     MiningUnitOreList
+    nqstruct_res:     OrePoolList
+    route:
+      kind:             Orleans
+      orleans:
+        type:           COMPLEX
+        grain_type:     NQ.Interfaces.IMiningUnitGrain
+        grain_method:   Available
+        grain_key:      v.elementId
+        args:
+          - v.ores
+    player_log:       Player {playerId} requested ore availability for {request.elementId}
+
+  - name:             MiningUnitGetPool
+    nqstruct_req:     TerritoryTileIndex
+    nqstruct_res:     OrePoolList
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlanetPoolGrain
+        grain_method:   GetOrePoolAt
+        grain_key:      v.planetId
+        args:
+          - v.tileIndex
+    player_log:   Player {playerId} requested ore pools on {request.planetId} {request.tileIndex}
+
+  - name:             MiningUnitCalibrate
+    nqstruct_req:     ElementId
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IMiningUnitGrain
+        grain_method:   Calibrate
+        grain_key:      v.elementId
+        args:
+          - playerId
+    player_log:       Player {playerId} is calibrating mining unit {request.elementId}
+
+  - name:             MiningUnitSetCalibrationBonus
+    nqstruct_req:     MiningUnitCalibrationBonus
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IMiningUnitGrain
+        grain_method:   ApplyCalibrationBonus
+        grain_key:      v.elementId
+        args:
+          - playerId
+          - v.bonus
+
+  - name:             ConstructInfoUpdate
+    direction:        ServerToClient
+    nqstruct_req:     ConstructInfoUpdate
+    technicalMessage: true
+
+  - name:             WalletTransferRequest
+    nqstruct_req:     WalletTransfer
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: WalletTransfer
+        grain_key:    0
+        args:         [playerId, v]
+    player_log:       Player {playerId} transfers {request.amount} cents from {request.fromWallet} to {request.toWallet}
+
+  - name:             WalletConsultRequest
+    nqstruct_req:     WalletOperationsQuery
+    nqstruct_res:     WalletOperations
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: WalletLog
+        grain_key:    0
+        args:         [playerId, v]
+    technicalMessage: true
+
+  - name:             PlayerPropertyUpdated
+    direction:        ServerToClient
+    nqstruct_req:     PlayerPropertyUpdate
+    technicalMessage: true
+
+  - name:             ReportAbuseRequest
+    nqstruct_req:     AbuseDescription
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: ReportAbuse
+        grain_key:    0
+        args:
+          - playerId
+          - v
+    player_log: Player {playerId} reported an abuse on {request.target} id {request.targetId}
+
+  - name:             AlienCoreList
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     AlienCoreList
+    route:
+      kind:           Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.IAlienCoreScannerGrain
+        grain_method: ListAlienCores
+        grain_key:    0
+        args:         []
+    technicalMessage: true
+
+  - name:             FtueGetChoices
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     StartupChoices
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   GetStartupChoices
+        grain_key:      playerId
+        args:           []
+    player_log:       Player {playerId} getting startup choices
+  - name:             FtueStart
+    nqstruct_req:     StartupData
+    nqstruct_res:     RelativeLocation
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   StartupSequence
+        grain_key:      playerId
+        args:           [v]
+    player_log:       Player {playerId} starting FTUE
+  - name:             FtueLand
+    nqstruct_req:     LanderTouchdown
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   LanderTouchdown
+        grain_key:      playerId
+        args:           [v]
+    player_log:       Player {playerId} landing FTUE
+
+  - name:             PlayerGetTitleList
+    nqstruct_req:     EmptyStruct
+    nqstruct_res:     Titles
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   GetTitleList
+        grain_key:      playerId
+        args:           []
+    technicalMessage:       true
+
+  - name:             PlayerSetActiveTitle
+    nqstruct_req:     ActiveTitle
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   SetActiveTitle
+        grain_key:      playerId
+        args:           [v.value]
+    player_log:       Player {playerId} setting title to {request.value}
+
+  - name:             PlayerSetActivePet
+    nqstruct_req:     Pet
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:             Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IPlayerGrain
+        grain_method:   SetActivePet
+        grain_key:      playerId
+        args:           [v.petId]
+    player_log:       Player {playerId} setting pet to {request.petId}
+
+  - name:             BotGiveItems
+    nqstruct_req: ItemAndQuantityList
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.IBotCallsGrain
+        grain_method: BotGiveItems
+        grain_key:    0
+        args:         [playerId, v]
+
+  - name:         SentinelAcceptMission
+    nqstruct_req: SentinelMissionId
+    nqstruct_res: SentinelMissionDetails
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: AcceptMission
+        grain_key:    playerId
+        args:         [v.missionId]
+
+  - name:         SentinelRejectMission
+    nqstruct_req: SentinelMissionId
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: RejectMission
+        grain_key:    playerId
+        args:         [v.missionId]
+
+  - name:         SentinelAcquireMission
+    nqstruct_req: SentinelMissionParameters
+    nqstruct_res: SentinelMissionDetails
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: AcquireMission
+        grain_key:    playerId
+        args:         [v]
+
+  - name:         SentinelEnterMission
+    nqstruct_req: SentinelMissionId
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: EnterMission
+        grain_key:    playerId
+        args:         [v.missionId]
+  - name:         SentinelMissionDetails
+    nqstruct_req: SentinelMissionId
+    nqstruct_res: SentinelMissionDetails
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: MissionDetails
+        grain_key:    playerId
+        args:         [v.missionId]
+  - name:         SentinelLeaveMission
+    nqstruct_req: EmptyStruct
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: LeaveMission
+        grain_key:    playerId
+        args:         []
+  - name:         SentinelLeavePeerMission
+    nqstruct_req: PlayerId
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: LeaveMission
+        grain_key:    v.id
+        args:         []
+  - name:         SentinelListActiveMissions
+    nqstruct_req: EmptyStruct
+    nqstruct_res: SentinelMissionBriefList
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: ActiveMissions
+        grain_key:    playerId
+        args:         []
+  - name:         SentinelListHistoryMissions
+    nqstruct_req: EmptyStruct
+    nqstruct_res: SentinelMissionBriefList
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: History
+        grain_key:    playerId
+        args:         []
+  - name:         SentinelCheckShip
+    nqstruct_req: SentinelMissionScan
+    nqstruct_res: SentinelForbiddenItemList
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: ScanShip
+        grain_key:    playerId
+        args:         [v.constructId, v.missionId]
+  - name:         SentinelMarkVisited
+    nqstruct_req: PointOfInterest
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: MarkVisited
+        grain_key:    playerId
+        args:         [v.id]
+  - name:         SentinelMarkVisitedPeer
+    nqstruct_req: SentinelPointOfInterest
+    nqstruct_res: EmptyStruct
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: MarkVisited
+        grain_key:    v.wormholeId
+        args:         [v.markId]
+  - name:         SentinelHistoryStatsRequest
+    nqstruct_req: EmptyStruct
+    nqstruct_res: SentinelHistoryStats
+    route:
+      kind:       Orleans
+      orleans:
+        type:         COMPLEX
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: Stats
+        grain_key:    playerId
+        args:         []
+  - name:         SentinelGetGlobalScore
+    nqstruct_req: EmptyStruct
+    nqstruct_res: SentinelScore
+    route:
+      kind:       Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.IDirectServiceGrain
+        grain_method: SentinelScore
+        grain_key:    0
+        args:         []
+    technicalMessage: true
+  - name:         SentinelGetTierList
+    nqstruct_req: EmptyStruct
+    nqstruct_res: SentinelMissionTierList
+    route:
+      kind:       Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.ISentinelMissionGrain
+        grain_method: AvailableTiers
+        grain_key:    playerId
+        args:         []
+    technicalMessage: true
+  - name:             ModTriggerHudEventRequest
+    direction:        ServerToClient
+    nqstruct_req:     ModTriggerHudEvent
+    clientRoute:      GRPC
+    technicalMessage: true
+  - name:             ModEventRegistrationRequest
+    direction:        ServerToClient
+    nqstruct_req:     ModEventRegistration
+    clientRoute:      GRPC
+    technicalMessage: true
+  - name:             ModEventUnRegistrationRequest
+    direction:        ServerToClient
+    nqstruct_req:     ModEventRegistration
+    clientRoute:      GRPC
+    technicalMessage: true
+  - name:             SentinelMissionEnded
+    direction:        ServerToClient
+    nqstruct_req:     SentinelMissionEnd
+    clientRoute:      GRPC
+    technicalMessage: true
+  - name:             SentinelCountersRequest
+    direction:        ServerToClient
+    nqstruct_req:     SentinelCounters
+    clientRoute:      GRPC
+    technicalMessage: true
+  - name:             NpcShotRequest
+    direction:        ServerToClient
+    nqstruct_req:     NpcShotParameters
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  - name:             TeleportConstructRequest
+    direction:        ServerToClient
+    nqstruct_req:     TeleportConstruct
+    clientRoute:      GRPC
+    technicalMessage: true
+
+  - name:             NpcShotReply
+    nqstruct_req:     NpcShotResult
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:   NQ.Interfaces.INpcShotGrain
+        grain_method: NpcShotComputation
+        grain_key:    0
+        args:         [v]
+
+  - name: ModActionRequest
+    nqstruct_req:     ModAction
+    nqstruct_res:     EmptyStruct
+    route:
+      kind:           Orleans
+      orleans:
+        grain_type:     NQ.Interfaces.IModManagerGrain
+        grain_method:   TriggerModAction
+        grain_key:      0
+        args:           [playerId, v]
+    player_log:       Player {playerId} triggered mod action {request.modName} {request.actionId}
+
+  # Unimplemented section
+
+
+# one way message should probably better be here:
+message:
+  - name: Experiment
+    direction: ServerToClient or ClientToServer
+
+# topics for pubsub
+topics:
+  - name:           PlayerNotifications
+    prefix:         notification
+    key_number:     1
+
+  - name:           PlayerPosition
+    prefix:         position-p
+    key_number:     1
+
+  - name:           FriendList
+    prefix:         friendlist
+    key_number:     1
+
+  - name:           Container
+    prefix:         container
+    key_number:     1
+
+  - name:           ContainerLifecycle
+    prefix:         container-lifecycle
+    key_number:     1
+    # those are the expected messages to be observed on this topic
+    # nobody is reading this yaml key, but that would be great to have some codegen reading that.
+    messages:       [ElementDamageNotif, ElementMovedNotif, ElementMovedNotif, ElementDeletedNotif]
+
+  - name:           Talent
+    prefix:         talent
+    key_number:     1
+
+  - name:           Monitor
+    prefix:         monitor
+    key_number:     0
+
+  - name:           Radar
+    prefix:         radar
+    key_number:     1
+
+  - name:           RightManagementConstruct
+    prefix:         rdms-construct
+    key_number:     1
+
+  - name:           RightManagementElement
+    prefix:         rdms-element
+    key_number:     2
+
+  - name:           RightManagementTerritory
+    prefix:         rdms-territory
+    key_number:     2
+
+  - name:           RightManagementItem
+    prefix:         rdms-item
+    key_number:     1
+
+  - name:           RightManagementPlayerRegistry
+    prefix:         rdms-registry-player
+    key_number:     1
+
+  - name:           RightManagementOrganizationRegistry
+    prefix:         rdms-registry-org
+    key_number:     1
+
+  - name:           RightManagementChange
+    prefix:         rdms-all
+    key_number:     0
+
+  - name:           Territory
+    prefix:         territory
+    key_number:     1
+
+  - name:           ConstructPlayers
+    doc: |
+      This is a topic attached to a given construct.
+      This is the topic players join when they are parented to a given construct.
+    prefix:         ConstructPlayers
+    key_number:     1
+
+  - name:           ClientRequestTracker
+    prefix:         client-tracker
+    key_number:     0
+
+  - name:           ConstructDetailsUpdate
+    doc: |
+      This topic is about any change on a construct a player might be interested in.
+      This is mostly used for the Periscope.
+    prefix:         constructs-details
+    key_number:     1
+
+  - name:           Blueprint
+    doc: |
+      Topic about changes on a blueprint.  The message is a BlueprintPropertiesUpdate
+    prefix:         Blueprint
+    key_number:     1
+
+  - name:           MissionChat
+    prefix:         missionchat
+    key_number:     1
+
+  - name:           AllPlayers
+    prefix:         all-players
+    key_number:     0
+
+  - name:           ChatRoom
+    prefix:         chatroom
+    key_number:     1

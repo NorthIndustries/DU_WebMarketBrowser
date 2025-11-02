@@ -1,0 +1,100 @@
+# Example docker-compose service configuration for MarketBrowserMod
+# Task 13: Docker-compose integration following MyDU mod deployment pattern
+#
+# Add this service to your main MyDU server docker-compose.yml file
+# Configure the environment variables in your .env file
+
+version: "3.8"
+
+services:
+  marketbrowser:
+    build:
+      context: ./MarketBrowserMod
+      dockerfile: Dockerfile.mod
+    container_name: mod_MarketBrowser
+    pull_policy: never
+    command: ["/Mod/MarketBrowserMod", "/config/dual.yaml"]
+    volumes:
+      - ${CONFPATH}:/config:ro
+      - ${LOGPATH}:/logs
+      # Optional: Mount custom configuration
+      # - ./MarketBrowserMod/appsettings.Production.json:/Mod/appsettings.Production.json:ro
+    environment:
+      # Required bot credentials
+      BOT_LOGIN: ${MARKET_BOT_LOGIN}
+      BOT_PASSWORD: ${MARKET_BOT_PASSWORD}
+
+      # Network configuration
+      QUEUEING: http://queueing:9630
+
+      # Web server configuration
+      WEB_PORT: 8080
+
+      # Market data refresh configuration
+      REFRESH_INTERVAL_MINUTES: 15
+      MAX_CACHE_AGE_MINUTES: 60
+      MAX_RETRY_ATTEMPTS: 3
+
+      # Performance tuning
+      RATE_LIMIT_DELAY_MS: 1000
+      CONNECTION_TIMEOUT_SECONDS: 30
+      SESSION_RECONNECT_DELAY_MS: 5000
+      MAX_CONSECUTIVE_FAILURES: 5
+
+      # Logging configuration
+      LOG_LEVEL: Information
+      ASPNETCORE_ENVIRONMENT: Production
+
+      # Analysis configuration
+      MAX_DISTANCE_KM: 1000000
+      PROFIT_MARGIN_THRESHOLD: 0.1
+
+    ports:
+      # Web interface and API
+      - "8080:8080"
+
+    restart: unless-stopped
+
+    # Health checks for container orchestration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health/live"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+        reservations:
+          memory: 256M
+          cpus: "0.25"
+
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Network configuration - VPC bridge network (10.5.0.x range)
+    networks:
+      vpcbr:
+        ipv4_address: 10.5.0.52
+
+# Network definition (should already exist in main docker-compose.yml)
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1
+# Example .env file entries:
+# MARKET_BOT_LOGIN=marketbrowser_bot
+# MARKET_BOT_PASSWORD=your_secure_password_here
+# CONFPATH=./config
+# LOGPATH=./logs

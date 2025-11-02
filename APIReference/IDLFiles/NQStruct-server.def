@@ -1,0 +1,667 @@
+prelude
+#include "NQ/ItemBank.hpp"
+#include <dustruct/ElementPropertyUpdate.hpp>
+#include <dustruct/PlayerInfo.hpp>
+#include <dustruct/gen/NQStructAdvanceAmalgated.hpp>
+#include <dustruct/gen/NQStructBaseAmalgated.hpp>
+end
+
+# Those are defined in NQStruct-base.def
+# TODO: introduce `include` like directive (should be fairly easy to do)
+extern Vec3 [hashAble]
+extern VoxelCell [hashAble]
+extern Quat [hashAble]
+extern ConstructId [hashAble]
+extern TimePoint [hashAble]
+extern Cell [hashAble]
+extern EntityId [hashAble]
+extern PlayerId [hashAble]
+extern GameplayModifier
+extern TalentAndLevel
+extern ElementPropertyUpdate
+
+extern LoginResponseOrCreation
+extern GRPCInfo
+
+
+// we have to [skipgo] otherwise we get a dupplicated symbol definition.
+// When we have a proper import statement, that will go away.
+type ConstructUid uint64 [skipgo]
+
+extern WeaponShot
+extern RelativeLocation
+extern FrontQueueingInfo
+extern ConstructKind [isEnum]
+extern PlanetProperties
+extern ConstructGeometry
+
+// ElementPropertyUpdateInternal is used from caf to orleans and should not last long
+struct ElementPropertyUpdateInternal [skippy]
+    ElementPropertyUpdate update
+    bool serverOnly
+    bool overrideKey
+end
+
+// ElementPropertyUpdates  is used from caf to orleans and should not last long
+struct ElementPropertyUpdates
+    vector<ElementPropertyUpdate> updates
+end
+
+struct NQBool [implicit,castable]
+    bool value
+end
+
+struct HostReadableIp
+    string ip
+    uint16 port
+end
+
+// This should be merged with NQ::IPv4
+struct HostIP4
+    // since this type is serialized, we can't rely
+    // on the "network format" (we would need it as a primitive datatype)
+    // it's more robust to deal with explicit ip components.
+    uint8 a
+    uint8 b
+    uint8 c
+    uint8 d
+end
+
+// HostId identifies a caf host within the cluster.  This is the same as NQ::NodeDesc.
+// By convention, the payload is the canonical ip/port of the caf socket.
+// Business code should consider this type as opaque.
+// This should not be confused with IPPort/IPPortHack
+// TODO: we should compose this structure with an IPPort
+struct HostId
+    HostIP4 ip
+    uint16 port
+end
+
+struct InterestPoint
+    string id
+    optional<HostReadableIp> node
+    optional<ConstructUid> constructId
+    optional<Vec3> pos
+end
+
+struct InterestPointList
+    vector<InterestPoint> points
+end
+
+struct InterestListItem
+    Vec3 center
+    HostId node
+end
+
+struct InterestList
+    vector<InterestListItem> items
+end
+
+struct PlayerState
+   uint64 playerId
+   RelativeLocation location
+
+   // we should not use that field too much.  This is mostly wrongly used.
+   Vec3 absolutePosition
+end
+
+// contains all the relative locations of an entity in the hierarchy of constructs containing the entity.
+// It starts with the finest constructs and ends with the universe
+struct FullLocation
+    vector<RelativeLocation> locations
+end
+
+enum PlayerModerationType
+    Ban = 0
+    Mute = 1
+    BanWarning = 2
+    MuteWarning = 3
+end
+
+// This represents the port offset from the base port where
+// we can find the various services.
+// That concerns fronts and nodes.
+enum NodePortOffset [enumclass]
+    PubSubArea       = 1
+    VoxelArea        = 2
+    PubSubSystem     = 3
+    Element          = 4
+    Player           = 5
+    Subscribee       = 6
+    Territory        = 7
+
+    // implemented by the visibility process for handling caf request.
+    HTTPVisibility   = 8
+
+    // net/rpc port on the visibility process.
+    NetRPCVisibility = 9
+
+    // public grpc service port.
+    // We should move it to a better place (like absolute value tcp:9631)
+    GRPCVisibility   = 10
+
+    // debug port for go introspection (/debug/pprof)
+    DebugVisibility  = 11
+
+    // This is the port of the HTTP service hosted by caf nodes.
+    CAFHTTP          = 12
+
+    // Internal port used by the visibility.  caf communicate also communicate through this port with
+    // the visibility system.
+    AlternateGRPCVisibility = 13
+
+    // end point to scrape the aggregated metrics from the client
+    ClientPrometheus = 14
+
+    // The embedded router expose this endpoint for prometheus
+    CAFOrleansRouterMetrics = 18
+
+    // The embedded router expose this endpoint for prometheus
+    GoOrleansRouterMetrics = 19
+
+end
+
+// packet sent from caf to the visibility process to bootstrap it.
+struct VisibilityConf
+    // identifier for the current host
+    HostId host
+    bool isFront
+
+    // public service to create
+    HostReadableIp publicGRPC
+end
+
+// this is the response of the bootstrap of the visibility companion service.
+struct VisibilityBootstrapResponse
+    // on a front, we return the credential for the clients
+    // so they can connect with grpc.
+    // This is announced to the queuing service.
+    optional<GRPCInfo> publicGRPCService
+
+    // this is for caf process.  All the interactions caf <-> visibility
+    // should go with grpc.
+    GRPCInfo internalGRPCService
+
+    // legacy http service, this is still used by caf for low traffic requests.
+    HostReadableIp httpService
+end
+
+struct CommunityLoginRequest
+    string email
+    string password
+    string otp
+    string device
+    string source
+    string ip
+    optional<string> steamAuthTicket
+    optional<uint32> steamAppId
+end
+
+struct CommunityLoginResponse
+    string communityId
+    string displayName
+    string referrerCommunityId
+    vector<string> roles
+    bool multiFactorAuth
+    bool muted
+    vector<string> titles
+    string refundExpirationDate
+end
+
+struct CommunitySteamLinkedAccountsRequest
+    string sessionTicket
+    uint64 steamAppId
+end
+
+struct CommunityPlayerModerationData
+    uint64 communityId
+    bool muted
+    bool banned
+    int32 muteWarning
+    int32 banWarning
+end
+
+struct CommunityBotRegistrationRequest
+    string email
+    string username
+    string password
+end
+
+struct CommunityTitle
+    uint32 id
+    string name
+    string description
+    string createdAt
+end
+
+struct CommunityUserTitle
+    uint32 userId
+    uint32 titleId
+    string createdAt
+end
+
+// construct with a timestamp (for debugging purposes)
+struct ConstructTime
+    ConstructUid CID
+    TimePoint Time
+end
+
+// event sent by the pubsub system to caf about construct discoveries
+struct DiscoveryEvent
+    // constructs appearing
+    vector<ConstructTime> appear
+
+    // construct disappearing
+    vector<ConstructTime> gone
+
+    // construct deleted (forever gone)
+    vector<ConstructTime> deleted
+end
+
+struct WeaponShotPublication
+    WeaponShot shot
+
+    // distance where this event should be visible
+    double visibilityDistance
+
+    // where to publish the event
+    Vec3 position
+
+    ConstructUid constructId
+end
+
+struct LBStats
+    uint64 interest_point_count
+    vector<HostReadableIp> active_nodes
+    vector<HostReadableIp> backup_nodes
+end
+
+
+extern PlayerInfo
+extern PlayerSpawnState
+extern LoginResponse
+extern EmptyStruct
+extern ConstructGeometry
+extern PlayerSpawnState
+extern LoginResponseKind
+
+struct NodeLoadState
+    uint64 playerCount
+end
+
+struct NotificationDestination
+    string url
+    bool to_slack
+    optional<string> slack_channel
+    optional<string> slack_username
+end
+
+struct Notification
+    string text
+    optional<string> channel
+    optional<string> username
+    optional<string> icon_emoji
+end
+
+struct ElementPosition
+    uint64 elementId
+    Vec3 universePosition
+end
+
+// inform that a subscriber in the visibility did migrate to some other node
+// This is sent by the gofront  to its companion
+struct SubscriberDidMigrate
+    uint64 subscriber
+    HostId target
+end
+
+
+// use by the loadbalancer to ask a node to migrate some cells.
+struct PSAMigrationBatch
+    // the psa to migrate
+    vector<Cell> cells
+
+    // where to migrate them
+    HostId target
+end
+
+struct PSAMigration
+    Cell cell
+    HostId target
+end
+
+struct PSAMigrationList
+    vector<PSAMigration> migration
+end
+
+struct QueueingServiceDebugStatsPlayers [skipcpp]
+    uint64 communityId
+    uint64 queueIndex
+    uint64 secondsInQueue
+end
+struct QueueingServiceDebugStatsPlayerList [skipcpp]
+    vector<QueueingServiceDebugStatsPlayers> players
+end
+struct QueueingServiceDebugStatsFronts [skipcpp]
+    vector<FrontQueueingInfo> fronts
+end
+
+struct MarketBulkEntry
+    uint64 player
+    uint64 organization
+    int64 buy_quantity
+    string type
+    double price
+    uint64 market
+    int64 expiration
+end
+
+struct MarketBulkOrders
+   vector<MarketBulkEntry> orders
+   uint64 default_player
+   uint64 default_organization
+   string market_name
+   vector<uint64> toDelete
+end
+
+struct JsonFixture
+    string json
+end
+
+struct ElementTags
+    uint64 localId
+    vector<string> tags
+end
+
+struct ConstructTags
+    vector<string> constructTags
+    vector<ElementTags> elementsTags
+end
+
+// this defines everything that is needed to regenerate the clone of a construct
+struct ConstructSourceDef
+    uint64 sourceId // a constructId
+    string group // hint to improve (human) efficiency for backoffice operation (regenerate constructs within the same group)
+    bool sameOwner
+    bool sameName
+    bool samePosition
+    bool sameElements
+    bool sameParent
+    bool sameConstructProperties
+    bool sameRDMS
+    bool sameContainerContent
+    bool sameVoxels
+end
+
+// Server Gameplay properties contained in all construct's json_properties
+struct ConstructJsonPropertiesServer
+    EntityId creatorId
+    uint64 originConstructId
+    optional<uint64> blueprintId
+    optional<bool> isFixture
+    optional<bool> isBase
+    optional<bool> isFlaggedForModeration
+    optional<bool> isDynamicWreck
+    optional<uint64> fuelType
+    optional<uint64> fuelAmount
+    optional<ConstructTags> rdmsTags
+    optional<bool> compacted
+    // a dynamic fixture is a in-game fixture managed by the server itself (spawn/despawn) like dyanamic asteroids
+    // those fixtures should not be destroyed/touched when performing devops operations (unless specifically specified)
+    optional<bool> dynamicFixture
+
+    // when the construct is a clone of an other construct,
+    // this defines how to regenerate it.
+    // This is only used for backoffice operations
+    optional<ConstructSourceDef> constructCloneSource
+end
+
+struct JsonPropertiesHeader
+    optional<string> uniqueIdentifier // For instance Alioth
+    optional<string> parentUniqueIdentifier
+    optional<uint64> constructIdHint
+    optional<string> prettyName
+    optional<string> fixtureHash
+    optional<string> folder
+
+    // Procedural generation
+    optional<string> artWorkSVNRevision
+    optional<string> biomeEditorVersion
+    optional<string> biomeEditorGitRevision
+end
+
+// defines the minimal content of a construct json_properties (in database)
+struct ConstructJsonProperties
+    ConstructKind kind
+    uint64 size
+    ConstructJsonPropertiesServer serverProperties
+    optional<JsonPropertiesHeader> header
+    ConstructGeometry voxelGeometry
+    optional<PlanetProperties> planetProperties
+    bool isNPC
+    bool isUntargetable
+end
+
+struct PSAMeasure
+    HostId host
+    Cell cell
+    Vec3 center
+    int64 load
+end
+
+enum OrleansPubSub [skipcpp,skipgo,skippy,enumclass]
+    // Payload : PlayerId
+    PlayerLoggedIn       = 1
+    // Payload : PlayerId
+    PlayerDisconnected   = 2
+    // Payload : bool
+    PlayerAdminrightsSet = 3
+
+    // Payload : TagId
+    RdmsTagDelete        = 4
+    // Payload : TagData
+    RdmsTagUpdate        = 5
+
+    // Payload : ConstructId
+    ConstructDestroyed   = 6
+
+    // Payload : EmptyStruct
+    ConstructStartPvp    = 7
+
+    // Payload : ConstructId
+    ConstructRestored   = 8
+    // Payload : EmptyStruct
+    ElementDisable       = 9
+
+    // Payload: TalentAndLevelPoints
+    TalentAcquired       = 10
+    // Payload: AbstractPacket
+    ContainerLifecycle   = 11
+end
+
+struct LoginResponseOrCreationForBots [skippy,noeq]
+    LoginResponseOrCreation r
+
+    // this helps bot to connect.  Normally this should not be needed
+    // since the grpcInfo comes from the queueing service.
+    GRPCInfo grpcInfo
+end
+
+// defines the EQU8 configuration serialized to JSON
+struct AnticheatSrvConfiguration [skipcpp,skipgo,skippy]
+    string host
+    string session_key
+    bool   client_proxy_failover
+    bool   auto_kick
+end
+struct AnticheatConfiguration [skipcpp,skipgo,skippy]
+    AnticheatSrvConfiguration server_config
+end
+
+struct AuthUserInfo
+    uint64 communityId
+    uint64 playerId
+    uint64 referrer
+    string displayName
+    bool   muted
+    bool   staff
+    bool   impersonated
+    bool   bot
+    string authentication
+end
+
+struct PlayerJWT
+    string JWToken
+end
+
+struct PlayerConnectionInfo
+    string jwt
+end
+
+
+// The session state is store in redis.
+struct SessionState
+    AuthUserInfo info
+
+    // session is always non empty in redis, but some API uses an
+    // empty session to notify a session being killed
+    string   session
+    string   JWToken
+end
+
+
+// This should be merged with nqstructbase:VoxelOperationsHistoryRequest
+// It only exists temporarily to not break the protocol
+// This describe a query to apply on the voxel history logs.
+struct VoxelOperationsHistoryRequest2
+    // When not empty, get all operations touching those cells.
+    vector<VoxelCell>   cells
+
+    // When set. Get all operations touching this construct.
+    optional<ConstructUid> constructID
+end
+
+enum ShieldHitEffect [enumclass]
+    ShieldAbsorbedHit = 1,
+    ShieldNotAbsorbedHit = 2,
+end
+
+// this will disapear when pvp code will be in C#
+struct ShieldHitResult
+    ShieldHitEffect effect
+    optional<uint64> shieldTypeId
+    double shieldDamage
+    double rawShieldDamage          // Damage taken before resistances
+    bool coreUnitStressDestroyed // was the core unit destroyed because of the stress
+    double coreUnitStressDamage
+end
+
+struct WeaponShotPower
+    double power
+    uint64 ammoType
+    uint64 originPlayerId
+    uint64 originConstructId
+end
+
+struct TalentEffect
+    GameplayModifier modifier
+    uint64 talent
+    int32 level
+end
+
+struct PropertyUpgrade [skippy]
+    ElementPropertyUpdate update
+    vector<TalentAndLevel> talents
+end
+
+struct ItemLocation
+    bool found
+    uint64 inventory
+    uint64 element
+    uint64 construct
+end
+
+struct ParentingChange
+    ConstructUid oldParent
+    ConstructUid newParent
+end
+
+struct ConstructParentingChange
+    ConstructUid constructId
+    ParentingChange change
+end
+
+struct ConstructAndPlayers
+    uint64 constructId
+    vector<uint64> playerIds
+end
+
+struct AnticheatId [value]
+    string id
+end
+
+struct CommunityUser
+    uint64 communityId
+    vector<string> groups
+end
+
+struct SubscriptionChanges
+    vector<CommunityUser> expiredSubscriptionsUsers
+    vector<CommunityUser> renewedSubscriptionsUsers
+end
+
+struct ConstructTransponder
+    uint64 construct
+    vector<uint64> tags
+end
+
+struct ConstructCloneRequest
+    string constructFixtureJson
+    ConstructSourceDef parameters
+    ConstructId target
+end
+
+struct TalentRefund
+    uint64 playerId
+    uint64 talent
+    uint64 previousLevel
+    uint64 refundAcquired
+    uint64 refundPartial
+end
+
+struct ElementDeletion
+    uint64 playerId
+    uint64 constructId
+    uint64 elementId
+    bool destroy
+end
+
+struct Sphere [value]
+    Vec3 center
+    double radius
+end
+
+struct SphereList
+    vector<Sphere> list
+end
+
+struct CommunityId [value,castable]
+    uint64 id
+end
+
+struct DebugPing
+    int32 delay_ms
+end
+
+struct ShieldCumulatedDamages
+    double totalDamageRaw
+    double totalDamage
+    double antimatterRaw
+    double antimatter
+    double electromagneticRaw
+    double electromagnetic
+    double kineticRaw
+    double kinetic
+    double thermicRaw
+    double thermic
+end

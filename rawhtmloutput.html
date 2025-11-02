@@ -1,0 +1,1608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyDU Market Browser</title>
+    <style>
+        /* Global Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: #333;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: #1e3c72;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        /* Status Bar */
+        .status-bar {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #28a745;
+        }
+
+        .status-indicator.warning {
+            background: #ffc107;
+        }
+
+        .status-indicator.error {
+            background: #dc3545;
+        }
+
+        /* Navigation */
+        .nav-tabs {
+            display: flex;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 5px;
+            margin-bottom: 20px;
+            overflow-x: auto;
+        }
+
+        .nav-tab {
+            flex: 1;
+            min-width: 120px;
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .nav-tab:hover {
+            background: rgba(30, 60, 114, 0.1);
+        }
+
+        .nav-tab.active {
+            background: #1e3c72;
+            color: white;
+        }
+
+        /* Content Panels */
+        .content-panel {
+            display: none;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .content-panel.active {
+            display: block;
+        }
+
+        /* Search and Filters */
+        .search-section {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+
+        .search-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .search-group input,
+        .search-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .search-group input:focus,
+        .search-group select:focus {
+            outline: none;
+            border-color: #1e3c72;
+        }
+
+        .search-actions {
+            display: flex;
+            gap: 10px;
+            align-items: end;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2a5298;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 10px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        .data-table th {
+            background: #1e3c72;
+            color: white;
+            padding: 15px 12px;
+            text-align: left;
+            font-weight: 600;
+            cursor: pointer;
+            user-select: none;
+            position: relative;
+        }
+
+        .data-table th:hover {
+            background: #2a5298;
+        }
+
+        .data-table th.sortable::after {
+            content: '↕';
+            position: absolute;
+            right: 8px;
+            opacity: 0.5;
+        }
+
+        .data-table th.sort-asc::after {
+            content: '↑';
+            opacity: 1;
+        }
+
+        .data-table th.sort-desc::after {
+            content: '↓';
+            opacity: 1;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .data-table tr:nth-child(even) {
+            background: #fafafa;
+        }
+
+        .data-table tr:nth-child(even):hover {
+            background: #f0f0f0;
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .pagination-info {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #1e3c72;
+            color: white;
+        }
+
+        .page-btn.active {
+            background: #1e3c72;
+            color: white;
+            border-color: #1e3c72;
+        }
+
+        .page-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1e3c72;
+        }
+
+        /* Profit Highlights */
+        .profit-card {
+            border-left: 4px solid #28a745;
+            transition: transform 0.3s ease;
+        }
+
+        .profit-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .profit-highlight {
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+
+        .profit-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .profit-stat {
+            text-align: center;
+        }
+
+        .profit-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .profit-stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        /* Loading and Error States */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #1e3c72;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #f5c6cb;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .nav-tabs {
+                flex-direction: column;
+            }
+
+            .nav-tab {
+                min-width: auto;
+            }
+
+            .search-row {
+                flex-direction: column;
+            }
+
+            .search-group {
+                min-width: auto;
+            }
+
+            .data-table {
+                font-size: 14px;
+            }
+
+            .data-table th,
+            .data-table td {
+                padding: 8px 6px;
+            }
+
+            .profit-stats {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .profit-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .pagination {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+
+        /* Utility Classes */
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .text-success {
+            color: #28a745;
+        }
+
+        .text-danger {
+            color: #dc3545;
+        }
+
+        .text-warning {
+            color: #ffc107;
+        }
+
+        .text-muted {
+            color: #6c757d;
+        }
+
+        .font-weight-bold {
+            font-weight: 700;
+        }
+
+        .mb-0 {
+            margin-bottom: 0;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 1.5rem;
+        }
+
+        .d-none {
+            display: none;
+        }
+
+        .d-block {
+            display: block;
+        }
+
+        .d-flex {
+            display: flex;
+        }
+
+        .justify-content-between {
+            justify-content: space-between;
+        }
+
+        .align-items-center {
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>MyDU Market Browser</h1>
+            <p class="subtitle">Advanced market analysis and trading opportunities</p>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <div class="status-item">
+                <div class="status-indicator" id="system-status"></div>
+                <span id="system-status-text">Checking system status...</span>
+            </div>
+            <div class="status-item">
+                <span id="data-age">Data age: Unknown</span>
+            </div>
+            <div class="status-item">
+                <span id="market-count">Markets: 0</span>
+            </div>
+            <div class="status-item">
+                <span id="order-count">Orders: 0</span>
+            </div>
+            <div class="status-item">
+                <button class="btn btn-sm btn-secondary" onclick="refreshData()">Refresh Data</button>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="showTab('markets')">Markets</button>
+            <button class="nav-tab" onclick="showTab('orders')">Orders</button>
+            <button class="nav-tab" onclick="showTab('profits')">Profit Opportunities</button>
+            <button class="nav-tab" onclick="showTab('planets')">Planets</button>
+            <button class="nav-tab" onclick="showTab('statistics')">Statistics</button>
+        </div>
+
+        <!-- Markets Panel -->
+        <div id="markets-panel" class="content-panel active">
+            <div class="search-section">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label for="market-search">Market Name</label>
+                        <input type="text" id="market-search" placeholder="Search markets...">
+                    </div>
+                    <div class="search-group">
+                        <label for="market-planet">Planet</label>
+                        <select id="market-planet">
+                            <option value="">All Planets</option>
+                        </select>
+                    </div>
+                    <div class="search-actions">
+                        <button class="btn btn-primary" onclick="searchMarkets()">Search</button>
+                        <button class="btn btn-secondary" onclick="clearMarketFilters()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortMarkets('name')">Market Name</th>
+                            <th class="sortable" onclick="sortMarkets('planetName')">Planet</th>
+                            <th class="sortable" onclick="sortMarkets('orderCount')">Orders</th>
+                            <th class="sortable" onclick="sortMarkets('distance')">Distance</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="markets-table-body">
+                        <tr>
+                            <td colspan="5" class="loading">Loading markets...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="markets-pagination"></div>
+        </div>
+
+        <!-- Orders Panel -->
+        <div id="orders-panel" class="content-panel">
+            <div class="search-section">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label for="order-item">Item Name</label>
+                        <input type="text" id="order-item" placeholder="Search items...">
+                    </div>
+                    <div class="search-group">
+                        <label for="order-type">Order Type</label>
+                        <select id="order-type">
+                            <option value="">All Orders</option>
+                            <option value="buy">Buy Orders</option>
+                            <option value="sell">Sell Orders</option>
+                        </select>
+                    </div>
+                    <div class="search-group">
+                        <label for="order-market">Market</label>
+                        <input type="text" id="order-market" placeholder="Market name...">
+                    </div>
+                </div>
+                <div class="search-row">
+                    <div class="search-group">
+                        <label for="order-min-price">Min Price</label>
+                        <input type="number" id="order-min-price" placeholder="0">
+                    </div>
+                    <div class="search-group">
+                        <label for="order-max-price">Max Price</label>
+                        <input type="number" id="order-max-price" placeholder="No limit">
+                    </div>
+                    <div class="search-group">
+                        <label for="order-player">Player Name</label>
+                        <input type="text" id="order-player" placeholder="Player name...">
+                    </div>
+                    <div class="search-actions">
+                        <button class="btn btn-primary" onclick="searchOrders()">Search</button>
+                        <button class="btn btn-secondary" onclick="clearOrderFilters()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortOrders('itemName')">Item</th>
+                            <th class="sortable" onclick="sortOrders('orderType')">Type</th>
+                            <th class="sortable" onclick="sortOrders('quantity')">Quantity</th>
+                            <th class="sortable" onclick="sortOrders('unitPrice')">Price</th>
+                            <th class="sortable" onclick="sortOrders('marketName')">Market</th>
+                            <th class="sortable" onclick="sortOrders('playerName')">Player</th>
+                            <th class="sortable" onclick="sortOrders('expirationDate')">Expires</th>
+                        </tr>
+                    </thead>
+                    <tbody id="orders-table-body">
+                        <tr>
+                            <td colspan="7" class="loading">Loading orders...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="pagination" id="orders-pagination"></div>
+        </div>
+
+        <!-- Profit Opportunities Panel -->
+        <div id="profits-panel" class="content-panel">
+            <div class="search-section">
+                <div class="search-row">
+                    <div class="search-group">
+                        <label for="profit-item">Item Name</label>
+                        <input type="text" id="profit-item" placeholder="Search items...">
+                    </div>
+                    <div class="search-group">
+                        <label for="profit-min-margin">Min Profit Margin (%)</label>
+                        <input type="number" id="profit-min-margin" placeholder="0" step="0.1">
+                    </div>
+                    <div class="search-group">
+                        <label for="profit-max-distance">Max Distance</label>
+                        <input type="number" id="profit-max-distance" placeholder="No limit">
+                    </div>
+                    <div class="search-actions">
+                        <button class="btn btn-primary" onclick="searchProfits()">Search</button>
+                        <button class="btn btn-secondary" onclick="clearProfitFilters()">Clear</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="profits-container">
+                <div class="loading">Loading profit opportunities...</div>
+            </div>
+
+            <div class="pagination" id="profits-pagination"></div>
+        </div>
+
+        <!-- Planets Panel -->
+        <div id="planets-panel" class="content-panel">
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th class="sortable" onclick="sortPlanets('name')">Planet Name</th>
+                            <th class="sortable" onclick="sortPlanets('marketCount')">Markets</th>
+                            <th class="sortable" onclick="sortPlanets('distance')">Distance from Origin</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="planets-table-body">
+                        <tr>
+                            <td colspan="4" class="loading">Loading planets...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Statistics Panel -->
+        <div id="statistics-panel" class="content-panel">
+            <div id="statistics-container">
+                <div class="loading">Loading statistics...</div>
+            </div>
+        </div>
+    </div>
+    <sc ript>
+        // Global state
+        let currentTab = 'markets';
+        let currentData = {
+        markets: { data: [], page: 1, totalPages: 1, sortBy: 'name', sortOrder: 'asc' },
+        orders: { data: [], page: 1, totalPages: 1, sortBy: 'unitPrice', sortOrder: 'asc' },
+        profits: { data: [], page: 1, totalPages: 1, sortBy: 'totalProfit', sortOrder: 'desc' },
+        planets: { data: [], sortBy: 'name', sortOrder: 'asc' }
+        };
+        let systemStatus = null;
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+        console.log('Frontend initialized, loading data...');
+        loadSystemStatus();
+        loadPlanets();
+        loadMarkets();
+        });
+
+        // Tab Management
+        function showTab(tabName) {
+        // Update navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
+
+        // Update content panels
+        document.querySelectorAll('.content-panel').forEach(panel => panel.classList.remove('active'));
+        document.getElementById(`${tabName}-panel`).classList.add('active');
+
+        currentTab = tabName;
+
+        // Load data for the tab if not already loaded
+        switch(tabName) {
+        case 'markets':
+        if (currentData.markets.data.length === 0) loadMarkets();
+        break;
+        case 'orders':
+        if (currentData.orders.data.length === 0) loadOrders();
+        break;
+        case 'profits':
+        if (currentData.profits.data.length === 0) loadProfits();
+        break;
+        case 'planets':
+        if (currentData.planets.data.length === 0) loadPlanets();
+        break;
+        case 'statistics':
+        loadStatistics();
+        break;
+        }
+        }
+
+        // System Status Management
+        async function loadSystemStatus() {
+        try {
+        console.log('Loading system status...');
+        const response = await fetch('/api/market/status');
+        console.log('Status response:', response.status);
+        systemStatus = await response.json();
+        console.log('System status data:', systemStatus);
+
+        updateStatusBar();
+        } catch (error) {
+        console.error('Error loading system status:', error);
+        updateStatusBar(true);
+        }
+        }
+
+        function updateStatusBar(hasError = false) {
+        const statusIndicator = document.getElementById('system-status');
+        const statusText = document.getElementById('system-status-text');
+        const dataAge = document.getElementById('data-age');
+        const marketCount = document.getElementById('market-count');
+        const orderCount = document.getElementById('order-count');
+
+        if (hasError || !systemStatus) {
+        statusIndicator.className = 'status-indicator error';
+        statusText.textContent = 'System Error';
+        dataAge.textContent = 'Data age: Unknown';
+        marketCount.textContent = 'Markets: Unknown';
+        orderCount.textContent = 'Orders: Unknown';
+        return;
+        }
+
+        // Update status indicator
+        if (systemStatus.isHealthy) {
+        statusIndicator.className = 'status-indicator';
+        } else if (systemStatus.warnings && systemStatus.warnings.length > 0) {
+        statusIndicator.className = 'status-indicator warning';
+        } else {
+        statusIndicator.className = 'status-indicator error';
+        }
+
+        // Update status text
+        statusText.textContent = systemStatus.status || 'Unknown';
+
+        // Update data age
+        if (systemStatus.dataAge) {
+        const minutes = Math.floor(systemStatus.dataAge.totalMinutes || 0);
+        dataAge.textContent = `Data age: ${minutes}m`;
+        }
+
+        // Update counts
+        marketCount.textContent = `Markets: ${systemStatus.marketCount || 0}`;
+        orderCount.textContent = `Orders: ${systemStatus.orderCount || 0}`;
+        }
+
+        async function refreshData() {
+        try {
+        const response = await fetch('/api/market/refresh', { method: 'POST' });
+        const result = await response.json();
+
+        if (response.ok) {
+        showNotification('Data refresh completed successfully', 'success');
+        await loadSystemStatus();
+
+        // Reload current tab data
+        switch(currentTab) {
+        case 'markets': await loadMarkets(); break;
+        case 'orders': await loadOrders(); break;
+        case 'profits': await loadProfits(); break;
+        case 'planets': await loadPlanets(); break;
+        case 'statistics': await loadStatistics(); break;
+        }
+        } else {
+        showNotification('Data refresh failed: ' + result.message, 'error');
+        }
+        } catch (error) {
+        console.error('Error refreshing data:', error);
+        showNotification('Data refresh failed: Network error', 'error');
+        }
+        }
+
+        // Markets Management
+        async function loadMarkets(page = 1) {
+        const tableBody = document.getElementById('markets-table-body');
+        tableBody.innerHTML = '<tr>
+            <td colspan="5" class="loading">Loading markets...</td>
+        </tr>';
+
+        try {
+        const params = new URLSearchParams({
+        page: page,
+        pageSize: 20,
+        sortBy: currentData.markets.sortBy,
+        sortOrder: currentData.markets.sortOrder
+        });
+
+        // Add filters
+        const marketSearch = document.getElementById('market-search')?.value;
+        const planetFilter = document.getElementById('market-planet')?.value;
+
+        if (marketSearch) params.append('marketName', marketSearch);
+        if (planetFilter) params.append('planetName', planetFilter);
+
+        const response = await fetch(`/api/market/markets?${params}`);
+        const result = await response.json();
+
+        if (response.ok) {
+        currentData.markets = {
+        data: result.data,
+        page: result.page,
+        totalPages: result.totalPages,
+        sortBy: currentData.markets.sortBy,
+        sortOrder: currentData.markets.sortOrder
+        };
+
+        renderMarketsTable();
+        renderPagination('markets', result);
+        } else {
+        tableBody.innerHTML = `<tr>
+            <td colspan="5" class="error">Error loading markets: ${result.error}</td>
+        </tr>`;
+        }
+        } catch (error) {
+        console.error('Error loading markets:', error);
+        tableBody.innerHTML = '<tr>
+            <td colspan="5" class="error">Network error loading markets</td>
+        </tr>';
+        }
+        }
+
+        function renderMarketsTable() {
+        const tableBody = document.getElementById('markets-table-body');
+
+        if (currentData.markets.data.length === 0) {
+        tableBody.innerHTML = '<tr>
+            <td colspan="5" class="empty-state">No markets found</td>
+        </tr>';
+        return;
+        }
+
+        tableBody.innerHTML = currentData.markets.data.map(market => `
+        <tr>
+            <td><strong>${escapeHtml(market.name)}</strong></td>
+            <td>${escapeHtml(market.planetName)}</td>
+            <td>${market.orderCount}</td>
+            <td>${formatDistance(market.distanceFromOrigin)}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="viewMarketOrders(${market.marketId})">
+                    View Orders
+                </button>
+            </td>
+        </tr>
+        `).join('');
+        }
+
+        function sortMarkets(column) {
+        if (currentData.markets.sortBy === column) {
+        currentData.markets.sortOrder = currentData.markets.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+        currentData.markets.sortBy = column;
+        currentData.markets.sortOrder = 'asc';
+        }
+
+        updateSortHeaders('markets', column, currentData.markets.sortOrder);
+        loadMarkets(currentData.markets.page);
+        }
+
+        function searchMarkets() {
+        currentData.markets.page = 1;
+        loadMarkets(1);
+        }
+
+        function clearMarketFilters() {
+        document.getElementById('market-search').value = '';
+        document.getElementById('market-planet').value = '';
+        searchMarkets();
+        }
+
+        function viewMarketOrders(marketId) {
+        showTab('orders');
+        document.getElementById('order-market').value = currentData.markets.data.find(m => m.marketId ===
+        marketId)?.name || '';
+        searchOrders();
+        }
+
+        // Orders Management
+        async function loadOrders(page = 1) {
+        const tableBody = document.getElementById('orders-table-body');
+        tableBody.innerHTML = '<tr>
+            <td colspan="7" class="loading">Loading orders...</td>
+        </tr>';
+
+        try {
+        const params = new URLSearchParams({
+        page: page,
+        pageSize: 20,
+        sortBy: currentData.orders.sortBy,
+        sortOrder: currentData.orders.sortOrder
+        });
+
+        // Add filters
+        const itemName = document.getElementById('order-item')?.value;
+        const orderType = document.getElementById('order-type')?.value;
+        const marketName = document.getElementById('order-market')?.value;
+        const minPrice = document.getElementById('order-min-price')?.value;
+        const maxPrice = document.getElementById('order-max-price')?.value;
+        const playerName = document.getElementById('order-player')?.value;
+
+        if (itemName) params.append('itemName', itemName);
+        if (orderType) params.append('orderType', orderType);
+        if (marketName) params.append('marketName', marketName);
+        if (minPrice) params.append('minPrice', minPrice);
+        if (maxPrice) params.append('maxPrice', maxPrice);
+        if (playerName) params.append('playerName', playerName);
+
+        const response = await fetch(`/api/market/orders?${params}`);
+        const result = await response.json();
+
+        if (response.ok) {
+        currentData.orders = {
+        data: result.data,
+        page: result.page,
+        totalPages: result.totalPages,
+        sortBy: currentData.orders.sortBy,
+        sortOrder: currentData.orders.sortOrder
+        };
+
+        renderOrdersTable();
+        renderPagination('orders', result);
+        } else {
+        tableBody.innerHTML = `<tr>
+            <td colspan="7" class="error">Error loading orders: ${result.error}</td>
+        </tr>`;
+        }
+        } catch (error) {
+        console.error('Error loading orders:', error);
+        tableBody.innerHTML = '<tr>
+            <td colspan="7" class="error">Network error loading orders</td>
+        </tr>';
+        }
+        }
+
+        function renderOrdersTable() {
+        const tableBody = document.getElementById('orders-table-body');
+
+        if (currentData.orders.data.length === 0) {
+        tableBody.innerHTML = '<tr>
+            <td colspan="7" class="empty-state">No orders found</td>
+        </tr>';
+        return;
+        }
+
+        tableBody.innerHTML = currentData.orders.data.map(order => `
+        <tr>
+            <td><strong>${escapeHtml(order.itemName)}</strong></td>
+            <td>
+                <span class="badge ${order.isBuyOrder ? 'text-success' : 'text-danger'}">
+                    ${order.orderType.toUpperCase()}
+                </span>
+            </td>
+            <td>${formatNumber(order.quantity)}</td>
+            <td>${formatCurrency(order.unitPrice)}</td>
+            <td>${escapeHtml(order.marketName)}<br><small class="text-muted">${escapeHtml(order.planetName)}</small>
+            </td>
+            <td>${escapeHtml(order.playerName)}</td>
+            <td>${formatDate(order.expirationDate)}</td>
+        </tr>
+        `).join('');
+        }
+
+        function sortOrders(column) {
+        if (currentData.orders.sortBy === column) {
+        currentData.orders.sortOrder = currentData.orders.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+        currentData.orders.sortBy = column;
+        currentData.orders.sortOrder = column === 'unitPrice' ? 'asc' : 'asc';
+        }
+
+        updateSortHeaders('orders', column, currentData.orders.sortOrder);
+        loadOrders(currentData.orders.page);
+        }
+
+        function searchOrders() {
+        currentData.orders.page = 1;
+        loadOrders(1);
+        }
+
+        function clearOrderFilters() {
+        document.getElementById('order-item').value = '';
+        document.getElementById('order-type').value = '';
+        document.getElementById('order-market').value = '';
+        document.getElementById('order-min-price').value = '';
+        document.getElementById('order-max-price').value = '';
+        document.getElementById('order-player').value = '';
+        searchOrders();
+        }
+
+        // Profit Opportunities Management
+        async function loadProfits(page = 1) {
+        const container = document.getElementById('profits-container');
+        container.innerHTML = '<div class="loading">Loading profit opportunities...</div>';
+
+        try {
+        const params = new URLSearchParams({
+        page: page,
+        pageSize: 10,
+        sortBy: currentData.profits.sortBy,
+        sortOrder: currentData.profits.sortOrder
+        });
+
+        // Add filters
+        const itemName = document.getElementById('profit-item')?.value;
+        const minMargin = document.getElementById('profit-min-margin')?.value;
+        const maxDistance = document.getElementById('profit-max-distance')?.value;
+
+        if (itemName) params.append('itemName', itemName);
+        if (minMargin) params.append('minProfitMargin', parseFloat(minMargin) / 100);
+        if (maxDistance) params.append('maxDistance', maxDistance);
+
+        const response = await fetch(`/api/market/profits?${params}`);
+        const result = await response.json();
+
+        if (response.ok) {
+        currentData.profits = {
+        data: result.data,
+        page: result.page,
+        totalPages: result.totalPages,
+        sortBy: currentData.profits.sortBy,
+        sortOrder: currentData.profits.sortOrder
+        };
+
+        renderProfitsCards();
+        renderPagination('profits', result);
+        } else {
+        container.innerHTML = `<div class="error">Error loading profit opportunities: ${result.error}</div>`;
+        }
+        } catch (error) {
+        console.error('Error loading profits:', error);
+        container.innerHTML = '<div class="error">Network error loading profit opportunities</div>';
+        }
+        }
+
+        function renderProfitsCards() {
+        const container = document.getElementById('profits-container');
+
+        if (currentData.profits.data.length === 0) {
+        container.innerHTML = '<div class="empty-state">No profit opportunities found</div>';
+        return;
+        }
+
+        container.innerHTML = currentData.profits.data.map(profit => `
+        <div class="card profit-card">
+            <div class="profit-highlight">
+                <div class="profit-stats">
+                    <div class="profit-stat">
+                        <div class="profit-stat-value">${formatCurrency({amount: profit.totalProfit})}</div>
+                        <div class="profit-stat-label">Total Profit</div>
+                    </div>
+                    <div class="profit-stat">
+                        <div class="profit-stat-value">${(profit.profitMargin * 100).toFixed(1)}%</div>
+                        <div class="profit-stat-label">Margin</div>
+                    </div>
+                    <div class="profit-stat">
+                        <div class="profit-stat-value">${formatNumber(profit.maxQuantity)}</div>
+                        <div class="profit-stat-label">Max Quantity</div>
+                    </div>
+                    <div class="profit-stat">
+                        <div class="profit-stat-value">${formatDistance(profit.distance)}</div>
+                        <div class="profit-stat-label">Distance</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-header">
+                <h3 class="card-title">${escapeHtml(profit.itemName)}</h3>
+                <div class="text-success font-weight-bold">
+                    ${formatCurrency({amount: profit.profitPerUnit})} per unit
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                <div>
+                    <h4 class="text-success">Buy From</h4>
+                    <p><strong>Market:</strong> ${escapeHtml(profit.buyOrder.marketName)}</p>
+                    <p><strong>Planet:</strong> ${escapeHtml(profit.buyOrder.planetName)}</p>
+                    <p><strong>Price:</strong> ${formatCurrency(profit.buyOrder.unitPrice)}</p>
+                    <p><strong>Quantity:</strong> ${formatNumber(profit.buyOrder.quantity)}</p>
+                    <p><strong>Player:</strong> ${escapeHtml(profit.buyOrder.playerName)}</p>
+                </div>
+                <div>
+                    <h4 class="text-danger">Sell To</h4>
+                    <p><strong>Market:</strong> ${escapeHtml(profit.sellOrder.marketName)}</p>
+                    <p><strong>Planet:</strong> ${escapeHtml(profit.sellOrder.planetName)}</p>
+                    <p><strong>Price:</strong> ${formatCurrency(profit.sellOrder.unitPrice)}</p>
+                    <p><strong>Quantity:</strong> ${formatNumber(profit.sellOrder.quantity)}</p>
+                    <p><strong>Player:</strong> ${escapeHtml(profit.sellOrder.playerName)}</p>
+                </div>
+            </div>
+        </div>
+        `).join('');
+        }
+
+        function searchProfits() {
+        currentData.profits.page = 1;
+        loadProfits(1);
+        }
+
+        function clearProfitFilters() {
+        document.getElementById('profit-item').value = '';
+        document.getElementById('profit-min-margin').value = '';
+        document.getElementById('profit-max-distance').value = '';
+        searchProfits();
+        }
+
+        // Planets Management
+        async function loadPlanets() {
+        const tableBody = document.getElementById('planets-table-body');
+        tableBody.innerHTML = '<tr>
+            <td colspan="4" class="loading">Loading planets...</td>
+        </tr>';
+
+        try {
+        const response = await fetch('/api/market/planets');
+        const planets = await response.json();
+
+        if (response.ok) {
+        currentData.planets.data = planets;
+        renderPlanetsTable();
+
+        // Populate planet filter dropdown
+        const planetSelect = document.getElementById('market-planet');
+        if (planetSelect) {
+        planetSelect.innerHTML = '<option value="">All Planets</option>' +
+        planets.map(planet => `<option value="${escapeHtml(planet.name)}">${escapeHtml(planet.name)}</option>
+        `).join('');
+        }
+        } else {
+        tableBody.innerHTML = `<tr>
+            <td colspan="4" class="error">Error loading planets: ${planets.error}</td>
+        </tr>`;
+        }
+        } catch (error) {
+        console.error('Error loading planets:', error);
+        tableBody.innerHTML = '<tr>
+            <td colspan="4" class="error">Network error loading planets</td>
+        </tr>';
+        }
+        }
+
+        function renderPlanetsTable() {
+        const tableBody = document.getElementById('planets-table-body');
+
+        if (currentData.planets.data.length === 0) {
+        tableBody.innerHTML = '<tr>
+            <td colspan="4" class="empty-state">No planets found</td>
+        </tr>';
+        return;
+        }
+
+        // Sort planets
+        const sortedPlanets = [...currentData.planets.data].sort((a, b) => {
+        const aVal = a[currentData.planets.sortBy];
+        const bVal = b[currentData.planets.sortBy];
+        const modifier = currentData.planets.sortOrder === 'asc' ? 1 : -1;
+
+        if (typeof aVal === 'string') {
+        return aVal.localeCompare(bVal) * modifier;
+        }
+        return (aVal - bVal) * modifier;
+        });
+
+        tableBody.innerHTML = sortedPlanets.map(planet => `
+        <tr>
+            <td><strong>${escapeHtml(planet.name)}</strong></td>
+            <td>${planet.marketCount}</td>
+            <td>${formatDistance(planet.distanceFromOrigin)}</td>
+            <td>
+                <button class="btn btn-sm btn-primary" onclick="filterByPlanet('${escapeHtml(planet.name)}')">
+                    View Markets
+                </button>
+            </td>
+        </tr>
+        `).join('');
+        }
+
+        function sortPlanets(column) {
+        if (currentData.planets.sortBy === column) {
+        currentData.planets.sortOrder = currentData.planets.sortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+        currentData.planets.sortBy = column;
+        currentData.planets.sortOrder = 'asc';
+        }
+
+        updateSortHeaders('planets', column, currentData.planets.sortOrder);
+        renderPlanetsTable();
+        }
+
+        function filterByPlanet(planetName) {
+        showTab('markets');
+        document.getElementById('market-planet').value = planetName;
+        searchMarkets();
+        }
+
+        // Statistics Management
+        async function loadStatistics() {
+        const container = document.getElementById('statistics-container');
+        container.innerHTML = '<div class="loading">Loading statistics...</div>';
+
+        try {
+        const response = await fetch('/api/market/stats');
+        const stats = await response.json();
+
+        if (response.ok) {
+        renderStatistics(stats);
+        } else {
+        container.innerHTML = `<div class="error">Error loading statistics: ${stats.error}</div>`;
+        }
+        } catch (error) {
+        console.error('Error loading statistics:', error);
+        container.innerHTML = '<div class="error">Network error loading statistics</div>';
+        }
+        }
+
+        function renderStatistics(stats) {
+        const container = document.getElementById('statistics-container');
+
+        container.innerHTML = `
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Market Statistics</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #1e3c72;">${stats.markets.total}</div>
+                    <div>Total Markets</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #28a745;">${stats.markets.withOrders}</div>
+                    <div>Markets with Orders</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #ffc107;">
+                        ${stats.markets.averageOrdersPerMarket.toFixed(1)}</div>
+                    <div>Avg Orders per Market</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Order Statistics</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #1e3c72;">${stats.orders.total}</div>
+                    <div>Total Orders</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #28a745;">${stats.orders.buyOrders}</div>
+                    <div>Buy Orders</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #dc3545;">${stats.orders.sellOrders}</div>
+                    <div>Sell Orders</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #6f42c1;">${stats.orders.uniqueItems}</div>
+                    <div>Unique Items</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #fd7e14;">${stats.orders.uniquePlayers}</div>
+                    <div>Unique Players</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 2rem; font-weight: bold; color: #20c997;">
+                        ${formatNumber(stats.orders.totalVolume)}</div>
+                    <div>Total Volume</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Markets by Planet</h3>
+            </div>
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Planet</th>
+                            <th>Market Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${Object.entries(stats.markets.byPlanet).map(([planet, count]) => `
+                        <tr>
+                            <td>${escapeHtml(planet)}</td>
+                            <td>${count}</td>
+                        </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <h3 class="card-title">Cache Information</h3>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div class="text-center">
+                    <div
+                        style="font-size: 1.5rem; font-weight: bold; color: ${stats.cache.isStale ? '#dc3545' : '#28a745'};">
+                        ${stats.cache.isStale ? 'Stale' : 'Fresh'}
+                    </div>
+                    <div>Cache Status</div>
+                </div>
+                <div class="text-center">
+                    <div style="font-size: 1.5rem; font-weight: bold; color: #1e3c72;">${Math.floor(stats.cache.age)}m
+                    </div>
+                    <div>Cache Age</div>
+                </div>
+                <div class="text-center">
+                    <div
+                        style="font-size: 1.5rem; font-weight: bold; color: ${stats.cache.consecutiveFailures > 0 ? '#dc3545' : '#28a745'};">
+                        ${stats.cache.consecutiveFailures}
+                    </div>
+                    <div>Consecutive Failures</div>
+                </div>
+            </div>
+        </div>
+        `;
+        }
+
+        // Utility Functions
+        function renderPagination(type, result) {
+        const paginationContainer = document.getElementById(`${type}-pagination`);
+
+        if (result.totalPages <= 1) { paginationContainer.innerHTML='' ; return; } const currentPage=result.page; const
+            totalPages=result.totalPages; let paginationHTML=` <div class="pagination-info">
+            Showing ${((currentPage - 1) * result.pageSize) + 1}-${Math.min(currentPage * result.pageSize,
+            result.totalCount)}
+            of ${result.totalCount} items
+            </div>
+            <div class="pagination-controls">
+                `;
+
+                // Previous button
+                paginationHTML += `
+                <button class="page-btn" ${currentPage===1 ? 'disabled' : '' }
+                    onclick="changePage('${type}', ${currentPage - 1})">
+                    ‹ Previous
+                </button>
+                `;
+
+                // Page numbers
+                const startPage = Math.max(1, currentPage - 2);
+                const endPage = Math.min(totalPages, currentPage + 2);
+
+                if (startPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="changePage('${type}', 1)">1</button>`;
+                if (startPage > 2) {
+                paginationHTML += `<span>...</span>`;
+                }
+                }
+
+                for (let i = startPage; i <= endPage; i++) { paginationHTML +=` <button
+                    class="page-btn ${i === currentPage ? 'active' : ''}" onclick="changePage('${type}', ${i})">
+                    ${i}
+                    </button>
+                    `;
+                    }
+
+                    if (endPage < totalPages) { if (endPage < totalPages - 1) { paginationHTML +=`<span>...</span>`;
+                        }
+                        paginationHTML += `<button class="page-btn"
+                            onclick="changePage('${type}', ${totalPages})">${totalPages}</button>`;
+                        }
+
+                        // Next button
+                        paginationHTML += `
+                        <button class="page-btn" ${currentPage===totalPages ? 'disabled' : '' }
+                            onclick="changePage('${type}', ${currentPage + 1})">
+                            Next ›
+                        </button>
+                        `;
+
+                        paginationHTML += '
+            </div>';
+            paginationContainer.innerHTML = paginationHTML;
+            }
+
+            function changePage(type, page) {
+            switch(type) {
+            case 'markets': loadMarkets(page); break;
+            case 'orders': loadOrders(page); break;
+            case 'profits': loadProfits(page); break;
+            }
+            }
+
+            function updateSortHeaders(tableType, column, order) {
+            const table = document.querySelector(`#${tableType}-panel .data-table`);
+            if (!table) return;
+
+            // Reset all headers
+            table.querySelectorAll('th').forEach(th => {
+            th.classList.remove('sort-asc', 'sort-desc');
+            });
+
+            // Find and update the sorted column header
+            const headers = table.querySelectorAll('th');
+            headers.forEach(th => {
+            const onclick = th.getAttribute('onclick');
+            if (onclick && onclick.includes(`'${column}'`)) {
+            th.classList.add(order === 'asc' ? 'sort-asc' : 'sort-desc');
+            }
+            });
+            }
+
+            function formatCurrency(currency) {
+            if (!currency || typeof currency.amount !== 'number') return 'N/A';
+            return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 0,
+            maximumFractionDigits: 0
+            }).format(currency.amount).replace('$', '');
+            }
+
+            function formatNumber(num) {
+            if (typeof num !== 'number') return 'N/A';
+            return new Intl.NumberFormat('en-US').format(num);
+            }
+
+            function formatDistance(distance) {
+            if (typeof distance !== 'number') return 'N/A';
+            if (distance < 1000) return `${distance.toFixed(0)}m`; if (distance < 1000000) return `${(distance /
+                1000).toFixed(1)}km`; return `${(distance / 1000000).toFixed(1)}Mm`; } function formatDate(dateString) {
+                if (!dateString) return 'N/A' ; const date=new Date(dateString); const now=new Date(); const
+                diffMs=date.getTime() - now.getTime(); const diffDays=Math.ceil(diffMs / (1000 * 60 * 60 * 24)); if
+                (diffDays < 0) return 'Expired' ; if (diffDays===0) return 'Today' ; if (diffDays===1) return 'Tomorrow'
+                ; return `${diffDays} days`; } function escapeHtml(text) { if (!text) return '' ; const
+                div=document.createElement('div'); div.textContent=text; return div.innerHTML; } function
+                showNotification(message, type='info' ) { // Create notification element const
+                notification=document.createElement('div'); notification.className=`notification notification-${type}`;
+                notification.style.cssText=` position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius:
+                8px; color: white; font-weight: 600; z-index: 1000; max-width: 400px; box-shadow: 0 4px 16px rgba(0, 0,
+                0, 0.2); transform: translateX(100%); transition: transform 0.3s ease; `; // Set background color based
+                on type switch(type) { case 'success' : notification.style.background='#28a745' ; break; case 'error' :
+                notification.style.background='#dc3545' ; break; case 'warning' :
+                notification.style.background='#ffc107' ; break; default: notification.style.background='#1e3c72' ;
+                break; } notification.textContent=message; document.body.appendChild(notification); // Animate in
+                setTimeout(()=> {
+                notification.style.transform = 'translateX(0)';
+                }, 100);
+
+                // Auto remove after 5 seconds
+                setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+                }
+                }, 300);
+                }, 5000);
+                }
+
+                // Keyboard shortcuts
+                document.addEventListener('keydown', function(e) {
+                if (e.ctrlKey || e.metaKey) {
+                switch(e.key) {
+                case '1': e.preventDefault(); showTab('markets'); break;
+                case '2': e.preventDefault(); showTab('orders'); break;
+                case '3': e.preventDefault(); showTab('profits'); break;
+                case '4': e.preventDefault(); showTab('planets'); break;
+                case '5': e.preventDefault(); showTab('statistics'); break;
+                case 'r': e.preventDefault(); refreshData(); break;
+                }
+                }
+                });
+
+                // Auto-refresh every 5 minutes
+                setInterval(loadSystemStatus, 5 * 60 * 1000);
+                </script>
+</body>
+
+</html>

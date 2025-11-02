@@ -1,0 +1,4848 @@
+GameplayObject:
+  assetAlias:
+    help: alias asset to this value
+    type: string
+    value: ""
+  displayName:
+    help: display name (deprecated, removed once localized)
+    type: string
+    value: ""
+    fixed: true
+    localized: true
+  displayParent:
+    help: display parent
+    type: string
+    value: ""
+    fixed: true
+    localized: false
+  displayHidden:
+    help: node that must be hidden in the display tree
+    type: bool
+    value: false
+    fixed: true
+  isTradable:
+    type: bool
+    value: false
+  description:
+    help: description key
+    type: string
+    value: ""
+    localized: true
+  subdescription:
+    help: sub-description key
+    type: string
+    value: ""
+    localized: true
+  tooltip:
+    help: tooltip key
+    type: string
+    value: ""
+    localized: true
+  hidden:
+    help: gameplay object that is not yet available for shipping
+    type: bool
+    value: false
+  customProperties:
+    help: property display helper map
+    type: CustomPropertyDefs
+  keptOnDeath:
+    help: item should not be lost at death time
+    type: bool
+    value: true
+BaseItem:
+  parent: GameplayObject
+  unitMass:
+    help: kg
+    type: double
+    min: 0
+    value: 0
+  newPlayerDefaultQty:
+    help: initial quantity in inventory
+    type: double
+    min: 0
+    value: 0
+  droppable:
+    help: element that can be dropped from the inventory
+    type: bool
+    value: true
+  isMovable:
+    help: Can be moved from the current container
+    type: bool
+    value: true
+  unitVolume:
+    help: volume when stored (L)
+    type: double
+    min: 0
+    value: 0
+  price:
+    help: default market price
+    type: double
+    min: 0
+    value: 0
+  level:
+    help: used by market
+    type: int
+    min: 1
+    max: 5
+    value: 1
+  scale:
+    help: size code of the item
+    type: string
+    value: ""
+  requiredTalents:
+    help: list of required talents for use as a tool or consumable
+    type: TalentRequirements
+    append: true
+  inventoryType:
+    help: category used to display item information in UI (values are object, material, worldMaterial)
+    type: string
+    value: ""
+  transferUnitBatchSize:
+    help: Item count or volume per transfer unit move.
+    type: int
+    value: 1
+  transferUnitSpeedFactor:
+    help: Speed factor at which the transfer unit perform moves. seconds per cubic meter.
+    type: double
+    value: 100.0
+  craftingDurationMul:
+    help: multiplicator for the duration of any recipe crafting this item as main product.
+    type: double
+    value: 1
+  requiredMaterialAdd:
+    help: quantity added to each required item of any recipe crafting this item as main product.
+    type: double
+    value: 0
+  requiredMaterialMul:
+    help: multiply quantity of each required item of any recipe crafting this item as main product.
+    type: double
+    value: 1
+  productMaterialAdd:
+    help: quantity added to each product of any recipe crafting this item as main product.
+    type: double
+    value: 0
+  productMaterialMul:
+    help: multiply quantity of each product of any recipe crafting this item as main product.
+    type: double
+    value: 1
+  order:
+    help: order of display of items.
+    type: int
+    value: 0
+FireWork:
+  parent: ConsumableDisplay
+  hitpoints:
+    type: double
+    min: 0
+    value: 2000
+  hitpointsBuffer:
+    help: armor
+    type: double
+    min: 0
+    value: 0
+Ammo:
+  parent: ConsumableDisplay
+  weaponType:
+    help: Type of weapon the ammo can be used by
+    enum: true
+    type: WeaponType
+    value: CANNON
+  damageType:
+    enum: true
+    type: DamageType
+    value: ANTIMATTER
+  damageModifier:
+    help: "Multiplier to the Weapon base damage"
+    type: double
+    min: 0
+    value: 1
+  aimingConeModifier:
+    help: "Multiplier to the Weapon optimal and falloff aiming cone"
+    type: double
+    min: 0
+    value: 1
+  trackingModifier:
+    help: "Multiplier to the Weapon optimal and falloff tracking"
+    type: double
+    min: 0
+    value: 1
+  optimalDistanceModifier:
+    help: "Multiplier to the Weapon optimal distance"
+    type: double
+    min: 0
+    value: 1
+  falloffDistanceModifier:
+    help: "Multiplier to the Weapon falloff distance"
+    type: double
+    min: 0
+    value: 1
+  accuracyModifier:
+    help: "Multiplier to the Weapon base accuracy"
+    type: double
+    min: 0
+    value: 1
+InvalidItem: # Charper: hack: item with id 0 for backward compatibility
+  parent: BaseItem
+DataItem:
+  parent: BaseItem
+  csharp_generation: force
+BlueprintBase:
+  parent: DataItem
+  csharp_generation: force
+RecipeItem:
+  parent: DataItem
+  recipeIds:
+    help: "id of the associated recipe"
+    type: ULongVector
+Blueprint:
+  parent: BlueprintBase
+  csharp_generation: force
+SingleUseBlueprint:
+  parent: BlueprintBase
+  csharp_generation: force
+TerritoryKey:
+  parent: DataItem
+  csharp_generation: force
+ConstructKey:
+  parent: DataItem
+  lifetime:
+    help: "key lifetime in seconds"
+    type: int
+    value: 3600
+  dynamic_properties:
+    constructId:
+      type: DynamicPropertyInt
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    creator:
+      type: DynamicPropertyInt
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    expiry:
+      type: DynamicPropertyInt
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    materials:
+      type: DynamicPropertyString
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    elements:
+      type: DynamicPropertyString
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    size:
+      type: DynamicPropertyInt
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    positionX:
+      type: DynamicPropertyDouble
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    positionY:
+      type: DynamicPropertyDouble
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    positionZ:
+      type: DynamicPropertyDouble
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    ownerPlayer:
+      type: DynamicPropertyInt
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    ownerOrganization:
+      type: DynamicPropertyInt
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+    name:
+      type: DynamicPropertyString
+      default:
+        isSavedInInventory: true
+        requireInstance: true
+ScannerResult:
+  parent: DataItem
+Material:
+  parent: Consumable
+RefinedMaterial:
+  parent: Material
+Consumable:
+  parent: BaseItem
+ConsumableDisplay:
+  parent: Consumable
+WarpCell:
+  parent: ConsumableDisplay
+EngineDisplay:
+  parent: EngineUnit
+RocketEngine:
+  parent: EngineDisplay
+  maxSpeedBoost:
+    help: "ratio of maxSpeed increase for construct of optimal mass"
+    type: double
+    min: 0
+    value: 0.3
+  optimalShipMass:
+    help: "below this mass, construct will receive a full boost"
+    type: double
+    min: 0
+    value: 100
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_ROCKETFUEL", name: "Link::PLUG_NAME_CONTAINER" }
+DecorativeUnit:
+  parent: FurnituresAppliances
+PlantUnit:
+  parent: DecorativeUnit
+Bonsai:
+  parent: PlantUnit
+ArkshipDecoUnit:
+  parent: DecorativeUnit
+Arkship:
+  parent: ArkshipDecoUnit
+SpaceFuel:
+  parent: Fuel
+RocketFuel:
+  parent: Fuel
+Fuel:
+  parent: Material
+Part:
+  parent: BaseItem
+  csharp_generation: force
+AtmoFuel:
+  parent: Fuel
+Brake:
+  parent: EngineUnit
+Airbrake:
+  parent: Brake
+  maxPowerSpeed:
+    help: "speed at which maxPower can be reached"
+    type: double
+    min: 0
+    value: 100
+  minEfficiency:
+    help: "brake efficiency at speed 0"
+    type: double
+    min: 0
+    max: 1
+    value: 0.1
+Honeycomb:
+  hitpoints:
+    help: "hit points consumed per cubic meter of material"
+    type: double
+    min: 0
+    value: 0
+  resistances:
+    help: "resistances (0: nothing, 1: unbreakable) for all 4 damage types"
+    type: Resistances
+    expanded: true
+  parent: Material
+ProductHoneycomb:
+  parent: Honeycomb
+PureHoneycomb:
+  parent: Honeycomb
+PureMaterial:
+  parent: RefinedMaterial
+MineableMaterial:
+  parent: Material
+Operator:
+  parent: ElectronicUnit
+NotOperatorUnit:
+  parent: Operator
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+LaserEmitterUnit:
+  parent: ElectronicUnit
+  maxLaserLength:
+    help: maximum length of the laser
+    type: double
+    min: 0.
+    max: 64
+    value: 20
+  displayLaser:
+    help: should the laser be visible by players
+    type: bool
+    value: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+RawMaterial:
+  parent: MineableMaterial
+  csharp_generation: force
+OreMaterial:
+  parent: MineableMaterial
+  unstableTime:
+    help: time duration before digging can success
+    type: double
+    min: 0
+    value: 1
+  timeToMaxSphere:
+    help: time duration for digging radius to be maximal
+    type: double
+    min: 0
+    value: 2
+  efficiency:
+    help: extract efficiency
+    type: double
+    min: 0
+    value: 0.02
+Element:
+  parent: Consumable
+  hitpoints:
+    help: maximum hitpoints of the element when deployed
+    type: double
+    min: 0
+    value: 2000
+  hitpointsBuffer:
+    help: armor
+    type: double
+    min: 0
+    value: 0
+  kineticAbsorption:
+    help: kinetic absorption coefficient
+    type: double
+    min: 0
+    max: 1
+    value: 1
+  resistances:
+    help: "resistances (0: nothing, 1: unbreakable) for all 4 damage types"
+    type: Resistances
+    expanded: true
+  characterAnchor:
+    help: can anchor character when activated
+    type: bool
+    value: false
+  visibilityLOD:
+    type: int
+    min: 0
+    max: 4
+    value: 0
+  isUseable:
+    type: bool
+    value: false
+  requiredTalentsForUse:
+    help: list of required talents to use deployed element
+    type: TalentRequirements
+    append: True
+  maxRestoreCount:
+    help: "maximum number of times the element can be restored before being destroyed"
+    type: int
+    value: 5
+  disableWhenColliding:
+    type: bool
+    value: false
+  maxCountPerConstruct:
+    type: int
+    value: -1
+  nbControlPlugIn:
+    type: int
+    min: 0
+    max: 8192
+    value: 3
+  extraPlugs:
+    type: ExtraPlugs
+  fittingCapacity:
+    help: Base fitting capacity points consumed by this element
+    type: int
+    value: 0
+  modInteractionType:
+    help: Set mod interaction to simple,switch,anchor,hold
+    type: string
+  modActivateLabel:
+    help: Set label to activate
+    type: string
+    value: activate
+  modDeactivateLabel:
+    help: Set label to deactivateCollidingElements
+    type: string
+    value: deactivate
+  modDeactivateOnBroken:
+    help: Auto deactivate on broken
+    type: bool
+    value: true
+  modRightToActivate:
+    help: RDMS right required to activate or 0 for none
+    type: int
+    value: 0
+  modRightToDeactivate:
+    help: RDMS right required to deactivate or 0 for none
+    type: int
+    value: 0
+  modInteractWhileCoreBroken:
+    help: allow interaction if core is broken
+    type: bool
+    value: false
+  modInteractWhileTokenized:
+    help: allow interaction if construct is tokenized
+    type: bool
+    value: false
+  modInteractInSurrogate:
+    help: allow interaction if player is surrogate
+    type: bool
+    value: false
+  modInteractInSandbox:
+    help: allow interaction if player in sandbox
+    type: bool
+    value: false
+  modEventName:
+    help: javascript event to trigger on interaction
+    type: string
+    value: modInteraction
+  dynamic_properties:
+    modActive:
+      help: active state for mod elements
+      type: DynamicPropertyBool
+      default:
+        isSavedInBlueprint: false
+        requireInstance: false
+    fittingCapacity:
+      help: Current fitting capacity
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        isReadOnly: true
+    gameplayTag:
+      type: DynamicPropertyString
+      default:
+        defaultValue: ""
+        isSavedInBlueprint: true
+        requireInstance: true
+    gamescriptClientTag:
+      type: DynamicPropertyString
+      default:
+        defaultValue: ""
+        isSavedInBlueprint: true
+        requireInstance: true
+    inheritConstructRights:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: true
+    opened:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    hitpoints:
+      help: maximum hitpoints (currentHP = hitpointsRatio * hitpoints)
+      type: DynamicPropertyDouble
+    hitpointsRatio:
+      help: current hitpoints ratio (currentHP = hitpointsRatio * hitpoints)
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        isSavedInInventory: true
+        requireInstance: true
+        defaultValue: 1.0
+        minValue: 0.0
+        maxValue: 1.0
+    name:
+      type: DynamicPropertyString
+      default:
+        isSavedInInventory: true
+        isSavedInBlueprint: true
+    whitelist:
+      type: DynamicPropertyString
+    master:
+      type: DynamicPropertyInt
+      default:
+        #isReadOnly: true
+        hasMin: false
+        isStream: true
+        defaultValue: 0
+    masterPing:
+      type: DynamicPropertyBool
+      default:
+        isStream: true
+        defaultValue: false
+    element_state:
+      type: DynamicPropertyBool
+    element_local:
+      help: defines if a given element shall stop server-sync certain async parameters to make it appear local
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    element_skin:
+      type: DynamicPropertyString
+    restoreCount:
+      help: number of times the element was restored
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        isSavedInInventory: true
+        isSavedInBlueprint: false
+        requireInstance: true
+        isReadOnly: true
+    incrementRestoreCount:
+      help: whether the next restoration will increment the restore count, like when destroyed during PvP
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: false
+        isReadOnly: true
+    destroyed:
+      help: "true if the element is definitely destroyed, and can no longer be restored"
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isReadOnly: true
+    elementsColliding:
+      help: comma separated list of elements colliding
+      type: DynamicPropertyString
+      cstype: DynamicPropertyElementList
+      default:
+        isReadOnly: true
+        isSavedInBlueprint: false
+        isSavedInInventory: false
+  plug_properties:
+    base: true
+    in: []
+    out: []
+PlanetElement:
+  parent: Element
+CoreUnit:
+  parent: PlanetElement
+  constructSize:
+    type: int
+    min: 32
+    max: 8192
+    value: 32
+  cellSize:
+    help: construct unit cell (0.25, 0.5, 1., 2., 4. or 8.)
+    type: double
+    min: 0.25
+    max: 8.0
+    value: 0.25
+  nbCoreUnitControlPlugIn:
+    type: int
+    min: 0
+    max: 8192
+    value: 10
+  dynamic_properties:
+    endOfWarpCooldown:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+    endOfWarpEstimate:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+    single_player_zone:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    salvagingMaxVolume:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+    recoverable:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: true
+    start_room:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    gyro_id2:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+    armedECU:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+    creatorPlayerId:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+    creatorOrgId:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+    construct_mass_total:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    constructLocalMass:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    warpStage:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    drmProtected:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: true
+        isReadOnly: true
+    resumeAngularVelocity:
+      help: World angular velocity (deg/s) around CM of the construct when resuming piloting after last physicalization
+      type: DynamicPropertyVec3
+      default:
+        isReadOnly: true
+        defaultValue: [0.0, 0.0, 0.0]
+    resumeLinearVelocity:
+      help: World linear velocity (m/s) of the construct when resuming piloting after last physicalization
+      type: DynamicPropertyVec3
+      default:
+        isReadOnly: true
+        defaultValue: [0.0, 0.0, 0.0]
+    resumeGrounded:
+      help: Whether the construct was placed on a support, not falling due to gravity
+      type: DynamicPropertyBool
+      default:
+        isReadOnly: true
+        defaultValue: true
+    resumeTotalMass:
+      help: mass associated with resume speed, used to conserve momentum
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    stressMaxHp:
+      help: maximum stress hp (is only valid/updated when pvp timer is active)
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    stressCurrentHp:
+      help: current stres hp (is only valid/updated when pvp timer is active)
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    lastElementsCollisionCheckDate:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        isSavedInBlueprint: false
+        isSavedInInventory: false
+    schematicContainerId:
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyElementId
+      readOnly: true
+      default:
+        defaultValue: 0
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbCoreUnitControlPlugIn" }
+ElementLDFX:
+  parent: Other
+  dynamic_properties:
+    fxParameters:
+      help: YAML settings of attached effects
+      type: DynamicPropertyString
+      default:
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+RepulsorUnit:
+  parent: FurnituresAppliances
+  radius:
+    help: capsule radius in m
+    type: double
+    min: 0
+    value: 1000
+  height:  # cylinder height in m
+    type: double
+    min: 0
+    value: 1300
+  linear_friction:
+    help: linear friction coefficient
+    type: double
+    min: 0
+    value: 0.5
+  quadratic_friction:
+    help: quadratic friction coefficient
+    type: double
+    min: 0
+    value: 0.025
+  repulsion:
+    help: repulsion coefficient
+    type: double
+    min: 0
+    value: 0.5
+CoreUnitDynamic:
+  parent: CoreUnit
+  csharp_generation: force
+CoreUnitDynamic64:
+  parent: CoreUnitDynamic
+CoreUnitStatic:
+  parent: CoreUnit
+CoreUnitSpace:
+  parent: CoreUnit
+CoreUnitAlien:
+  parent: CoreUnit
+  csharp_generation: force
+DoorUnit:
+  parent: FurnituresAppliances
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+ElevatorUnit:
+  parent: FurnituresAppliances
+  max_range:
+    help: maximal distance (m) that elevators can transport players
+    type: double
+    min: 10
+    value: 10
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_DOWN" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_UP" }
+Adjustor:
+  parent: EngineDisplay
+TerritoryUnit:
+  parent: PlanetElement
+  sanctuary:
+    help: is a sanctuary territory
+    type: bool
+    value: false
+  dynamic_properties:
+    territory_owner:
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        defaultValue: 0
+TerritoryUnitBasicSanctuary:
+  parent: TerritoryUnit
+ConstructElement:
+  parent: Element
+FurnituresAppliances:
+  parent: ConstructElement
+Display:
+  parent: FurnituresAppliances
+HighTechFurniture:
+  parent: FurnituresAppliances
+IndustryInfrastructure:
+  parent: ConstructElement
+Systems:
+  parent: ConstructElement
+CombatDefense:
+  parent: ConstructElement
+BaseShieldGeneratorUnit:
+  parent: CombatDefense
+  shieldMaxHp:
+    help: maximum baseShield hitpoints
+    type: double
+    min: 0
+    value: 100000
+  adjResistancePoolSize:
+    help: "Number of resistances points available in the resistance pool"
+    type: double
+    min: 0
+    value: 0
+  baseShieldResistances:
+    help: "base shield resistances (0: nothing, 1: unbreakable) for all 4 damage types"
+    type: Resistances
+    expanded: true
+  adjResistanceCooldown:
+    help: "Time to wait after changing adjustable resistance until it's possible to change it again (in s)"
+    type: double
+    min: 0
+    value: 300 # 5*60 = 5min
+  dynamic_properties:
+    shieldMaxHp:
+      help: maximum shield Hp (shieldHp = shieldHpRatio * shieldMaxHp)
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    lockdownEnd:
+      help: timepoint when the lockdown ends (in timepoint network time)
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyNQTimePoint
+      isReadOnly: true
+    immunityEnd:
+      help: timepoint when the immunity ends (in timepoint network time)
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyNQTimePoint
+      isReadOnly: true
+    lockdownExitTime:
+      help: Prefered time of the day for lockdown exit (in number of minutes from 00:00 UTC)
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyTimeSpanMinutesFromMidnightUTC
+      isReadOnly: true
+    adjResistancePoolSize:
+      help: "Number of resistances points available in the resistance pool (talent)"
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    adjResistances:
+      help: values of adjustable resistances (resistance = shield_resistances + shieldAdjResistances)
+      type: DynamicPropertyString
+      cstype: DynamicPropertyPvpShieldResistance
+      default:
+        defaultValue: "{}"
+      expended: true
+      isReadOnly: true
+    hitHistory:
+      help: gives the cumulated damages taken by the base shield for each damage type `{'totalDamage':a, 'antimatter':b, 'electromagnetic':c, 'kinetic':d, 'thermic':e}`
+      type: DynamicPropertyString
+      cstype: DynamicPropertyNQStructJsonified<NQ.ShieldCumulatedDamages>
+      expended: true
+      isReadOnly: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+ShieldGeneratorUnit:
+  parent: CombatDefense
+  shieldMaxHp:
+    help: maximum shield hitpoints
+    type: double
+    min: 0
+    value: 10000
+  shieldResistances:
+    help: "shield resistances (0: nothing, 1: unbreakable) for all 4 damage types"
+    type: Resistances
+    expanded: true
+  adjResistancePoolSize:
+    help: "Number of resistances points available in the resistance pool"
+    type: double
+    min: 0
+    value: 0
+  adjResistanceCooldown:
+    help: "Time to wait after changing adjustable resistance until it's possible to change it again (in s)"
+    type: double
+    min: 0
+    value: 300 # 5*60 = 5min
+  ventingCooldown:
+    help: "Time to wait after venting until it's possible to vent again (in s)"
+    type: double
+    min: 0
+    value: 300 # 5*60 = 5min
+  ventingRegen:
+    help: "Number of Hp/s to regenerate when the shield is venting 10 -> 10Hp/s"
+    type: double
+    value: 0
+  ventingMaxRegen:
+    help: "Maximum Number of percent to regenerate during one venting 0.5 -> 50%"
+    type: double
+    value: 0.5
+  dynamic_properties:
+    shieldMaxHp:
+      help: maximum shield Hp (shieldHp = shieldHpRatio * shieldMaxHp)
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    adjResistancePoolSize:
+      help: "Number of resistances points available in the resistance pool (talent)"
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    adjResistances:
+      help: values of adjustable resistances (resistance = shield_resistances + shieldAdjResistances)
+      type: DynamicPropertyString
+      cstype: DynamicPropertyPvpShieldResistance
+      expended: true
+      isReadOnly: true
+    hitHistory:
+      help: gives the cumulated damages taken by the shield for each damage type `{'totalDamage':a, 'antimatter':b, 'electromagnetic':c, 'kinetic':d, 'thermic':e}`
+      type: DynamicPropertyString
+      cstype: DynamicPropertyNQStructJsonified<NQ.ShieldCumulatedDamages>
+      expended: true
+      isReadOnly: true
+    ventingCurrentCooldown:
+      help: timepoint where it will be possible to vent again (in timepoint network time)
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyNQTimePoint
+      isReadOnly: true
+    ventingTargetHp:
+      help: the target shield hp when the venting ends
+      type: DynamicPropertyDouble
+      isReadOnly: true
+    ventingStartHp:
+      help: the shield hp when the venting started
+      type: DynamicPropertyDouble
+      isReadOnly: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+Piloting:
+  parent: ConstructElement
+Electronics:
+  parent: FurnituresAppliances
+Trigger:
+  parent: Electronics
+Other:
+  parent: ConstructElement
+VirtualProjectorUnit:
+  parent: HighTechFurniture
+  dynamic_properties:
+    fileName:
+      type: DynamicPropertyString
+    scaleFactor:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 1.0
+        hasMin: false
+    dx:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        hasMin: false
+    dy:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        hasMin: false
+    dz:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        hasMin: false
+    angleX:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        hasMin: false
+    angleY:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        hasMin: false
+    angleZ:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        hasMin: false
+HighTechTransportation:
+  parent: Piloting
+AntiGravityGeneratorUnit:
+  parent: HighTechTransportation
+  coreUnitSize:
+    help: size of compatible coreunits
+    type: int
+    value: 0
+  nbGravitonPlug:
+    help: number of graviton out plugs
+    type: int
+    value: 6
+  dynamic_properties:
+    base_alt:
+      type: DynamicPropertyDouble
+    targetAltitude:
+      type: DynamicPropertyDouble
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_ELECTRICITY", name: "Link::PLUG_NAME_POWER" }
+    out:
+      - { key: "PlugType::PLUG_GRAVITON", count: nbGravitonPlug }
+WarpBeaconUnit:
+  parent: HighTechTransportation
+  coreUnitSize:
+    help: size of compatible coreunits
+    type: int
+    value: 0
+  setupTimer:
+    help: "time before which it is not possible to warp to the beacon in seconds"
+    type: double
+    min: 0
+    value: 86400 # 24*60*60 = 24h
+  minWarpDistance:
+    help: "Minimum distance for warping to this beacon"
+    type: double
+    min: 0
+    value: 200000
+  maxWarpDistance:
+    help: "Maximum distance for warping to this beacon"
+    type: double
+    min: 0
+    value: 100000000
+  warpCellRate:
+    help: "Cell consumption rate"
+    type: double
+    min: 0
+    value: 0.00025
+  cruiseSpeedKmH:
+    help: "Cruise speed"
+    type: double
+    min: 0
+    value: 2520000
+  maxPeerBeaconDistance:
+    help: "Max distance to local beacon of the same type"
+    type: double
+    min: 0
+    value: 0
+  requiredWarpDriveTypeNames:
+    help: "Item type names of required warp drive to use this beacon, empty for all"
+    type: StringVector
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ELECTRICITY", name: "Link::PLUG_NAME_POWER" }
+WarpDriveUnit:
+  parent: HighTechTransportation
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_CONTAINER" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+      - { key: "PlugType::PLUG_ELECTRICITY", name: "Link::PLUG_NAME_POWER" }
+SurfaceEngine:
+  parent: EngineDisplay
+  maxAltitude:
+    help: "maximal altitude for the surface engine to work (in m)"
+    type: double
+    min: 0
+    value: 30
+  maxOverloadFactor:
+    help: "thrust overload when near ground (2 means engine can go 200% of the max thrust)"
+    type: double
+    min: 0
+    value: 3
+  allowThrustAlongGravity:
+    help: "Whether or not we allow the 'thrusting along the gravity' feature"
+    type: bool
+    value: true
+  activateThrustAlongGravityByDefault:
+    help: "Whether or not we activate the 'thrusting along the gravity' feature by default on the engine"
+    type: bool
+    value: true
+  thrustConeMaxHalfAngle:
+    help: "When thrusting along the gravity, the thrust will be limited to a cone of this half angle"
+    type: double
+    min: 0
+    max: 90
+    value: 45
+  dynamic_properties:
+    thrustVectoringActive:
+      type: DynamicPropertyBool
+      default:
+        isSavedInBlueprint: true
+Hovercraft:
+  parent: SurfaceEngine
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_ATMOFUEL", name: "Link::PLUG_NAME_CONTAINER" }
+CounterUnit:
+  parent: ElectronicUnit
+  nbPlugOut:
+    help: number of signal plug out
+    type: int
+    value: 10
+  dynamic_properties:
+    counter_rank:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", count: nbPlugOut }
+DataBankUnit:
+  parent: ElectronicUnit
+  bankSizeLimit:
+    type: int
+    min: 0
+    value: 30000
+  nbDatabankControlPlugIn:
+    type: int
+    min: 0
+    max: 8192
+    value: 20
+  dynamic_properties:
+    databank:
+      type: DynamicPropertyString
+      default:
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbDatabankControlPlugIn" }
+AntiGravityPulsorUnit:
+  parent: HighTechTransportation
+  plug_properties:                  
+    in:
+      - { key: "PlugType::PLUG_GRAVITON", name: "Link::PLUG_NAME_IN" }
+ContainerUnit:
+  parent: IndustryInfrastructure
+  maxVolume:
+    help: maximum total volume (StorageInfo::DEFAULT_MAX_QUANTITY_IN_SLOT = 1 million billion)
+    type: double
+    min: 0
+    max: 999999999999999
+    value: 999999999999999
+  itemFilter:
+    help: type of Item this container unit can contain
+    type: string
+    value: ""
+  massFactor:
+    help: mass factor applied to container content
+    type: double
+    min: 0
+    max: 100000
+    value: 1
+  claimMode:
+    help: default claim mode some containers allow changing this using the corresponding dynamic property
+    type: int
+    min: 0
+    max: 2
+    value: 0
+  dynamic_properties:
+    massFactor:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 1
+        isSavedInBlueprint: true
+        requireInstance: true
+    maxVolume:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+        isSavedInBlueprint: true
+        requireInstance: true
+    itemFilter:
+        type: DynamicPropertyString
+        isSavedInBlueprint: true
+        requireInstance: true
+    current_mass:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    current_volume:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    claimMode:
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyEnumAsInt<NQ.ContainerClaimMode>
+      default:
+        defaultValue: 0
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+DispenserUnit:
+  parent: ContainerUnit
+  isAdmin:
+    help: true if Dispenser is admin, false otherwise
+    type: bool
+    value: false
+  realContent:
+    help: true if Dispenser contains real items
+    type: bool
+    value: true
+  dynamic_properties:
+    delay:
+      isReadOnly: true
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 5
+    tag:
+      isReadOnly: true
+      type: DynamicPropertyString
+    claimLimit:
+      isReadOnly: true
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 1
+    cost:
+      isReadOnly: true
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    bypassPrimaryContainer:
+      isReadOnly: true
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    bypassConfirmation:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    moneyRecipientPlayer:
+      isReadOnly: true
+      type: DynamicPropertyInt
+    moneyRecipentOrganization:
+      isReadOnly: true
+      type: DynamicPropertyInt
+    moneyRecipientName:
+      isReadOnly: true
+      type: DynamicPropertyString
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_CONTAINER" }
+Spacebrake:
+  parent: Brake
+SpaceEngine:
+  parent: EngineDisplay
+  csharp_generation: force
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_SPACEFUEL", name: "Link::PLUG_NAME_CONTAINER" }
+FuelContainer:
+  parent: ContainerUnit
+  fuelType:
+    help: type of fuel accepted by this container
+    type: string
+    value: ""
+  nbFuelPlugOut:
+    type: int
+    min: 1
+    max: 100
+    value: 10
+AtmoFuelContainer:
+  parent: FuelContainer
+  csharp_generation: force
+  plug_properties:
+    inherit: true
+    out:
+      - { key: "PlugType::PLUG_ATMOFUEL", count: nbFuelPlugOut }
+SpaceFuelContainer:
+  parent: FuelContainer
+  plug_properties:
+    inherit: true
+    out:
+      - { key: "PlugType::PLUG_SPACEFUEL", count: nbFuelPlugOut }
+RocketFuelContainer:
+  parent: FuelContainer
+  plug_properties:
+    inherit: true
+    out:
+      - { key: "PlugType::PLUG_ROCKETFUEL", count: nbFuelPlugOut }
+AmmoContainerUnit:
+  parent: ContainerUnit
+  nbWeaponPlug:
+    type: int
+    min: 1
+    max: 100
+    value: 10
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_ITEM", elementTypes: [ "WeaponUnit" ], count: nbWeaponPlug }
+ItemContainerBase:
+  parent: ContainerUnit
+MissionContainer:
+  parent: ItemContainerBase
+ItemContainer:
+  parent: ItemContainerBase
+  nbIndustryPlugIn:
+    type: int
+    min: 1
+    max: 100
+    value: 10
+  nbIndustryPlugOut:
+    type: int
+    min: 1
+    max: 100
+    value: 10
+  nbRepairPlugOut:
+    type: int
+    min: 1
+    max: 100
+    value: 1
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_ITEM", elementTypes: [ "IndustryUnit", "MiningUnit", "PlasmaExtractorUnit" ], count: nbIndustryPlugIn }
+    out:
+      - { key: "PlugType::PLUG_ITEM", count: 1 }
+      - { key: "PlugType::PLUG_ITEM", elementTypes: [ "IndustryUnit" ], count: nbIndustryPlugOut }
+      - { key: "PlugType::PLUG_ITEM", elementTypes: [ "RepairUnit" ], count: nbRepairPlugOut }
+ContainerHub:
+  parent: ItemContainer
+  csharp_generation: force
+  nbItemPlugIn:
+    type: int
+    min: 1
+    max: 100
+    value: 10
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_ITEM", count: nbItemPlugIn }
+CockpitHovercraftUnit:
+  parent: KinematicsController
+ControlUnit:
+  parent: Systems
+  fittingCapacityMax:
+    help: Available fitting capacity points for connected radar and weapon elements
+    type: int
+    min: 0
+    value: 225
+  hasWindShield:
+    help: true if controlUnit has a wind shield (like a cockpit)
+    type: bool
+    value: false
+  nbControlPlugOut:
+    type: int
+    min: 1
+    value: 10
+  luaCharacterLimit:
+    type: int
+    min: 0
+    value: 100000
+  dynamic_properties:
+    fittingCapacityMax:
+      help: Current fitting capacity max
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        isReadOnly: true
+    dpuyaml_6:
+      type: DynamicPropertyString
+      default:
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    userLua:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    controlScheme:
+      type: DynamicPropertyString
+      default:
+        defaultValue: ""
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    drmProtected:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        isReadOnly: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+    out:
+      - { key: "PlugType::PLUG_CONTROL", count: nbControlPlugOut }
+DelayLineUnit:
+  parent: ElectronicUnit
+  dynamic_properties:
+    delayline_on:
+      type: DynamicPropertyBool
+      default:
+        isStream: true
+        defaultValue: false
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+ECU:
+  parent: ControlUnit
+PVPSeatUnit:
+  parent: ControlUnit
+  weaponScale:
+    help: size code of the weapons that may be linked
+    type: string
+    value: xs
+  nbControlWeaponPlugOut:
+    help: Number of weapon elements that can be attached to the CU
+    type: int
+    min: 1
+    value: 3
+  nbControlRadarPlugOut:
+    help: Number of radar elements that can be attached to the CU
+    type: int
+    min: 1
+    value: 3
+  plug_properties:
+    out:
+      - { key: "PlugType::PLUG_CONTROL", count: nbControlPlugOut }
+      - { key: "PlugType::PLUG_CONTROL", elementTypes: [ "WeaponUnit" ], count: nbControlWeaponPlugOut }
+      - { key: "PlugType::PLUG_CONTROL", elementTypes: [ "RadarPVPUnit" ], count: nbControlRadarPlugOut }
+RemoteControlUnit:
+  parent: KinematicsController
+Generic:
+  parent: ControlUnit
+ProgrammingBoard:
+  parent: Generic
+KinematicsController:
+  parent: ControlUnit
+  weaponScale:
+    help: size code of the weapons that may be linked
+    type: string
+    value: xs
+  nbControlWeaponPlugOut:
+    help: Number of weapon elements that can be attached to the kinematics controller
+    type: int
+    min: 0
+    value: 0
+  nbControlRadarPlugOut:
+    help: Number of radar elements that can be attached to the kinematics controller
+    type: int
+    min: 0
+    value: 0
+  plug_properties:
+    out:
+      - { key: "PlugType::PLUG_CONTROL", count: nbControlPlugOut }
+      - { key: "PlugType::PLUG_CONTROL", elementTypes: [ "WeaponUnit" ], count: nbControlWeaponPlugOut }
+      - { key: "PlugType::PLUG_CONTROL", elementTypes: [ "RadarPVPUnit" ], count: nbControlRadarPlugOut }
+ElectronicUnit:
+  parent: Electronics
+CockpitCommandmentUnit:
+  parent: KinematicsController
+CockpitFighterUnit:
+  parent: KinematicsController
+AndOperatorUnit:
+  parent: Operator
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED1" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED2" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+XorOperatorUnit:
+  parent: Operator
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED1" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED2" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+NorOperatorUnit:
+  parent: Operator
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED1" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED2" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+NandOperatorUnit:
+  parent: Operator
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED1" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_NAMED2" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+OrOperatorUnit:
+  parent: Operator
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", count: 10 }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+AtmosphericEngine:
+  parent: EngineDisplay
+  referenceSpeedFor10pcFuelMultiplier:
+    type: double
+    min: 0
+    value: 10
+  fuelMultiplierAtOrigin:
+    type: double
+    min: 1
+    value: 10
+  referenceSpeedFor90pcThrustMultiplier:
+    type: double
+    min: 0
+    value: 100
+  thrustMultiplierAtOrigin:
+    type: double
+    min: 0
+    max: 1
+    value: 0.5
+  atmosphereDensityExponent:
+    help: exponent applied to atmosphere density effect on thrust
+    type: double
+    min: 0
+    value: 1
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_ATMOFUEL", name: "Link::PLUG_NAME_CONTAINER" }
+EmitterUnit:
+  parent: ElectronicUnit
+  range:
+    help: range
+    type: double
+    min: 0
+    value: 1000
+  dynamic_properties:
+    emt_channel:
+      type: DynamicPropertyString
+      default:
+        isStream: false
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+ReceiverUnit:
+  parent: ElectronicUnit
+  range:
+    help: range
+    type: double
+    min: 0
+    value: 1000
+  dynamic_properties:
+    rcv_channel:
+      type: DynamicPropertyString
+      default:
+        updatePeriodMs: 1000
+        isStream: false
+    msg:
+      type: DynamicPropertyString
+      default:
+        isStream: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+TransponderUnit:
+  parent: CombatDefense
+  dynamic_properties:
+    tags:
+      type: DynamicPropertyString
+      cstype: DynamicPropertyTransponderTags
+      default:
+        isStream: false
+        isReadOnly: true
+        isSavedInBlueprint: true
+    tagsActive:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isStream: false
+        isReadOnly: true
+        isSavedInBlueprint: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+RelayUnit:
+  parent: ElectronicUnit
+  dynamic_properties:
+    relay_delayed:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", count: 10 }
+EngineUnit:
+  parent: Piloting
+  obstructionVerticalAngle:
+    help: angle in degree for obstruction shape
+    type: double
+    min: 0
+    max: 360
+    value: 30
+  obstructionHorizontalAngle:
+    help: angle in degree for obstruction shape
+    type: double
+    min: 0
+    max: 360
+    value: 30
+  obstructionBufferThreshold:
+    help: obstruction will be 0 under this value
+    type: double
+    min: 0
+    max: 1
+    value: 0.1
+  maxPower:
+    help: max power
+    type: double
+    min: 0
+    value: 40000
+  maxPowerMultiplier:
+    help: max power multiplier set as a dynamic property on deploy
+    type: double
+    min: 0
+    value: 1
+  size:
+    help: engine size
+    type: int
+    min: 0
+    max: 4
+    value: 0
+  t50:
+    help: t50
+    type: double
+    min: 0
+    value: 1
+  fuelRate:
+    help: fuel rate
+    type: double
+    min: 0
+    value: 0.000001
+  functionInSpace:
+    type: bool
+    value: false
+  functionInAtmosphere:
+    type: bool
+    value: false
+  dynamic_properties:
+    maxPowerMultiplier:
+      help: max power multiplier set on deploy
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 1 # default value used for legacy engines
+        isSavedInBlueprint: true
+        requireInstance: true
+    engine_power:
+      type: DynamicPropertyDouble
+      default:
+        isStream: true
+        defaultValue: 0
+        updatePeriodMs: 3000
+    engine_tc:
+      type: DynamicPropertyBool
+      default:
+        isSavedInBlueprint: true
+    engine_tags:
+      type: DynamicPropertyString
+      default:
+        isSavedInBlueprint: true
+    ignoreDefaultTags:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+VerticalBooster:
+  parent: SurfaceEngine
+  plug_properties:
+    inherit: true
+    in:
+      - { key: "PlugType::PLUG_SPACEFUEL", name: "Link::PLUG_NAME_CONTAINER" }
+Airfoil:
+  parent: EngineUnit
+  maxLiftFactor:
+    help: multiplied by v2 to calculate lift force
+    type: double
+    min: 0
+    value: 1
+  liftDragRatio:
+    help: lift drag ratio
+    type: double
+    min: 0
+    value: 10
+  thetaBeginMaxLift:
+    help: first angle (deg) where lift is maximized
+    type: double
+    min: 0
+    max: 90
+    value: 20
+  thetaEndMaxLift:
+    help: last angle (deg) where lift is maximized, must be greater than thetaBeginMaxLift
+    type: double
+    min: 0
+    max: 90
+    value: 25
+  thetaStall:
+    help: angle of zero lift (deg), must be greater than thetaEndMaxLift
+    type: double
+    min: 0
+    max: 90
+    value: 30
+  deltaTheta:
+    help: controls the flap (deg), pseudo inverse can modify current theta by this value to reach objective
+    type: double
+    min: 0
+    max: 90
+    value: 10
+  atmosphereDensityExponent:
+    help: exponent applied to atmosphere density effect on thrust
+    type: double
+    min: 0
+    value: 1
+  controlSurfaceLiftToTorqueRatio:
+    help: a ratio [0,1] to indicate how much torque can the control surface apply comparing to current lift
+    type: double
+    min: 0
+    max: 1
+    value: 0.25
+FactoryUnit:
+  parent: Other
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_CONTAINER" }
+PlasmaExtractorUnit:
+  parent: IndustryInfrastructure
+  runtimeHours:
+    help: Duration in hours of an extraction cycle
+    type: double
+    value: 1
+  dynamic_properties:
+    status:
+      type: DynamicPropertyInt
+    activationTime:
+      type: DynamicPropertyInt
+    nextBatch:
+      type: DynamicPropertyInt
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_OUT", elementTypes: [ "ItemContainer", "ContainerHub" ], count: 1 }
+MiningUnit:
+  parent: IndustryInfrastructure
+  oreTier:
+    help: tier of the ores this unit can extract
+    type: int
+    value: 1
+  miningEfficiency:
+    help: ratio production / taken_from_pool
+    type: double
+    value: 0.9
+  maxMiningRate:
+    help: Mining rate in liters per hour (pool consumption)
+    type: double
+    value: 500.0
+  adjacentTerritoryBonus:
+    help: Bonus in ratio per adjacent territory with same owner
+    type: double
+    value: 0.1
+  calibrationGracePeriodHours:
+    help: Duration in hours before calibration starts to decrease
+    type: double
+    value: 48
+  calibrationDecreaseRatePerHour:
+    help: Calibration decrease rate per hour after grace period
+    type: double
+    value: 0.00625
+  calibrationCooldownHour:
+    help: Min delay between two calibrations
+    type: double
+    value: 24
+  pickupCooldownHour:
+    help: Min delay after start to be able to pickup MU
+    type: double
+    value: 24
+  stopCooldownHour:
+    help: Min delay after start to be able to stop MU
+    type: double
+    value: 24
+  runtimeHours:
+    help: Duration in hours of a mining unit cycle
+    type: double
+    value: 1
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_OUT", elementTypes: [ "ItemContainer", "ContainerHub" ], count: 1 }
+  dynamic_properties:
+    miningEfficiency:
+      type: DynamicPropertyDouble
+    status:
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyEnumAsInt<NQ.MiningUnitState>
+    selectedOre:
+      type: DynamicPropertyInt
+    maxMiningRate:
+      type: DynamicPropertyDouble
+    currentMiningRate:
+      type: DynamicPropertyDouble
+    activationTime:
+      type: DynamicPropertyInt
+    nextBatch:
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyNQTimePoint
+    territoryAdjacencyBonus:
+      type: DynamicPropertyDouble
+    lastCalibrationTime:
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyNQTimePoint
+    calibrationAtCalibrationTime:
+      type: DynamicPropertyDouble
+    calibratingPlayerId:
+      type: DynamicPropertyInt
+    calibratingPlayerName:
+      type: DynamicPropertyString
+    lastPreviousCalibrationValue:
+      type: DynamicPropertyDouble
+    lastExtractingPointCoordinates:
+      type: DynamicPropertyString
+    lastExtractedOreType:
+      type: DynamicPropertyInt
+    lastExtractedOreVolume:
+      type: DynamicPropertyDouble
+    lastExtractionCalibrationBonus:
+      type: DynamicPropertyDouble
+SpaceMiningUnit:
+  parent: MiningUnit
+IndustryUnit:
+  parent: IndustryInfrastructure
+  productNameList:
+    help: List of Item classes this industry unit can produce
+    type: ItemNames
+  speedFactor:
+    help: Speed factor applied to base recipe value
+    type: double
+    value: 1.0
+    min: 0.001
+  industryEfficiency:
+    help: Effect that modifies crafting time of all elements produced by this industry
+    type: double
+    value: 1.0
+  nbIndustryPlugIn:
+    type: int
+    min: 0
+    max: 8192
+    value: 7
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_IN", elementTypes: [ "ItemContainer", "ContainerHub" ], count: "nbIndustryPlugIn" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_OUT", elementTypes: [ "ItemContainer", "ContainerHub" ], count: 1 }
+  dynamic_properties:
+    produced:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    status:
+      type: DynamicPropertyString
+      cstype: DynamicPropertyEnumAsString<NQ.IndustryState>
+      default:
+        defaultValue: "STOPPED"
+    recipe:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    batchSize:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 1
+    speedFactor:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 1.0
+        isReadOnly: true
+    getNotifications:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    current_mass:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    current_volume:
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+        defaultValue: 0
+TransferUnit:
+  parent: IndustryUnit
+InstrumentUnit:
+  parent: Electronics
+SupportTechTransportation:
+  parent: Piloting
+GyroUnit:
+  parent: SupportTechTransportation
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+TelemeterUnit:
+  parent: Sensor
+  range:
+    help: telemeter range in m
+    type: double
+    min: 0
+    value: 20
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+ManualButtonUnit:
+  parent: Trigger
+  dynamic_properties:
+    button_on:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+InfoButtonUnit:
+  parent: Display
+  enableJavascript:
+    type: bool
+    value: false
+  dynamic_properties:
+    content:
+      type: DynamicPropertyString
+      default:
+        updatePeriodMs: 10000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    override_others:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: true
+    autoshutdown_time:
+      type: DynamicPropertyDouble
+      default:
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+        defaultValue: 0.0
+    fileUrl:
+      type: DynamicPropertyString
+      default:
+        updatePeriodMs: 10000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    helperKey:
+      type: DynamicPropertyString
+      default:
+        updatePeriodMs: 10000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    waypoint:
+      type: DynamicPropertyString
+      default:
+        updatePeriodMs: 10000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+        defaultValue: ""
+FireworksUnit:
+  parent: FurnituresAppliances
+  dynamic_properties:
+    speed:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 100.0
+    delay:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 4.0
+    color:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    explosionType:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    firingPayload:
+      type: DynamicPropertyString
+      default:
+        isStream: true
+        defaultValue: "{}"
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_CONTAINER" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+LandingGearUnit:
+  parent: SupportTechTransportation
+  length:
+    type: double
+    min: 0
+    value: 2.5
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+CanonUnit:
+  parent: DecorativeUnit
+  length:
+    help: lenght used for ui display
+    type: double
+    min: 0
+    value: 0
+ForceFieldUnit:
+  parent: HighTechFurniture
+  size:
+    help: force field size
+    type: int
+    min: 1
+    value: 1
+  dynamic_properties:
+    length_v2:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    maxLength:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 10
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+ScreenUnit:
+  parent: Display
+  ratio:
+    type: double
+    min: 0
+    value: 1.67
+  sizeFactor:
+    type: double
+    min: 0
+    value: 1
+  htmlCharacterLimit:
+    type: int
+    min: 0
+    value: 50000
+  enableCssAnimation:
+    type: bool
+    value: false
+  enableJavascript:
+    type: bool
+    value: false
+  enableExternalLinks:
+    type: bool
+    value: true
+  dynamic_properties:
+    content_2:
+      type: DynamicPropertyString
+      default:
+        hasPropagation: true
+        updatePeriodMs: 10000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    fileUrl:
+      type: DynamicPropertyString
+      default:
+        hasPropagation: true
+        updatePeriodMs: 10000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+    drmProtected:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        isReadOnly: true
+    dynamicContent:
+      type: DynamicPropertyString
+      default:
+        hasPropagation: true
+        updatePeriodMs: 1000
+        isSavedInBlueprint: true
+        isSavedInInventory: true
+        requireInstance: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+ArtifactUnit:
+  parent: ScreenUnit
+LightUnit:
+  parent: FurnituresAppliances
+  lightProperties:
+    help: light properties
+    type: LightProperties
+  dynamic_properties:
+    blinking:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isSavedInBlueprint: true
+        requireInstance: true
+    ontime:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 1.0
+        isSavedInBlueprint: true
+        requireInstance: true
+    offtime:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 1.0
+        isSavedInBlueprint: true
+        requireInstance: true
+    phase:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0.0
+        isSavedInBlueprint: true
+        requireInstance: true
+    color:
+      type: DynamicPropertyString
+      default:
+        defaultValue: ""
+        isSavedInBlueprint: true
+        requireInstance: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_IN" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+MarketPodUnit:
+  parent: Other
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_MARKET" }
+  dynamic_properties:
+    order_fee:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+    value_tax:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+    daily_storage_fee:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+MarketUnit:
+  parent: Other
+  nbPlugOut:
+    help: number of market plug out
+    type: int
+    value: 256
+  plug_properties:
+    out:
+      - { key: "PlugType::PLUG_MARKET", count: nbPlugOut }
+ResurrectionNodeUnit:
+  parent: Systems
+SeatUnit:
+  parent: FurnituresAppliances
+Sensor:
+  parent: Electronics
+DetectionZoneUnit:
+  parent: Sensor
+  radius:
+    help: detection zone radius in m
+    type: int
+    min: 0
+    value: 2
+  dynamic_properties:
+    zone_state:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    visibility_enabled:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+LaserDetectorUnit:
+  parent: Sensor
+  dynamic_properties:
+    laser_detector_enabled:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+ManualSwitchUnit:
+  parent: Trigger
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_ON" }
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OFF" }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+PressureTileUnit:
+  parent: Trigger
+  dynamic_properties:
+    tile_enabled:
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    owner:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    lastOwnerUpdate:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+    out:
+      - { key: "PlugType::PLUG_SIGNAL", name: "Link::PLUG_NAME_OUT" }
+RadarUnit:
+  parent: Other
+  range:
+    help: range
+    type: double
+    min: 0
+    value: 100000.0
+  refreshPeriod:
+    help: refresh period
+    type: double
+    min: 0
+    value: 1.0
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+RadarPVPUnit:
+  parent: CombatDefense
+  maxIdentifiedTargets:
+    help: base amount of targets that may be identified at a time
+    type: int
+    min: 0
+    value: 4
+  worksInSpace:
+    help: whether the radar works outside of the atmosphere of the closest planet
+    type: bool
+    value: true
+  worksInAtmosphere:
+    help: whether the radar works close to a planet within its atmosphere
+    type: bool
+    value: false
+  reloadTime:
+    help: minimal time between consecutive scans
+    type: double
+    min: 0.00000001
+    value: 1.0
+  scanRange:
+    help: "Maximum detection distance (in meters)"
+    type: int
+    value: 0
+    min: 0
+    max: 1000000
+  baseIdentificationRange16m:
+    help: "Base distance to identify a Construct of build size 16m"
+    type: double
+    value: 0
+    min: 0
+    max: 1000000
+  baseIdentificationRange32m:
+    help: "Base distance to identify a Construct of build size 32m"
+    type: double
+    value: 0
+    min: 0
+    max: 1000000
+  baseIdentificationRange64m:
+    help: "Base distance to identify a Construct of build size 64m"
+    type: double
+    value: 0
+    min: 0
+    max: 1000000
+  baseIdentificationRange128m:
+    help: "Base distance to identify a Construct of build size 128m"
+    type: double
+    value: 0
+    min: 0
+    max: 1000000
+  baseIdentificationTime16m:
+    help: Base time required to identify a Construct of build size 16m
+    type: double
+    min: 0.00000001
+    value: 5
+  identificationTime16mBuff:
+    help: Time buff to identify a Construct of build size 16m
+    type: double
+    min: 0.00000001
+    value: 1.0
+  baseIdentificationTime32m:
+    help: base time required to identify a Construct of build size 32m
+    type: double
+    min: 0.00000001
+    value: 5
+  identificationTime32mBuff:
+    help: Time buff to identify a Construct of build size 32m
+    type: double
+    min: 0.00000001
+    value: 1.0
+  baseIdentificationTime64m:
+    help: Base time required to identify a Construct of build size 64m
+    type: double
+    min: 0.00000001
+    value: 5
+  identificationTime64mBuff:
+    help: Time buff to identify a Construct of build size 64m
+    type: double
+    min: 0.00000001
+    value: 1.0
+  baseIdentificationTime128m:
+    help: Base time required to identify a Construct of build size 128m
+    type: double
+    min: 0.00000001
+    value: 5
+  identificationTime128mBuff:
+    help: Time buff to identify a Construct of build size 128m
+    type: double
+    min: 0.00000001
+    value: 1.0
+  baseScanCone:
+    help: Base half angle of the radar obstruction test cone
+    type: double
+    min: 0.00000001
+    value: 10
+  scanConeBuff:
+    help: Buff factor for the angle of the radar obstruction test cone
+    type: double
+    min: 0.00000001
+    value: 1
+  dynamic_properties:
+    maxIdentifiedTargets:
+      help: Current max identified target
+      type: DynamicPropertyInt
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationRange16m:
+      help: identification range of build size 16m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationRange32m:
+      help: identification range of build size 32m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationRange64m:
+      help: identification range of build size 64m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationRange128m:
+      help: identification range of build size 128m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationTime16m:
+      help: identification time of build size 16m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationTime32m:
+      help: identification time of build size 32m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationTime64m:
+      help: identification time of build size 64m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseIdentificationTime128m:
+      help: identification time of build size 128m
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseScanCone:
+      help: Base half angle of the radar obstruction test cone
+      type: DynamicPropertyDouble
+      default:
+        isReadOnly: true
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_CONTROL", elementTypes: [ "PVPSeatUnit", "KinematicsController" ] }
+      - { key: "PlugType::PLUG_CONTROL", count: "nbControlPlugIn" }
+RadarPvPSpace:
+  parent: RadarPVPUnit
+TeleportationNodeUnit:
+  parent: Systems
+  dynamic_properties:
+    teleport_destination:
+      type: DynamicPropertyString
+      default:
+        defaultValue: "0,0,0"
+    starting_video_file:
+      type: DynamicPropertyString
+    ending_video_file:
+      type: DynamicPropertyString
+    sandbox_destination:
+      type: DynamicPropertyString
+    give_reward: # for teleporters used when leaving tutorial planets after completing the tutorial
+      type: DynamicPropertyBool
+    smooth_translate:
+      type: DynamicPropertyBool
+Scrap:
+  parent: ConsumableDisplay
+  regenCapacity:
+    help: hit points repaired per unit
+    type: double
+    min: 0
+    value: 0
+WeaponUnit:
+  parent: CombatDefense
+  baseDamage:
+    help: base weapon damage on deploy independently from ammo or skill level
+    type: double
+    min: 0
+    value: 10000.0
+  damageBuff:
+    help: Weapon damage buff on use
+    type: double
+    min: 0
+    value: 1.0
+  baseOptimalAimingCone:
+    help: Base Optimal aiming up to this angle around weapon axis in degree
+    type: double
+    min: 0.00000001
+    max: 180.0
+    value: 15.0
+  optimalAimingConeBuff:
+    help: Optimal aiming angle buff on use
+    type: double
+    min: 0.00000001
+    value: 1.0
+  falloffAimingCone:
+    help: Accuracy falloff angle around weapon axis in degree
+    type: double
+    min: 0.00000001
+    max: 180.0
+    value: 10.0
+  baseOptimalTracking:
+    help: Base Optimal aiming for moving targets up to this angular velocity in degree/s
+    type: double
+    min: 0.00000001
+    value: 12.0
+  optimalTrackingBuff:
+    help: Optimal aiming buff for moving targets on use
+    type: double
+    min: 0.00000001
+    value: 1.0
+  falloffTracking:
+    help: Accuracy falloff angular velocity in degree/s
+    type: double
+    min: 0.00000001
+    value: 22.0
+  baseOptimalDistance:
+    help: Base Optimal aiming up to this distance in m
+    type: double
+    min: 0.00000001
+    value: 3000
+  optimalDistanceBuff:
+    help: Optimal aiming buff on use
+    type: double
+    min: 0.00000001
+    value: 1.0
+  falloffDistance:
+    help: falloff distance in m, related to optimal distance, the higher the more accurate
+    type: double
+    min: 0.00000001
+    value: 2500
+  optimalCrossSectionDiameter:
+    help: optimal targets have cross sections corresponding to spheres with this diameter or larger
+    type: double
+    min: 0.00000001
+    value: 16.0
+  baseAccuracy:
+    help: Basic accuracy of the weapon, independent of ammunition or combat situation
+    type: double
+    min: 0.00000001
+    max: 1.0
+    value: 0.9
+  baseCycleTime:
+    help: Max Time to fire a shot if the weapon is otherwise ready
+    type: double
+    min: 0.00000001
+    value: 1.0
+  cycleTimeBuff:
+    help: Time buff to fire on use
+    type: double
+    min: 0.00000001
+    value: 1.0
+  baseReloadTime:
+    help: Max Time to reload the magazine, independently of ammo used
+    type: double
+    min: 0.00000001
+    value: 3.0
+  reloadTimeBuff:
+    help: Time buff to reload the magazine on use
+    type: double
+    min: 0.00000001
+    value: 1.0
+  unloadTime:
+    help: Time to unload the magazine into the linked ammo container
+    type: double
+    min: 0.00000001
+    value: 2.0
+  magazineVolume:
+    help: base volume of the internal magazine
+    type: double
+    min: 0.00000001
+    value: 10.0
+  weaponType:
+    help: Type of weapon, ammo must match this to be compatible
+    enum: true
+    type: WeaponType
+    value: CANNON
+  minConstructSizeCategory:
+    help: minimal construct size category xs, s, m, l
+    type: string
+    value: xs
+  dynamic_properties:
+    baseDamage:
+      help: Current weapon base damage
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseOptimalAimingCone:
+      help: Current optimal aiming cone
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseOptimalTracking:
+      help: Current optimal track
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseOptimalDistance:
+      help: Current optimal distance
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseCycleTime:
+      help: Current cycle time
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    baseReloadTime:
+      help: Current reload time
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    magazineVolume:
+      help: Current magazine volume
+      type: DynamicPropertyDouble
+      default:
+        hasMin: false
+        isReadOnly: true
+    ammoType:
+      help: ammunition item type currently in the magazine
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        hasMin: false
+        isReadOnly: true
+    ammoCount:
+      help: count of ammunition currently in the magazine
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        minValue: 0
+        isReadOnly: true
+    anglePitch:
+      help: Weapon rotation around x-axis in degree
+      type: DynamicPropertyDouble
+      default:
+        isStream: true
+        defaultValue: 0.0
+        minValue: -180.0
+        maxValue: 180.0
+    angleYaw:
+      help: Weapon rotation around z-axis in degree
+      type: DynamicPropertyDouble
+      default:
+        isStream: true
+        defaultValue: 0.0
+        minValue: -180.0
+        maxValue: 180.0
+    reloadOperationType:
+      help: 0 = Reload, 1 = Unload, this only counts if reloadOperationEnd is in the future
+      type: DynamicPropertyInt
+    reloadOperationEnd:
+      help: Timepoint when the active reload operation ends (in timepoint network time)
+      type: DynamicPropertyInt
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ITEM", elementTypes: [ "AmmoContainerUnit" ], name: "Link::PLUG_NAME_CONTAINER" }
+      - { key: "PlugType::PLUG_CONTROL", elementTypes: [ "PVPSeatUnit", "KinematicsController" ] }
+StasisWeaponUnit:
+  parent: WeaponUnit
+  rangeCurvature:
+    help: curvature of the range function (a parameter in spec)
+    type: double
+    value: 0.5
+  rangeMin:
+    help: min range of weapon (D parameter in spec)
+    type: double
+    value: 10000.0
+  rangeMax:
+    help: max range of weapon (d parameter in spec)
+    type: double
+    value: 80000.0
+  effectDuration:
+    help: base duration of the debuf in seconds
+    type: double
+    value: 20.0
+  effectStrength:
+    help: base strength at optimal distance
+    type: double
+    value: 1.0
+  dynamic_properties:
+    effectDuration:
+      help: duration of the debuf in seconds
+      type: DynamicPropertyDouble
+Tool:
+  parent: BaseItem
+  toolbarDefault:
+    help: added to the corresponding toolbar slot if > 0
+    type: int
+    min: 0
+    max: 9
+    value: 0
+  toolDisabled:
+    help: true if tool is disabled for now
+    type: bool
+    value: false
+  effects:
+    type: Effects
+BuildTool:
+  parent: Tool
+AreaSmoothTool:
+  parent: BuildTool
+ElementTool:
+  parent: BuildTool
+LineTool:
+  parent: BuildTool
+LinkTool:
+  parent: BuildTool
+MoveTool:
+  parent: BuildTool
+ReplaceTool:
+  parent: BuildTool
+SelectTool:
+  parent: BuildTool
+SmoothTool:
+  parent: BuildTool
+  range:
+    help: smooth operation range (in m)
+    type: double
+    min: 0
+    value: 20
+  cooldown:
+    help: minimum time between 2 smooth operations (in s)
+    type: double
+    min: 0
+    value: 0.5
+  sphereScaleRange:
+    help: number of different smoothing sphere radius
+    type: int
+    min: 1
+    max: 7
+    value: 2
+VoxelTool:
+  parent: BuildTool
+VertexTool:
+  parent: BuildTool
+RepairTool:
+  parent: ExploreTool
+  restoreEfficiency:
+    help: improve restore capability of scraps used by the tool
+    type: double
+    min: 0
+    value: 1
+  repairEfficiency:
+    help: improve repair capability of scraps used by the tool
+    type: double
+    min: 0
+    value: 1
+  speedFactor:
+    help: repair speed factor
+    type: double
+    min: 0
+    value: 1
+ExploreTool:
+  parent: Tool
+BlueprintTool:
+  parent: ExploreTool
+MiningTool:
+  parent: ExploreTool
+  diggingCollectTime:
+    help: digging collect time (in s)
+    type: double
+    min: 0
+    value: 0.3
+  diggingRange:
+    help: digging range (in m)
+    type: double
+    min: 0
+    value: 20
+  diggingScaleRange:
+    help: number of different digging sphere radius
+    type: int
+    min: 1
+    max: 6
+    value: 1
+  terraformingDuration:
+    help: terraforming operation duration (in s)
+    type: double
+    min: 0
+    value: 0.3
+  terraformingRange:
+    help: terraforming range (in m)
+    type: double
+    min: 0
+    value: 20
+  miningSpeedFactor:
+    help: mining speed factor
+    type: double
+    min: 0
+    value: 1
+  miningRange:
+    help: mining range (in m)
+    type: double
+    min: 0
+    value: 20
+  minSphereRadius:
+    help: mining minimum sphere radius (in m)
+    type: double
+    min: 0
+    value: 0.1
+  maxSphereRadius:
+    help: mining minimum sphere radius (in m)
+    type: double
+    min: 0
+    value: 8.0
+  miningEfficiency:
+    help: mining efficiency ie L of material collected per L mined
+    type: double
+    min: 0
+    value: 1
+HarvestTool:
+  parent: ExploreTool
+  harvestDurationFactor:
+    help: harvest duration factor
+    type: double
+    min: 0
+    value: 1
+  harvestEfficiency:
+    help: harvest efficiency ie L of material collected per L mined
+    type: double
+    min: 0
+    value: 1
+DeployTool:
+  parent: ExploreTool
+DetectorTool:
+  parent: ExploreTool
+  directionalScanRange:
+    help: directional scan cone lenght (in m)
+    type: double
+    min: 0
+    value: 50
+  directionalScanAngle:
+    help: directional scan cone angle (in degrees)
+    type: double
+    min: 0
+    value: 10
+  directionalScanResponsiveness:
+    help: directional scan feedback delay (in s)
+    type: double
+    min: 0
+    value: 1
+  directionalScanSensitivity:
+    help: sensitivity to signal variation
+    type: double
+    min: 0
+    value: 0.001
+  directionalScanCooldown:
+    help: directional scan period (in s)
+    type: double
+    min: 0
+    value: 0.5
+  closeRangeScanPeriod:
+    help: close range scan (bip) period (in s)
+    type: double
+    min: 0
+    value: 1
+  closeRangeScanRadius:
+    help: close range scan radius (in m)
+    type: double
+    min: 0
+    value: 3
+  diggingRange:
+    help: digging range (in m)
+    type: double
+    min: 0
+    value: 20
+  diggingCollectTime:
+    help: digging collect time (in s)
+    type: double
+    min: 0
+    value: 0.3
+  diggingScaleRange:
+    help: number of different digging sphere radius
+    type: int
+    min: 1
+    max: 6
+    value: 1
+InformationTool:
+  parent: ExploreTool
+ManeuverTool:
+  parent: ExploreTool
+  rangeFactor:
+    help: maneuver tool range is min(rangeBase, buildRange) * rangeFactor
+    type: double
+    min: 0
+    value: 1
+  grabRangeBase:
+    help: maneuver tool grab range is (grabRangeBase + grabRangeSizeFactor * constructSize) * rangeFactor
+    type: double
+    min: 0
+    value: 0
+  grabRangeSizeFactor:
+    help: maneuver tool grab range is (grabRangeBase + grabRangeSizeFactor * constructSize) * rangeFactor
+    type: double
+    min: 0
+    value: 1
+  travelDistancePerPeriod:
+    help: maneuvered construct can move at most travelDistancePerPeriod per travelDistancePeriod and per maneuver session
+    type: double
+    min: 0
+    value: 256
+  travelDistancePeriod:
+    help: maneuvered construct can move at most travelDistancePerPeriod during travelDistancePeriod
+    type: double
+    min: 0
+    value: 180
+  rangeStepCount:
+    help: number of mouse roll steps needed to move the object forward/backward of grab range distance
+    type: int
+    value: 20
+PlanetSmoothTool:
+  parent: ExploreTool
+  range:
+    help: smooth operation range (in m)
+    type: double
+    min: 0
+    value: 20
+  cooldown:
+    help: minimum time between 2 smooth operations (in s)
+    type: double
+    min: 0
+    value: 0.5
+  sphereScaleRange:
+    help: number of different smoothing sphere radius
+    type: int
+    min: 1
+    max: 7
+    value: 2
+FlatteningTool:
+  parent: ExploreTool
+  cylinderHeight:
+    help: flattening cylinder height
+    type: double
+    min: 0
+    value: 3.5
+  range:
+    help: flattening range (in m)
+    type: double
+    min: 0
+    value: 20
+  collectTime:
+    help: flattening collect time (in s)
+    type: double
+    min: 0
+    value: 0.75
+  cylinderScaleRange:
+    help: number of different flattening cylinder radius
+    type: int
+    min: 1
+    max: 6
+    value: 1
+RefuelTool:
+  parent: ExploreTool
+  speedFactor:
+    help: refuel speed factor
+    type: double
+    min: 0
+    max: 100
+    value: 0.1
+ScannerTool:
+  parent: ExploreTool
+  shortRange:
+    help: scanner short range at lod 0 (in m)
+    type: double
+    min: 0
+    max: 50
+    value: 50
+  longRange:
+    help: scanner long range at lod 2 (in m)
+    type: double
+    min: 50
+    max: 2000
+    value: 400
+  distanceBetween2Scans:
+    help: distance that must be walked before a new scan is triggered (in m)
+    type: double
+    min: 1
+    value: 10
+  cooldown:
+    help: scan period (in s)
+    type: double
+    min: 0
+    value: 3.0
+  diggingRange:
+    help: digging range (in m)
+    type: double
+    min: 0
+    value: 20
+  diggingCollectTime:
+    help: digging collect time (in s)
+    type: double
+    min: 0
+    value: 0.3
+  diggingScaleRange:
+    help: number of different digging sphere radius
+    type: int
+    min: 1
+    max: 6
+    value: 1
+WeaponTool:
+  parent: ExploreTool
+TerritoryScannerUnit:
+  parent: Systems
+  duration:
+    help: total duration of the scan in seconds
+    type: double
+    min: 60
+    value: 120
+  dynamic_properties:
+    lastScanStartTime:
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        defaultValue: 0
+    status:
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        defaultValue: 0
+    coordinates:
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    scanStartWorldPosition:
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+FeaturesList:
+  parent: GameplayObject
+  luaRadarRestrictions:
+    help: Restrict position and velocity construct infos in lua to matching transponder
+    type: bool
+    value: true
+  abandonConstructOnCrash:
+    help: Whether a construct loses its owner after its core unit was destroyed due to physics
+    type: bool
+    value: false
+  kineticDamageElementLifeLoss:
+    help: Wether elements increase their resotre count when construct crash
+    type: bool
+    value: true
+  barter:
+    type: bool
+    value: true
+  talentTree:
+    type: bool
+    value: true
+  buildHelper:
+    type: bool
+    value: true
+  yebisPostFXs:
+    type: bool
+    value: true
+  fetchConstruct:
+    type: bool
+    value: true
+  pvp:
+    type: bool
+    value: true
+  friendList:
+    type: bool
+    value: true
+  industry:
+    type: bool
+    value: true
+  organizations:
+    type: bool
+    value: true
+  planetVoxelOperations:
+    type: bool
+    value: true
+  marks:
+    type: bool
+    value: true
+  repairUnit:
+    type: bool
+    value: true
+  preventExternalUrl:
+    type: bool
+    value: true
+  resumeConstructPhysics:
+    type: bool
+    value: true
+  missions:
+    type: bool
+    value: true
+  miningUnit:
+    type: bool
+    value: true
+  talentRespec:
+    type: bool
+    value: false
+  showWatermark:
+    type: bool
+    value: false
+  dynamicAsteroids:
+    type: bool
+    value: true
+  dynamicWrecks:
+    type: bool
+    value: true
+  debugComputeVoxelHash:
+    type: bool
+    value: false
+    help: Activate various hash computation in voxel operation
+  territoryUpkeep:
+    type: bool
+    value: false
+  miningUnitCalibration:
+    type: bool
+    value: false
+  constructGarbageCollection:
+    type: bool
+    value: false
+  enforceMeshComplexityLimit:
+    type: bool
+    value: false
+  orgConstructLimit:
+    type: bool
+    value: false
+  orgConstructLimitWarnOnly:
+    type: bool
+    value: true
+  allowApheliaMissionInVR:
+    type: bool
+    value: true
+  deactivateCollidingElements:
+    type: bool
+    value: false
+  plasmaExtractorUnit:
+    type: bool
+    value: true
+  skinSelector:
+    type: bool
+    value: false
+    help: Show the avatar skin selector
+  allowMarketOnDynamicConstruct:
+    type: bool
+    value: false
+  allowIndustryOnDynamicConstruct:
+    type: bool
+    value: false
+  allowMiningUnitOnDynamicConstruct:
+    type: bool
+    value: false
+  allowMissionContainerOnDynamicConstruct:
+    type: bool
+    value: false
+  allowBaseShieldOnDynamicConstruct:
+    type: bool
+    value: false
+  allowBaseShieldOnStaticConstruct:
+    type: bool
+    value: false
+  allowShieldEverywhere:
+    type: bool
+    value: false
+FeaturesConfig:
+  parent: GameplayObject
+WatermarkConfig:
+  parent: FeaturesConfig
+  watermarkText:
+    type: string
+    value: ""
+FetchConstructConfig:
+  parent: FeaturesConfig
+  hasTimeLimit:
+    type: bool
+    value: true
+  fromPlanetSurface:
+    help: "Character can only fetch construct if grounded to a planet surface."
+    type: bool
+    value: true
+  delay:
+    help: "Delay between two construct fetchings in seconds."
+    type: int
+    value: 86400
+  maxDistance:
+    help: "Maximum distance to fetch a construct in m."
+    type: double
+    value: 4000
+WalletTransferConfig:
+  parent: FeaturesConfig
+  minTransferQuantas:
+    type: int
+    value: 1000
+  transferMinDelay:
+    type: int
+    value: 600
+IndustryConfig:
+  parent: FeaturesConfig
+  minRecipeTime:
+    type: int
+    value: 1
+BlueprintConfig:
+  parent: FeaturesConfig
+  costBase:
+    type: double
+    value: 1000
+  costSizeExponentBase:
+    type: double
+    value: 5
+  costReductionA:
+    type: double
+    value: 0.6
+  costReductionR:
+    type: double
+    value: 0.15
+  honeycombSwapCooldownHours:
+    help: Cooldown in hours on the swap honeycomb feature during blueprint deployment.
+    type: double
+    value: 0.1
+PVPConfig:
+  parent: FeaturesConfig
+  pvpEnableAreaLimitation:
+    type: bool
+    value: false
+  stagingFakeWeaponshot:
+    help: Enable staging tool fake weapon shots that may be outside of tutorials.
+    type: bool
+    value: false
+  planetVoxelOpIdsWhiteList:
+    type: ULongVector
+  planetsAreSafeZones:
+    type: bool
+    value: true
+  planetSafeZoneFallbackRadius:
+    help: Currently there is no atmo combat, add a fallback safe zone radius to planets if we forgot it in the BO config
+    type: double
+    value: 500000.0
+  planetSafeZoneFallbackMinSize:
+    help: For historic reasons some fixture asteroids have planet type, ignore those when applying the fallback rule
+    type: double
+    value: 10000.0
+  safeZones:
+    type: SafeZones
+  planetProperties:
+    type: PlanetConfProperties
+  spawnTag:
+    type: string
+    value: "Nova_DistrictHub"
+  respawnTag:
+    type: string
+    value: "respawnPoint"
+  pvpTimerDuration:
+    help: Pvp timer duration (in seconds)
+    type: int
+    value: 600
+  shields:
+    help: Shield feature
+    type: bool
+    value: true
+  baseShields:
+    help: BaseShield bubble feature
+    type: bool
+    value: true
+  shieldsAdjResistances:
+    help: Shield Adjustable resistances feature
+    type: bool
+    value: true
+  baseShieldsAdjResistances:
+    help: Base Shield Adjustable resistances feature
+    type: bool
+    value: true
+  baseShieldImmunity:
+    help: Base Shield immunity feature
+    type: bool
+    value: true
+  shieldsVenting:
+    help: Shield Venting feature
+    type: bool
+    value: true
+  coreUnitStress:
+    help: Core Unit stress feature
+    type: bool
+    value: true
+  constructDamagedNotificationDelay:
+    help: Delay between two construct damaged notification for the same construct, in s (default 20min)
+    type: int
+    value: 1200
+CoreUnitStressConfig:
+  parent: FeaturesConfig
+  hpToStressRatio:
+    type: double
+    value: 1
+  h0:
+    type: double
+    help: critical hp, in hp
+    value: 25000000
+  expo:
+    type: double
+    help: No unit, between 0 and 1 (expo = 1, always linear)
+    value: 0.05
+  tierExpoPure:
+    type: double
+    help: Impact of the tier in the calculus of m_m for pure materials. Typically 1.15
+    value: 1.15
+  tierExpoProducts:
+    type: double
+    help: Impact of the tier in the calculus of m_m for products materials. Typically 1.2
+    value: 1.2
+  stressMultiplier:
+    type: double
+    help: Multiplier that is applied to the stress calculation
+    value: 0.25
+BaseShieldConfig:
+  parent: FeaturesConfig
+  lockdownCountdownMinimumDuration:
+    type: double
+    help: minimum duration of a lockdown in hours (before applying lockdownDelta)
+    value: 18
+  lockdownDelta:
+    type: double
+    help: lockdown exit time random delta in hours
+    value: 2
+  lockdownRatioTrigger:
+    type: double
+    help: ratio (between 0 and 1) of bubble hp that needs to be destroyed to start the lockdown
+    value: 0.5
+  defaultLockdownExitTime:
+    type: int
+    help: default value for lockdown exit time, number of minutes from midnight utc
+    value: 720
+  postLockdownPvpTimer:
+    help: time pvp timer will be active after lockdown (in s)
+    type: int
+    min: 0
+    value: 120
+  immunityDuration:
+    help: once the construct has finished regenerating its shield after the end of combat lock, it enters immunity for a set duration (in s)
+    type: int
+    min: 0
+    value: 172800 # 48 h
+OrganizationConfig:
+  parent: FeaturesConfig
+  orgCreationFee:
+    type: double
+    value: 1000000
+  voteDurationHours:
+    type: double
+    value: 24
+TerritoriesConfig:
+  parent: FeaturesConfig
+  territoryUnitDeployDuration:
+    type: double
+    value: 900
+  territoryUnitRetrieveCooldown:
+    type: double
+    value: 604800
+  orgFirstTerritoryFee:
+    type: double
+    value: 50000
+  orgTerritoryFeeFactor:
+    type: double
+    value: 50000
+  orgTerritoryFeeExponant:
+    type: double
+    value: 2
+  playerFirstTerritoryFee:
+    type: double
+    value: 50000
+  playerTerritoryFeeFactor:
+    type: double
+    value: 50000
+  playerTerritoryFeeExponant:
+    type: double
+    value: 2
+  upkeepIntervalDays:
+    help: "interval in days at which upkeep fees are due"
+    type: int
+    value: 7
+  upkeepFee:
+    help: "upkeep fee in quantas"
+    type: int
+    value: 1000000
+  maxBalanceInFeeDays:
+    help: "Max territory wallet balance counted in upkeep days"
+    type: int
+    value: 90
+  initialExpirationDelayDays:
+    help: "initial period after deployment before which first upkeep is due in days"
+    type: int
+    value: 14
+  abandonDelayDays:
+    help: "delay after which an off-line territory is abandoned"
+    type: int
+    value: 14
+  keyExpirationDelayHours:
+    help: "delay after which a territory key expires"
+    type: int
+    value: 48
+  requisitionDelayDays:
+    help: "delay in days between requisition time and construct disown"
+    type: int
+    value: 14
+CoherentConfig:
+  parent: FeaturesConfig
+  imageCDNList:
+    help: list of valid cdn domain name
+    type: ItemNames
+ReconnectionRewardConfig:
+  parent: FeaturesConfig
+  reconnectionRewardInterval:
+    help: "Cooldown in seconds for reconnection reward (default: 23h)"
+    type: int
+    value: 82800
+  reconnectionRewardMoney:
+    help: "Reward money on reconnection (in quantas)"
+    type: int
+    value: 0
+AsteroidTrackerConfig:
+  parent: FeaturesConfig
+  maxScanDistance:
+    help: "max distance from scan point to accept as valid scan"
+    type: double
+    value: 1000.0
+  scanPointDistances:
+    help: "distances from asteroid center for each scan point"
+    type: ULongVector
+    value: [200000, 100000, 50000]
+  scanPointDistanceRandomFactor:
+    help: "Portion of the distance to randomize"
+    type: double
+    value: 0.2
+  antiCheatRadius:
+    help: "Distance between fake center and actual center"
+    type: double
+    value: 100000
+AsteroidManagerConfig:
+  parent: FeaturesConfig
+  minStaticConstructDistance:
+    help: "min distance to a static construct"
+    type: double
+    value: 10000.0
+  minPlanetDistance:
+    help: "min distance to a planetary body"
+    type: double
+    value: 1000000.0
+  maxPlanetDistance:
+    help: "max distance to closest planetary body"
+    type: double
+    value: 10000000.0
+  minAsteroidDistance:
+    help: "min distance between two asteroids"
+    type: double
+    value: 1000.0
+  lifetimeDays:
+    help: "per asteroid lifetime in days"
+    type: int
+    value: 20
+  cycleTimeDays:
+    help: "Interval between spawn cycles"
+    type: int
+    value: 21
+  count:
+    help: "number of asteroids to spawn for each tier per cycle"
+    type: ULongVector
+    value: [40, 20, 10, 5, 3]
+  safezoneProbability:
+    help: "Probability to spawn in safe zone, -1 for don't care"
+    type: DVector
+    value: [0.5, 0.5, 0, 0, 0]
+  publishDelay:
+    help: "delay in seconds between discovery and publish on GAT"
+    type: int
+    value: 36000
+  planets:
+    help: "list of construct ids to spawn asteroids around"
+    type: ULongVector
+    value: [1,2,3,4,5,6,7,8,9]
+  notBefore:
+    help: "Do not spawn anything before that date"
+    type: int
+    value: 0
+  spawnBatchSize:
+    help: "Max number of asteroids to spawn for each batch"
+    type: int
+    value: 5
+  spawnBatchIntervalHours:
+    help: "Interval between spawn batches in hour"
+    type: double
+    value: 1
+WreckManagerConfig:
+  parent: FeaturesConfig
+  minStaticConstructDistance:
+    help: "min distance to a static construct"
+    type: double
+    value: 10000.0
+  minPlanetDistance:
+    help: "min distance to a planetary body"
+    type: double
+    value: 1000000.0
+  maxPlanetDistance:
+    help: "max distance to closest planetary body"
+    type: double
+    value: 10000000.0
+  minAsteroidDistance:
+    help: "min distance between two asteroids"
+    type: double
+    value: 1000.0
+  lifetimeDays:
+    help: "spawn cycle period in days"
+    type: int
+    value: 20
+  count:
+    help: "number of asteroids to spawn for each tier"
+    type: ULongVector
+    value: [40, 20, 10, 5, 3]
+  safezoneProbability:
+    help: "Probability to spawn in safe zone, -1 for don't care"
+    type: DVector
+    value: [-1, -1, 0, 0, 0]
+  planets:
+    help: "list of construct ids to spawn asteroids around"
+    type: ULongVector
+    value: [1,2,3,4,5,6,7,8,9]
+  notBefore:
+    help: "Do not spawn anything before that date"
+    type: int
+    value: 0
+  spawnBatchSize:
+    help: "Max number of asteroids to spawn for each batch"
+    type: int
+    value: 5
+  spawnBatchIntervalHours:
+    help: "Interval between spawn batches in hour"
+    type: double
+    value: 1
+  offsetDistanceMax:
+    type: double
+    value: 800000.0
+  offsetDistanceMin:
+    type: double
+    value: 100000.0
+ConstructCompactionConfig:
+  parent: FeaturesConfig
+  autoCompactRadius:
+    help: "Radius around the interest points around which auto-compaction is enabled"
+    type: int
+    value: 100
+  autoCompactionMinIdleTime:
+    help: "Time for which a construct must be idle before being an auto-compaction candidiate"
+    type: int
+    value: 600
+  compactionMaxMass:
+    help: "Max mass in kg of a construct to allow compaction"
+    type: int
+    value: 5000
+MissionConfig:
+  parent: FeaturesConfig
+  updateCooldown:
+    help: "Period after mission creation when update is locked (in seconds)"
+    type: int
+    value: 300
+  creationFee1h:
+    help: "Creation fee in quantas for 1h mission"
+    type: int
+    value: 10000
+  creationFee12h:
+    help: "Creation fee in quantas for 12h mission"
+    type: int
+    value: 20000
+  creationFee24h:
+    help: "Creation fee in quantas for 24h mission"
+    type: int
+    value: 50000
+  creationFee7d:
+    help: "Creation fee in quantas for 7 days mission"
+    type: int
+    value: 100000
+  creationFee30d:
+    help: "Creation fee in quantas for 30 days mission"
+    type: int
+    value: 200000
+  maxDeliverDistance:
+    help: "Max distance for pickup/delivery"
+    type: int
+    value: 1000
+  minRideDistance:
+    help: "Min distance between origin and destination containers"
+    type: int
+    value: 1000
+  apheliaSpecialMissionRewardThreshold:
+    help: "Threshold in quantas for an aphelia mission to be special"
+    type: int
+    value: 1000000
+  apheliaSpecialMissionVisibilityRatio:
+    help: "Ratio of visible/total for each player's view of aphelia special missions"
+    type: double
+    value: 0.05
+  apheliaSpecialMissionResetShiftHours:
+    help: "shift in hours from UTC time at which special mission list will reset"
+    type: double
+    value: 10.0
+  apheliaSpecialMissionDurationHours:
+    help: "Duration in hours of aphelia special missions"
+    type: double
+    value: 24.0
+SurveyConfig:
+  parent: FeaturesConfig
+  minimumTimeBetweenSurveyInH:
+    help: "Minimum time between two survey (in hours)"
+    type: double
+    value: 5
+  firstSurveyGameTimeInH:
+    help: "Period before the first survey is trigger (in hours)"
+    type: double
+    value: 5
+  secondSurveyGameTimeInH:
+    help: "Period before the second survey is trigger (in hours)"
+    type: double
+    value: 40
+  nqSurveyDateTrigger:
+    help: "After this date every player will be shown the survey(format yyyy-mm-dd ex : 2021-02-14 empty if no trigger)"
+    type: string
+    value: ""
+MiningConfig:
+  parent: FeaturesConfig
+  maximumGroundDistance:
+    help: "Maximum ground distance (in meters)"
+    type: double
+    value: 5.0
+  tierFactor:
+    help: "Factor applied depending of ore tier (tierFactor ^ oreTier)"
+    type: double
+    value: 0.4
+  orePoolFactor:
+    help: "Base ratio bonus depending of ore pool availability"
+    type: double
+    value: 0.1
+  calibrationBonusFactor:
+    help: "Calibration bonus"
+    type: double
+    value: 0.75
+  extractingResultThreshold:
+    help: "Result threshold to gain calibration bonus"
+    type: double
+    value: 0.8
+  maxBattery:
+    help: "Maximum battery for extracting game"
+    type: double
+    value: 250
+  freeBattery:
+    help: "Battery amount that can be used before affecting battery efficiency"
+    type: double
+    value: 150
+  minBatteryMultiplier:
+    help: "Base multiplier applied to mini game height result when calculating final mini game result"
+    type: double
+    value: 0.5
+  moveProbeBatteryCostBase:
+    help: "Move probe base cost"
+    type: double
+    value: 0
+  moveProbeBatteryCostByDistance:
+    help: "Move probe cost by distance"
+    type: double
+    value: 10
+  scanPointBatteryCost:
+    help: "Scan a point battery cost"
+    type: double
+    value: 5.0
+  scanPointRevealArea:
+    help: "Scan a point, revealed area radius"
+    type: double
+    value: 0.015
+  revealCircleBatteryCost:
+    help: "Reveal circle base battery cost"
+    type: double
+    value: 30
+  revealCircleBatteryCostVariable:
+    help: "Reveal circle variable additional battery cost (depending of action size)"
+    type: double
+    value: 30
+  revealCircleRadius:
+    help: "Reveal circle base radius"
+    type: double
+    value: 0.075
+  revealCircleRadiusVariable:
+    help: "Reveal circle additional radius (depending of action size)"
+    type: double
+    value: 0.1
+  revealLineCost:
+    help: "Reveal line base cost"
+    type: double
+    value: 20
+  revealLineCostByDistance:
+    help: "Reveal line additional cost by distance"
+    type: double
+    value: 50
+  revealLineStrokeWidth:
+    help: "Reveal line width"
+    type: double
+    value: 0.01
+  scanForPeakCost:
+    help: "Scan for peak base cost"
+    type: double
+    value: 15
+  scanForPeakRadius:
+    help: "Scan for peak radius"
+    type: double
+    value: 0.13
+  coneScanCost:
+    help: "Cone scan base cost"
+    type: double
+    value: 35
+  coneScanRadius:
+    help: "Cone scan radius"
+    type: double
+    value: 0.22
+  coneScanAngle:
+    help: "Cone scan angle (in radian)"
+    type: double
+    value: 2.62
+  scanRandomNoiseFrequency:
+    help: "Cone scan deviation noise frequency"
+    type: double
+    value: 10
+  extractingSpawnRadius:
+    help: "Maximum spawn radius of the extracting mini game result (in meter)"
+    type: double
+    value: 1.0
+ConstructGCConfig:
+  parent: FeaturesConfig
+  apheliaTerritoryConstructAbandonDelayHours:
+    help: "idle time after which a construct on aphelia territory is abandoned"
+    type: double
+    value: 10.0
+  unsubscribedEntityConstructAbandonDelayHours:
+    help: "time after which a construct from an unsubscribed entity is abandoned"
+    type: double
+    value: 960.0
+  apheliaTerritoryAbandonedConstructDeleteDelayHours:
+    help: "time after which an abandoned construct on aphelia territory is deleted"
+    type: double
+    value: 10.0
+  abandonedConstructDeleteDelayHours:
+    help: "Time after which any abandoned construct is deleted"
+    type: double
+    value: 960.0
+ReportAbuseConfig:
+  parent: FeaturesConfig
+  reportAbuseCooldown:
+    help: minimum time between 2 reports by the same person (seconds)
+    type: int
+    value: 900
+  reportAbuseTargetCooldown:
+    help: minimum time between 2 reportys by the same person on the same target (seconds)
+    type: int
+    value: 86400 # 24 * 60 * 60 = 24h
+DeployInterdictionConfig:
+  parent: FeaturesConfig
+  gameplayInterdictionZoneRadius:
+    help: radius in meters of each interdiction zone set by gaemplaytag
+    type: double
+    value: 50000
+  alienInterdictionZoneRadius:
+    help: radius in meters of each interdiction zone around alien cores
+    type: double
+    value: 1000000
+  asteroidInterdictionZoneRadius:
+    help: radius in meters of each interdiction zone around alien cores
+    type: double
+    value: 100000
+  bossInterdictionZoneRadius:
+    help: radius in meters of each interdiction zone around alien boss once spawned
+    type: double
+    value: 100000
+ConstructSpeedConfig:
+  parent: FeaturesConfig
+  heavyConstructMass:
+    help: "kg. Constructs heavier than this have a heavy speed limit"
+    type: double
+    value: 10000
+  maxHeavyLinearSpeedKmH:
+    help: "km/h. >= heavy speed. Speed limit of heavy constructs in space"
+    type: double
+    value: 20000
+  maxHeavyAngularSpeed:
+    help: "rad/s. >= heavy speed. Speed limit of heavy constructs in space"
+    type: double
+    value: 2
+  lightConstructMass:
+    help: "kg. Constructs lighter than this have a light speed limit"
+    type: double
+    value: 0
+  maxLightLinearSpeedKmH:
+    help: "km/h. >= heavy speed. Speed limit of light constructs in space"
+    type: double
+    value: 50000
+  maxLightAngularSpeed:
+    help: "rad/s. >= heavy speed. Speed limit of light constructs in space"
+    type: double
+    value: 3
+  convexity:
+    help: "a >= 0. a = 0 -> piecewise affine function, a = infinity -> non continuous function"
+    type: double
+    value: 1
+  convergenceDuration:
+    help: "s. Time it takes to reduce current speed to maxSpeed on debuff received"
+    type: double
+    value: 3
+  useAtmoSpeedLimit:
+    help: "enable atmo speed limit depending on atmosphere density"
+    type: bool
+    value: false
+  useRelativisticMassIncrease:
+    help: "enable old school relativistic mass increase"
+    type: bool
+    value: false
+  effectStackingAlpha:
+    help: "multiplier of effects values after the first one"
+    type: double
+    value: 0.1
+    min: 0.
+    max: 1.
+  effectStackingBeta:
+    help: "geometric multiplier of effect value after the second one"
+    type: double
+    value: 0.7
+    min: 0.
+    max: 1.
+SolarSystemConfig:
+  parent: FeaturesConfig
+SolarSystemPlanet:
+  parent: SolarSystemConfig
+  constructId:
+    type: int
+  moonsConstructId:
+    type: ULongVector
+  maxStaticAltitude:
+    type: double
+    value: 1000
+SteamConfig:
+  parent: FeaturesConfig
+  achievementsList:
+    help: "It contain a list of steam achievements id"
+    type: StringVector
+  refundPeriodDuration:
+    type: int
+    help: "Minimum game time required before unlocking full gameplay"
+    value: 10800
+SentinelConfig:
+  parent: FeaturesConfig
+  minBeaconRadius:
+    help: "min planet distance at which beacon spawn"
+    type: double
+    value: 3000000
+  maxBeaconRadius:
+    help: "max planet distance at which beacon spawn"
+    type: double
+    value: 4000000
+  rejectCooldownSeconds:
+    help: "cooldown after mission rejection"
+    type: double
+    value: 1200
+  bossScoreThreshold:
+    help: "alien score threshold at which the boss start its spawn timer"
+    type: int
+    value: 13000
+  bossSpawnDelay:
+    help: "delay in seconds before the alien boss spawns when threshold reached"
+    type: double
+    value: 86400
+  bossModel:
+    help: "model used for the boss"
+    type: string
+    value: NPCTowerBoss
+  bossSpawnCoordinates:
+    help: "spawn coordinates of the boss"
+    type: DVector
+    value: [1000000, 2000000, 3000000]
+  bossAlienScorePoints:
+    help: "how many score points does killing the boss gives"
+    type: int
+    value: 1000000
+  debugDump:
+    help: "dump missions locally"
+    type: bool
+    value: false
+PvEGenerationConfig:
+  parent: FeaturesConfig
+  label:
+    help: "Label for the difficulty. Shown to players."
+    type: string
+    value: "Undefined Difficulty"
+  minWaveCount:
+    help: "The minimum amount of battlegroups to create."
+    type: int
+    value: 8
+  maxWaveCount:
+    help: "The maximum amount of battlegroups to create, can overflow by one if a filler wave is needed"
+    type: int
+    value: 12
+  targetShieldSum:
+    help: "The target sum enemy shield to have in the mission (Sets the difficulty)."
+    type: double
+    value: 130000000
+  generationSmoothing:
+    help: "A modifier which allows the general noise to be evened out slightly."
+    type: double
+    value: 1
+  tier:
+    help: "A numerical identifier for the mission difficulty, 0-4 (Not used)."
+    type: int
+    value: 4
+  allowedModels:
+    help: "Allowed NPC types for this difficulty."
+    type: StringVector
+  maxEnemyOfOneType:
+    help: "The max amount of a single enemy type allowed in a battlegroup."
+    type: int
+    value: 8
+  clusterSpacing:
+    help: "A variable distance between enemies inside a battlegroup as positioned in the world."
+    type: double
+    value: 3500
+  minWaveSeparation:
+    help: "The minimum distance between two battlegroups."
+    type: double
+    value: 25000
+  maxWaveSeparation:
+    help: "The maximum distance between two battlegroups."
+    type: double
+    value: 100000
+  initialDistance:
+    help: "The min distance between spawn and the first battlegroup, allows enemies to be visible upon entry."
+    type: double
+    value: 500
+  initialDistanceMax:
+    help: "The max distance between spawn and the first battlegroup, allows enemies to be visible upon entry."
+    type: double
+    value: 100000
+  initialSeparation:
+    help: "A modifier value for the clusterSpacing for the first battlegroup, allowing the first group to be closer together."
+    type: double
+    value: 1
+  endWithStrongestWave:
+    help: "Forces the strongest battlegroup (hp sum) to the end of the waves."
+    type: bool
+    value: true
+  canBattlegroupSubSpawn:
+    help: "Allows battlegroups NPCs to not spawn all at once."
+    type: bool
+    value: true
+  allowedMissionTypes:
+    help: "List of the mission types allowed, can be one of: Gauntlet, Trap, Wave."
+    type: StringVector
+  maxDistanceFromSpawn:
+    help: "The maximum distance waves can spawn from the initial spawn location."
+    type: double
+    value: 100000
+  waveSpawnVariance:
+    help: "The distance between two battlegroups in wave mode."
+    type: double
+    value: 25000
+  timeBetweenWaves:
+    help: "The time between two waves in wave mode."
+    type: double
+    value: 200
+  timeBetweenWavesVariance:
+    help: "A random amount of seconds up to this value to delay some of the spawns in a wave."
+    type: double
+    value: 5
+  minTrapDistance:
+    help: "The minimum distance between two traps (and battlegroups) for trap missions."
+    type: double
+    value: 75000
+  maxTrapDistance:
+    help: "The minimum distance between two traps (and battlegroups) for trap missions."
+    type: double
+    value: 405000
+  trapTriggerDistance:
+    help: "The radius of the triggers in a trap mission."
+    type: double
+    value: 25000
+  distanceBetweenTraps:
+    help: "The minimum distances between traps"
+    type: double
+    value: 50000
+  debugMode:
+    help: "Present mission information in the description, visible to players if turned on"
+    type: bool
+    value: false
+  firstWaveDelay:
+    help: "Delays the first enemies will spawn after this delay"
+    type: double
+    value: 10
+  gauntletHPMultiplier:
+    help: "Multiplies the amount of HP present in gauntlet type missions"
+    type: double
+    value: 1
+  waveHPMultiplier:
+    help: "Multiplies the amount of HP present in wave type missions"
+    type: double
+    value: 1
+  trapHPMultiplier:
+    help: "Multiplies the amount of HP present in trap type missions"
+    type: double
+    value: 1
+Character:
+  parent: GameplayObject
+  maxLinearSpeedKmH:
+    help: "km/h. > construct max speed. Speed limit of character in space"
+    type: double
+    value: 60000
+  talentPointsPerSecond:
+    help: number of talent points the player acquires per second
+    type: double
+    value: 0.1
+  talentLearningMultiplier:
+    help: talent points multiplier for a queued talent
+    type: double
+    value: 15
+  talentQueueRequestMinimumDelay:
+    help: number of seconds between 2 consecutive server requests to change talent queue
+    type: double
+    value: 3
+  talentStartTime:
+    help: min time at which talent points start accumulating (unix timestamp)
+    type: int
+    value: 0
+  talentBoost:
+    help: "json spec of talent boost: ORDERED list of { start: date factor: factor}"
+    type: string
+    value: "[]"
+  walkSpeed:
+    help: walk speed in m/s
+    type: double
+    value: 2.5
+  sprintSpeed:
+    help: sprint speed in m/s
+    type: double
+    value: 6
+  groundJetpackSpeed:
+    help: ground jetpack speed in m/s
+    type: double
+    value: 10
+  jumpSpeed:
+    help: jump speed in m/s
+    type: double
+    value: 3.5
+  jumpDuration:
+    help: jump duration in s
+    type: double
+    value: 0.4
+    min: 0.01
+  doubleJumpSpeed:
+    help: double jump speed in m/s
+    type: double
+    value: 3.5
+  doubleJumpDuration:
+    help: double jump duration in s
+    type: double
+    value: 0.6
+    min: 0.01
+  jetpackHorizontalSpeed:
+    help: build jetpack horizontal normal speed in m/s
+    type: double
+    value: 2.0
+  jetpackHorizontalSprintSpeed:
+    help: build jetpack horizontal sprint speed in m/s
+    type: double
+    value: 10.0
+  jetpackVerticalSpeed:
+    help: build jetpack vertical speed in m/s
+    type: double
+    value: 7.5
+  jetpackMinAcceleration:
+    help: space jetpack acceleration for heavy character in m/s^2
+    type: double
+    value: 1
+  jetpackMaxAcceleration:
+    help: space jetpack acceleration for light character in m/s^2
+    type: double
+    value: 10
+  jetpackM0:
+    help: space jetpack reference mass for power calculation in kg
+    type: double
+    value: 100
+  nanopackMassMul:
+    help: the mass contained in the nanopack is multiplied by nanopackMassMul for determining it's total mass.
+    type: double
+    value: 1
+  nanopackMaxVolume:
+    help: max nanopack volume in L.
+    type: double
+    value: 4000
+    min: 0
+  nanopackMaxSlots:
+    help: max number of slots in nanopack
+    type: int
+    value: 64
+    min: 0
+  specializedItems:
+    help: Temporary configuration variable (to be removed)
+    type: bool
+    value: true
+  defaultWallet:
+    help: amount of quanta the player starts with at first connection
+    type: double
+    value: 5000.0
+  maxOrganizations:
+    help: max number of organization the player can join
+    type: int
+    value: 5
+  maxConstructs:
+    help: max number of constructs the player can own
+    type: int
+    value: 10
+  orgMaxConstructs:
+    help: max number of constructs an organization can own
+    type: int
+    value: 0
+    surrogate: true
+  orgConstructSlots:
+    help: number of construct slots given to an organization
+    type: int
+    value: 5
+    surrogate: true
+  orgConstructSlotsAllocationCooldown:
+    help: min interval in seconds between two org construct slot allocation
+    type: int
+    value: 604800 # 7 days
+    surrogate: true
+  orgConstructLimitEnforcerReferenceTime:
+    help: reference time for org construct limit enforcment
+    type: string
+    value: "2021-10-04T12:00:00"
+  orgConstructLimitEnforcerIntervalDays:
+    help: interval in days for org construct limit enforcment
+    type: int
+    value: 7
+  linkedRanged:
+    help: maximum range at which the container can be linked to a nanopack
+    type: double
+    min: 0
+    value: 250
+  nanocrafterTimeMultiplier:
+    help: Recipe duration multiplier when done with the nanocrafter
+    type: double
+    value: 1.0
+  nanocrafterQueueSize:
+    help: maximum number of queued crafts with nanocrafter
+    type: int
+    value: 100
+  permaboxDigFactor:
+    help: multiplication factor on quantities when digging in a permabox
+    type: int
+    value: 100
+  missionHaulingMaxIssued:
+    help: maximum number of live issued hauling missions a player can have
+    type: int
+    value: 1
+  missionMaxIssued:
+    help: maximum number of live issued sandbox missions a player can have
+    type: int
+    value: 1
+  landerInitialAltitude:
+    help: FTUE lander initial altitude (from reference altitude)
+    type: int
+    value: 5000
+  landerInitialVelocity:
+    help: FTUE lander spawn velocity toward planet (m/s)
+    type: int
+    value: 50
+  landerPartsToRemove:
+    help: "Space separated list of item type names to remove from lander on touchdown"
+    type: string
+    value: "RocketEngineSmall RadialRocketFuelTankXSmall"
+  calibrationChargeRechargeTimeHours:
+    help: "Time in hours to gain a calibration charge"
+    type: double
+    value: 6
+    surrogate: true
+  calibrationChargeAtStart:
+    help: "Starting player calibration charges"
+    type: int
+    value: 1
+  calibrationChargeMax:
+    help: Max number of charges a player can hold
+    type: int
+    value: 5
+    surrogate: true
+  calibrationGain:
+    help: Increase in calibration per extraction
+    type: double
+    value: 0.5
+  baseExtractedAmount:
+    help: "Base extracted volume amount, in L"
+    type: double
+    value: 4000.0
+  maxHeadquarters:
+    help: "Maximum number of territory headquarters"
+    type: int
+    value: 5
+  ftuePlanet:
+    help: "Planet id for the ftue territory picker"
+    type: int
+    value: 26
+  researchSlots:
+    help: "Number of schematics research slot available"
+    type: int
+    value: 4
+    surrogate: true
+  scrapRestoreCost:
+    help: "ratio of maxhp required to go from 0 to 1% max hp"
+    type: double
+    value: 0.03
+  dynamic_properties:
+    inventory_mass:
+      help: total mass of items in the inventory
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isPublic: true
+    nanocrafter_mass:
+      help: total mass of ingredient items in the nanocrafter
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isPublic: true
+    scriptHandlersContext:
+      type: DynamicPropertyString
+      default:
+        jsonUpdatable: true
+        defaultValue: "{}"
+    favoriteEmote:
+      type: DynamicPropertyString
+      default:
+        defaultValue: "emote_wave"
+    salvagedVolumePerConstruct:
+      help: json map to store the amount of volume collected per salvageable construct Id
+      type: DynamicPropertyString
+      default:
+        defaultValue: "{}"
+    currentWaypoint:
+      type: DynamicPropertyString
+    warpDestinationConstructId:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    warpDestinationWorldPosition:
+      type: DynamicPropertyString
+    warpDestinationConstructName:
+      type: DynamicPropertyString
+    warpDestinationArrivalOffset:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+    anchoredConstructId:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+    anchoredRelativePosition:
+      type: DynamicPropertyVec3
+    anchoredRelativeRotation:
+      type: DynamicPropertyQuat
+    anchored_distance:
+      help: total distance flown
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isPublic: false
+        updatePeriodMs: 60000
+    user_game_time:
+      help: total time played
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        isPublic: false
+        updatePeriodMs: 60000
+    walk_distance:
+      help: total distance walked
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isPublic: false
+        updatePeriodMs: 60000
+    inventory_filters:
+      help: toolbar internal settings
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    user_start_time:
+      help: date of character creation
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    userLastSurveyTime:
+      help: Timepoint of last player survey
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+    surveyCount:
+      help: count of player answered or skipped survey
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+    dispensers_visits_history:
+      help: timestamp of dispensers interactions
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+        defaultValue: "{}"
+    keep_non_precious_resources:
+      help: keep dirt when digging
+      type: DynamicPropertyBool
+      default:
+        isPublic: false
+    reset_achievements_done:
+      help: used after initial beta wipe to forcefully reset achievements following the non wipe of player properties
+      type: DynamicPropertyBool
+      default:
+        isPublic: false
+    objective_ftue_fly_distance:
+      help: Piloting construct distance when on ftue
+      type: DynamicPropertyDouble
+      default:
+        isPublic: false
+        updatePeriodMs: 60000
+    objective_mine_ore_quantity:
+      help: Total ore quantity mined by player in m3
+      type: DynamicPropertyDouble
+      default:
+        isPublic: false
+    objective_talent_unlocked_count:
+      help: Talent unlocked count
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+    last_fetch_constructs_time:
+      help: timestamp of constructs fetch interactions
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    last_chat_sanction_time:
+      help: Timestamp of last penalty
+      type: DynamicPropertyDouble
+      default:
+        isPublic: false
+    chat_active_sanctions_count:
+      help: Count of active sanctions
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+    chatBlacklist:
+      help: json list of id/playerName block in the chat user
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    last_recipeId:
+      help: default recipe selected
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 1
+        isPublic: false
+    recipes_queue:
+      help: crafting jobs queue
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    miningCalibrationCharges:
+      help: Number of mining calibration charges the player
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        isReadOnly: true
+    calibrationChargeAcquisitionTime:
+      help: time at which last calibration charge was aquired
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        isReadOnly: true
+    lastAbuseReportTime:
+      help: "Timepoint of the last abuse report (unix timestamp in seconds)"
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        defaultValue: 0
+    ftueStep:
+      help: "Current stage of the FTUE (LoginResponseKind)"
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        defaultValue: 0
+    skipFtue:
+      help: "Set this property to true to force skip ftue (also requires to set ftueStep to 0)"
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+    ftueFirstCalibration:
+      help: "Set to true when a MU was auto-calibrated on BP deploy"
+      type: DynamicPropertyBool
+      default:
+        isPublic: false
+    ftueOutpostName:
+      help: "FTUE Outpost name"
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    ftueScriptStarted:
+      help: "FTUE script has been started"
+      type: DynamicPropertyBool
+      default:
+        isPublic: false
+        defaultValue: false
+    ftueSpeederName:
+      help: "FTUE Speeder name"
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+    ftueTerritoryTileIndex:
+      help: "FTUE Start Territory Tile Index"
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        defaultValue: -1
+    deathInfo:
+      help: "JSON PlayerDeathInfo of last death"
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+        isReadOnly: true
+    needRespawn:
+      help: "true if the client should respawn"
+      type: DynamicPropertyBool
+      default:
+        isPublic: false
+        isReadOnly: false
+    honeycombSwapLastUseDate:
+      help: Timepoint of the last use by player of the honeyCombSwap feature during blueprint deployment
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+    petsAvailable:
+      help: "List of pets available to player (embeded JSON)"
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+        isReadOnly: true
+        defaultValue: "[]"
+    petActive:
+      help: "Currently active pet"
+      type: DynamicPropertyInt
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: 0
+    skinsAvailable:
+      help: "List of player skins available to player (embeded JSON)"
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+        isReadOnly: true
+        defaultValue: "[]"
+    emotesAvailable:
+      help: "List of emotes available to player (json)"
+      type: DynamicPropertyString
+      default:
+        isPublic: false
+        isReadOnly: true
+        defaultValue: "[]"
+    wormholeId:
+      help: "Current wormhole id(playerid) or 0 for none"
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        isReadOnly: true
+        defaultValue: 0
+    wormholeTier:
+      help: "Current wormhole tier or -1 for none"
+      type: DynamicPropertyInt
+      default:
+        isPublic: false
+        isReadOnly: true
+        defaultValue: -1
+    alienScore:
+      help: "Global alien progress score (on Aphelia)"
+      type: DynamicPropertyInt
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: 0
+    alienScoreContribution:
+      help: "alien progress score contribution by the player"
+      type: DynamicPropertyInt
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: 0
+    alienBossSpawnTimestamp:
+      help: "unix timestamp when alien boss will spawn or 0 if not triggered (on aphelia)"
+      type: DynamicPropertyInt
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: 0
+    alienBossDefeated:
+      help: "true on aphelia if alien boss was defeated"
+      type: DynamicPropertyBool
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: false
+    alienBossKillCount:
+      help: "number of alien boss killed by player"
+      type: DynamicPropertyInt
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: 0
+    alienBossDamage:
+      help: "damage to alien boss done by player"
+      type: DynamicPropertyDouble
+      default:
+        isPublic: true
+        isReadOnly: true
+        defaultValue: 0
+    accountInputSettings:
+      help: "Account input settings configuration"
+      type: DynamicPropertyString
+      default:
+        defaultValue: ""
+Asset:
+  parent: GameplayObject
+InvalidAsset:
+  parent: Asset
+Decor:
+  parent: Asset
+  harvestable:
+    help: define if object can be collected
+    type: bool
+    value: false
+  displayOreName:
+    help: "localized name key"
+    type: string
+    value: ""
+  oreType:
+    help: "what ore comes out of this asset"
+    type: string
+    value: ""
+  oreValue:
+    help: volume when stored (L)
+    type: double
+    min: 0
+    value: 0
+  harvestCollectTime:
+    help: time to collect (s)
+    type: double
+    min: 1
+    value: 1
+Rock:
+  parent: Decor
+RockExtracting:
+  parent: Rock
+  assetScaleMin:
+    help: "Minimum scale of the asset when generating from the extracting game"
+    type: double
+    value: 1.0
+  assetScaleMax:
+    help: "Maximum scale of the asset when generating from the extracting game"
+    type: double
+    value: 1.0
+Foliage:
+  parent: Decor
+Tree:
+  parent: Decor
+TalentGroup:
+  parent: GameplayObject
+  tier:
+    help: "[1,2,3] the higher the tier, the more powerfull the talents in the group"
+    type: int
+    value: 1
+    min: 1
+    max: 3
+  group:
+    help: parent talentGroup name (not mandatory)
+    type: string
+  order:
+    help: order of display within a tier from lower to higher.
+    type: int
+    value: 0
+Talent:
+  parent: GameplayObject
+  group:
+    help: talentGroup name
+    type: string
+  requiredTalents:
+    help: list of required talents for unlocking this talent at level 1
+    type: TalentRequirements
+    append: true
+  costs:
+    help: list of costs for unlocking level 1 to 5.
+    type: TalentCosts
+  effects:
+    help: effects of the talent per level unlocked
+    type: Effects
+  startingLevel:
+    help: level at which the player starts for this talent
+    type: int
+    value: 0
+    min: 0
+    max: 5
+  order:
+    help: order of display within a group from lower to higher.
+    type: int
+    value: 0
+  internalTalent:
+    help: "set to true for talents that can't be trained directly"
+    type: bool
+    value: false
+Construct:
+  parent: GameplayObject
+  immobilitySpeedThreshold:
+    help: Limit speed when the construct is considered as immobile
+    type: double
+    min: 0.
+    value: 0.5
+RepairUnit:
+  parent: CombatDefense
+  repairMaxConstructSpeed:
+    help: Max speed at which a construct can be moving to be repaired
+    type: double
+    min: 0
+    value: 1
+  repairRange:
+    help: Max distance at which a construct can be repaired, in meters
+    type: double
+    min: 0
+    value: 1000
+  repairDuration16m:
+    help: Duration of a repair, per construct size, in seconds
+    type: double
+    min: 0
+    value: 5
+  repairDuration32m:
+    help: Duration of a repair, per construct size, in seconds
+    type: double
+    min: 0
+    value: 5
+  repairDuration64m:
+    help: Duration of a repair, per construct size, in seconds
+    type: double
+    min: 0
+    value: 5
+  repairDuration128m:
+    help: Duration of a repair, per construct size, in seconds
+    type: double
+    min: 0
+    value: 5
+  plug_properties:
+    in:
+      - { key: "PlugType::PLUG_ITEM", name: "Link::PLUG_NAME_IN", elementTypes: [ "ItemContainer", "ContainerHub" ], count: 1 }
+  dynamic_properties:
+    status:
+      type: DynamicPropertyString
+      cstype: DynamicPropertyEnumAsString<NQ.RepairUnitState>
+      help: Status of the repair unit
+      default:
+        isReadOnly: true
+        defaultValue: 'STOPPED'
+    target:
+      type: DynamicPropertyInt
+      help: Construct id being repaired
+      default:
+        isReadOnly: true
+        defaultValue: 0
+    finishTimestamp:
+      type: DynamicPropertyInt
+      cstype: DynamicPropertyUnixTimestamp
+      help: Repair finish time (unix timestamp in seconds)
+      default:
+        isReadOnly: true
+        defaultValue: 0
+SurrogateUnits:
+  parent: Systems
+SurrogateVRStation:
+  parent: SurrogateUnits
+  dynamic_properties:
+    inUse:
+      help: "true if the SurrogateVRStation is currently used"
+      type: DynamicPropertyBool
+      default:
+        defaultValue: false
+        isReadOnly: true
+SurrogatePodStation:
+  parent: SurrogateUnits
+  popularityDays:
+    help: Number of days to consider for popularity calculation
+    type: int
+    min: 0
+    value: 30
+  disconnectionGraceTime:
+    help: Time in seconds after which connected surrogates will be disconnected when a SPS is disabled
+    type: int
+    min: 0
+    value: 120
+  dynamic_properties:
+    currentConnections:
+      help: count of surrogates instantiated in this SPS
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        minValue: 0
+        maxValue: 100
+        isReadOnly: true
+    spsName:
+      help: display name of the SPS in search results
+      type: DynamicPropertyString
+      default:
+        defaultValue: ""
+        isReadOnly: false
+Package:
+  parent: Consumable
+  dynamic_properties:
+    volume:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isSavedInInventory: true
+        requireInstance: true
+    mass:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isSavedInInventory: true
+        requireInstance: true
+Placeholder:
+  parent: Consumable
+  dynamic_properties:
+    volume:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isSavedInInventory: true
+        requireInstance: true
+    mass:
+      type: DynamicPropertyDouble
+      default:
+        defaultValue: 0
+        isSavedInInventory: true
+        requireInstance: true
+DeepSpaceAsteroidTrackerUnit:
+  parent: Systems
+  scanDuration:
+    help: Duration in seconds of a scan point scan
+    type: int
+    min: 0
+    value: 5
+  dynamic_properties:
+    state:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        isReadOnly: true
+    scanPointIndex:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        isReadOnly: true
+    scanPointTotal:
+      type: DynamicPropertyInt
+      default:
+        defaultValue: 0
+        isReadOnly: true
+Schematic:
+  parent: DataItem
+  researchable:
+    type: bool
+    value: true
+  researchCostQuanta:
+    type: int
+    value: 0
+    surrogate: true
+  researchCostTimeSeconds:
+    type: int
+    value: 0
+    surrogate: true
+  researchBatchSize:
+    type: int
+    value: 1
+    surrogate: true
+  productionBaseItem:
+    type: StringVector
+    help: "base item names produced, empty for none"
+  productionScalesFilter:
+    type: StringVector
+  productionLevelFilter:
+    type: int
+    value: -1
+  productionItems:
+    type: StringVector
+    help: "list of item names explicitly produced"
+  productionExcluded:
+    type: StringVector
+    help: "list of item names excluded from production"
+Pet:
+  parent: GameplayObject
+  petKind:
+    type: string
+    help: "Pet family"
+  petName:
+    type: string
+    help: "Pet name in family"
+  level:
+    type: int
+    help: "Level of pet within family"
+  uniqueId:
+    type: int
+    help: "short unique id for this pet"

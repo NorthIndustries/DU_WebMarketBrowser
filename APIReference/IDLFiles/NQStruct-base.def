@@ -1,0 +1,3792 @@
+type MarketId uint64
+type OrderId uint64
+type UserId uint64
+type ConstructUid uint64
+type ItemTypeId uint64
+type ItemInstanceId uint64
+extern ErrorResponse
+extern ItemInfo
+extern ItemAndQuantity
+
+enum DisconnectionStatus [enumclass]
+    SERVER_INTERNAL                 = 0
+    ADMIN_DISCONNECTION             = 1
+    PLAYER_REQUEST                  = 2
+    DOUBLE_CONNECTION               = 3
+    TIMED_ACTION                    = 4
+    INVALID_PLAYER_UPDATE           = 5
+    INVALID_CONSTRUCT_UPDATE        = 6
+    FRONT_MAX_PLAYERS_REACHED       = 7
+    SERVER_MAINTENANCE              = 8
+    KICKED_BY_ANTICHEAT             = 9
+    BANNED_BY_ANTICHEAT             = 10
+    CONNECTION_LOST                 = 11
+    NONE                            = 12
+end
+
+enum RecipeRunningStatus
+    RECIPE_COOKING = 0
+    RECIPE_DONE = 1
+    RECIPE_ABORTED = 2
+    RECIPE_COLLECTED = 3
+    RECIPE_QUEUED = 4
+end
+
+
+enum ErrorCode [enumclass]
+    // If you add/delete members, update PRINTABLE_ERROR_CODE <src/ErrorResponse.cpp>
+
+    UnknownError = 0
+    DatabaseError = 1
+    InternalError = 2
+    NotImplementedError = 3
+    RequestTimingError = 4
+    RouterError = 5
+    InvalidSession = 6   // The client cookie is invalidated.  This is a deconnection.
+
+    INTERNAL_ERROR_CODE_LIMIT = 10
+
+    // Generic messages
+    InvalidParameters = 20
+    InvalidPlayerId = 21
+    InvalidConstructId = 22
+    InvalidMessageType = 23
+    InvalidCell = 24
+    Unauthorized = 25
+    InvalidProtocol = 26
+    QueueingServiceNotReady = 27
+    NotEnoughMoney = 28
+    TalentRequirementNotMet = 29
+    ServerInMaintenance = 30
+
+    // Login error codes: community section, keep in sync
+    LoginInvalidPassword = 100
+    LoginBanned = 101
+    LoginUnknownAccount = 102  // email unknown
+    LoginInvalidOtp = 107
+    LoginAccountLocked = 108   // too many failures
+    LoginAccountInactive = 109 // not verified
+    LoginMfaRequired = 129 // for employees
+    LoginInvalidSteamAccount = 135
+
+    // Login error codes: server error
+    LoginInvalid = 110 // misc login errors
+    LoginInitFailed = 111
+    LoginUnauthorized = 112    // valid auth but unauthorized ingame
+    LoginConnectedElsewhere = 113
+    LoginDisconnectingPrevious = 114
+    LoginInvalidEncryptionKey = 115
+    LoginMustConnectThroughSteam = 117
+
+    NoResetPlanned = 116
+
+    NameInvalidNamingPolicy = 150
+    NameAlreadyTaken = 151
+
+    PlayerInvalidPosition = 175
+    PlayerInvalidRotation = 176
+
+    PlayerPropertyInvalid = 180
+    PlayerPropertyNotDefined = 181
+
+    ConstructNotFound = 200
+    ConstructNotEmpty = 201
+    ConstructNotDeletable = 202
+    ConstructTooMany = 203
+    ConstructNotOwner = 204
+    ConstructNotVisible = 205
+    ConstructAttachToItself = 206
+    ConstructAttachToChild = 207
+
+    ConstructDoubleControl = 250
+    ConstructNotDynamic = 251
+    ConstructAlreadyControlled = 252
+    ConstructNotControlled = 253
+    ConstructInvalidPosition = 254
+    ConstructInvalidRotation = 255
+    ConstructInvalidVoxelGrid = 256
+    ConstructInvalidSize = 257
+    ConstructInvalidParent = 258
+    ConstructNameTooLong = 259
+    ConstructBuildRdms = 260
+    ConstructBuildPvp = 261
+    ConstructBuildWarp = 262
+    ConstructBuildRepaired = 263
+    ConstructBuildTokenized = 264
+    ConstructBuildLockdown = 265
+    ConstructInInterdictionZone = 266
+    ConstructTokenizePiloting = 267
+
+    ElementAlreadyExists = 300
+    ElementInvalidConstruct = 301
+    ElementOverlapping = 302
+    ElementOutOfBound = 303
+    ElementNotFound = 304
+    ElementConstructNotFound = 305
+    ElementTooManyInCell = 306
+    ElementUnknownType = 307
+    ElementInvalidType = 308
+    ElementNotUsable = 309
+    ElementDoubleUse = 310
+    ElementAlreadyUsed = 311
+    ElementUsed = 312
+    ElementNotUsed = 313
+
+    LinkCannotLinkToSelf = 314
+    LinkInvalidType = 315
+    LinkSourceInvalid = 316
+    LinkSourceAlreadyOccupied = 317
+    LinkDestinationInvalid = 318
+    LinkDestinationAlreadyOccupied = 319
+    LinkInvalidConstruct = 320
+
+    ElementPropertiesNotFound = 321
+    ElementPropertyNotDefined = 322
+    ElementPropertyInvalid = 323
+
+    ContainerNotEmpty = 324
+    LinkedContainer = 325
+
+    SkinNotFound = 326
+
+    ElementIsDestroyed = 327
+    ContainerUnderLock = 328
+
+    // generic error
+    InventoryOperationError = 500
+    InventoryNotEmptySlot = 501
+    InventoryFull = 502
+    InventoryOverVolume = 503
+    InventoryNotEnough = 504
+
+    // generic error manipulating container
+    DeletePrimaryContainerError = 505
+    InventoryNoSuchContainer = 506
+    InventoryContainerAlreadyOpen = 507
+    InventoryInvalidItemType = 508
+
+    // Bookmark
+    BookmarkNotFound = 650
+    BookmarkAlreadyExists = 651
+
+    // Construct getter
+    ConstructGetterPlanet = 600
+    ConstructGetterDatabase = 601
+    ConstructGetterCellBroken = 602
+    ConstructGetterCellTimeout = 603
+
+    // Territory
+    TerritoryNotPlanet = 700
+    TerritoryAlreadyClaimed = 701
+    TerritoryUnclaimed = 702
+    TerritoryNotOwned = 703
+    TerritoryInvalid = 704
+    TerritoryInvalidPosition = 705
+    TerritoryRetrieveTimeError = 706
+    TerritoryNotEnoughMoney = 707
+    CannotRemoveSanctuaryTerritory = 708
+    SanctuaryTerritoryNotDeployableAsOrg = 709
+    TerritoryKeyed = 710
+    TerritoryKeyExpired = 711
+    TerritoryOffline = 712
+
+    // Messages and Notifications
+    MessageInvalidChannel = 800
+    MessageSameSenderReceiver = 801
+    MessageInvalidContent = 802
+    MessageNotInChannel = 803
+    MessagePlayerIsMuted = 804
+
+    // Recipes
+    RecipeUnknown = 900
+    RecipeEmptyQueue = 901
+    RecipeInvalidAction = 902
+    RecipeInvalidId = 903
+    RecipeInvalidBulk = 904
+
+    // Blueprint and factory
+    BlueprintPlanetImprit = 1000
+    BlueprintConstructError = 1001
+    BlueprintNotFound = 1002
+    BlueprintContainerInvalid = 1003
+    BlueprintInsufficientMaterial = 1004
+    BlueprintFactoryError = 1005
+    BlueprintFactorySpawnOutOfBound = 1006
+    BlueprintNotOwned = 1007
+    BlueprintCorrupted = 1008
+    BlueprintExpired = 1009
+    BlueprintNotEnoughMoney = 1010
+
+    // Organization
+    OrganizationError = 1100
+    OrganizationDoesNotExist = 1101
+    OrganizationNameExist = 1102
+    OrganizationNotEnoughRight = 1103
+    OrganizationAlreadyMember = 1104
+    OrganizationNotMember = 1105
+    OrganizationMembershipDemandAlreadyExists = 1106
+    OrganizationMembershipDemandNotFound = 1107
+    OrganizationVoteAlreadyExists = 1108
+    OrganizationJoinWouldCreateDuplicate = 1109
+    OrganizationNameTakenByPlayer = 1110
+    OrganizationNameTakenByOrg = 1111
+    OrganizationTagTaken = 1112
+    OrganizationCreateNotEnoughMoney = 1113
+    OrganizationMaxNumberReached = 1114
+
+    // Get player info
+    PlayerNotFound = 1200
+
+    // Markets
+    // XXX until a proper solution is found, don't touch those codes
+    // without changing the corresponding codes in go market service.
+    MarketError = 1300
+    MarketNotFound = 1301
+    MarketNotImplemented = 1302
+    MarketNotEnoughToSell = 1303
+    MarketInvalidTransfer = 1304
+    MarketNeedInsurance = 1305
+    MarketNotEnoughMoney = 1306
+    MarketTransactionAborted = 1307
+    MarketNoOrderMatch = 1308
+
+    // Voxel Errors
+    VoxelServiceError = 1400
+    CsgMismatchingVersions = 1401
+    CsgOutOfBuildingArea= 1402
+    CSGInvalidCellNumber = 1403
+    VoxelNoMetadata = 1404
+    VoxelReloading = 1405
+
+    // Radar
+    RadarError = 1500
+    RadarNotReloaded = 1501
+    RadarInvalidReferential = 1502
+    RadarTransponderUniqueActive = 1503
+
+    // Weapon
+    WeaponNotReady = 1511
+    WeaponShotKillInvalid = 1512
+
+    // Shield
+    ShieldOnePerConstruct = 1520
+    ShieldBadAdjustableResistance = 1521
+    ShieldAdjustableResistancesOnCoolDown = 1522
+    ShieldVentingOnCoolDown = 1523
+    ShieldCantVent = 1524
+    ShieldNotPresent = 1525
+    ShieldFeatureDisabled = 1526
+
+    // BaseShield
+    BaseShieldOnePerConstruct = 1530
+    BaseShieldFeatureDisabled = 1531
+    BaseShieldNotPresent = 1532
+    BaseShieldPvpTimerIsActive = 1533
+    BaseShieldDisableInLockdown = 1534
+
+    // Fight
+    AttackSequenceNotStarted = 1550
+    CannotTokenizePvpTimerActive = 1551
+    CannotFightInLockdown = 1552
+
+    // FriendList
+    FriendListCantRemoveSelf = 1600
+    FriendListRequestAlreadyMade = 1601
+    FriendListRequestDoesNotExists = 1602
+
+    // Industry errors
+    IndustryIsRunning = 1700
+    IndustryIncompatibleRecipe = 1701
+    IndustryWouldLoseIngredients = 1702
+    IndustryMissingRecipeItem = 1703
+    IndustryRecipeItemAlreadyInBank = 1704
+    IndustryRecipeItemInUse = 1705
+    IndustryRecipeItemPresent = 1706
+
+    // Voting
+    VoteNotMember = 1800
+    VoteAlreadyCast = 1801
+    VoteIsClosed = 1802
+
+    // Dispensers
+    DispenserMaxUseReached = 1900
+    DispenserInCooldown = 1901
+    DispenserEmpty = 1902
+    DispenserNoContainer = 1903
+    DispenserNoBatch = 1904
+    DispenserNotEnoughMoney = 1905
+
+    // RDMS
+    RDMSTagNotFound = 2000
+    RDMSActorNotFound = 2001
+    RDMSPolicyNotFound = 2002
+    RDMSAssetNoOwner = 2003
+    RDMSInvalidOwner = 2004
+    RDMSInvalidAsset = 2005
+    RDMSTagAlreadyExists = 2006
+    RDMSActorAlreadyExists = 2007
+    RDMSPolicyAlreadyExists = 2008
+
+    // Surrogates
+    SPSInSession = 2100
+    SPSNotInSession = 2101
+    SPSNotFound = 2102
+    SPSFull = 2103
+    SPSDisabled = 2104
+    SPSAccessDenied = 2105
+    SPSDeniedInVR = 2106
+
+    // RepairUnit
+    RepairUnitNoContainer = 2200
+    RepairUnitBusy = 2201
+    RepairUnitContainerFull = 2202
+    RepairUnitNotEnoughMaterials = 2203
+    RepairUnitOutOfRange = 2204
+    RepairUnitTargetKeyed = 2205
+    RepairUnitTargetBeingRepaired = 2206
+    RepairUnitKeyed = 2207
+    RepairUnitBeingRepaired = 2208
+    RepairUnitTargetBeingControlled = 2209
+    RepairUnitSnapshotNoRepairUnit = 2210
+    RepairUnitFeatureDisabled = 2211
+
+    AchievementAlreadyUnlocked = 2301
+
+    // Construct Compaction
+    CompactBadCore = 2401,
+    CompactHasContainer = 2402,
+    CompactHasMultipleFuelContainers = 2403,
+    CompactTooHeavy = 2404,
+    CompactAlreadyHaveOne = 2405,
+    CompactHasWeapon = 2406,
+    CompactBadEngine = 2407,
+    CompactTooManyEngines = 2408,
+    CompactBeingRepaired = 2409,
+
+    TransferNotEnoughMoney = 2501,
+    TransferAmountTooLow = 2502,
+    TransferInCooldown = 2503,
+
+    MiningUnitConstructOwnerUnauthorized = 2601,
+    MiningUnitPickupStartCooldown = 2602,
+    MiningUnitPickupCalibrationCooldown = 2603,
+    MiningUnitStopCooldown = 2604,
+    MiningUnitEmptyPool = 2605,
+
+    SentinelForbiddenItemFound = 2606,
+    SentinelMaxShipMassExceeded = 2607,
+    SentinelMaxCrewExceeded = 2608,
+    SentinelPlayerNotInConstruct = 2609,
+    SentinelAlreadyInMission = 2610,
+    SentinelMissionKindAlreadyTaken = 2611,
+    SentinelConstructHasChildren = 2612,
+    MaxError = 2613
+end
+
+
+enum PropertyType
+    PROPERTY_NONE = 0
+    PROPERTY_BOOLEAN = 1
+    PROPERTY_INTEGER = 2
+    PROPERTY_FLOATING = 3
+    PROPERTY_STRING = 4
+    PROPERTY_QUAT = 5
+    PROPERTY_VEC3 = 6
+    PROPERTY_HASH = 7
+end
+
+enum ElementLOD
+// Those value are used as array and vector accessors, do not change their value
+    LOD_0           = 0
+    LOD_1           = 1
+    LOD_2           = 2
+    LOD_3           = 3
+    LOD_4           = 4
+
+    LOD_NUMBER      = 5
+    LOD_NONE        = 255
+end
+
+
+enum PlugType
+// IMPORTANT: This is stored in the DB, do not renumber! (except PLUG_END)
+    PLUG_INVALID     = 0
+    PLUG_ITEM        = 1
+    PLUG_ATMOFUEL    = 2
+    PLUG_SPACEFUEL   = 3
+    PLUG_FLUID       = 4
+    PLUG_ELECTRICITY = 5
+    PLUG_SIGNAL      = 6
+    PLUG_HEAT        = 7
+    PLUG_CONTROL     = 8
+    PLUG_MARKET      = 9
+    PLUG_ROCKETFUEL  = 10
+    PLUG_GRAVITON    = 11
+    PLUG_USER1       = 12
+    PLUG_USER2       = 13
+    PLUG_USER3       = 14
+    PLUG_USER4       = 15
+    PLUG_USER5       = 16
+    PLUG_END         = 17
+end
+
+enum Gravity [enumNames]
+    GRAVITY_NONE = 0
+    GRAVITY_RADIAL = 1
+    GRAVITY_DIRECTIONAL = 2
+end
+
+enum GravityOrigin [enumNames]
+    GRAVITY_NATURAL = 0
+    GRAVITY_ARTIFICAL = 1
+end
+
+enum MessageChannelType
+    SUPPORT     = 0 // General
+    PRIVATE     = 1
+    ROOM        = 2
+    ORG         = 3
+    CONSTRUCT   = 4
+    LOCAL       = 5
+    HELP        = 6
+
+    INVALID     = 255
+end
+
+enum ChatUpdateNewState
+    JOINED       = 0
+    CONNECTED    = 1
+    DISCONNECTED = 2
+    LEFTROOM     = 3
+end
+
+enum MarketRequestSource
+    FROM_INVENTORY = 0
+    FROM_MARKET_CONTAINER = 1
+end
+
+struct EmptyStruct [value]
+end
+
+struct TimePoint [skipcpp,value]
+    int64 networkTime
+end
+
+struct Vec3 [skipcpp,value]
+    double x
+    double y
+    double z
+end
+
+struct Vec3u [skipcpp,value]
+    uint64 x
+    uint64 y
+    uint64 z
+end
+
+struct Vec4 [skipcpp,value]
+    double x
+    double y
+    double z
+    double w
+end
+
+struct Quat [skipcpp,value]
+    float x
+    float y
+    float z
+    float w
+end
+
+struct Cell [skipcpp,value]
+    int64 x
+    int64 y
+    int64 z
+    int16 h
+    uint16 kind
+    ConstructUid constructId
+end
+
+struct ElementLODSubscriptionLevel
+    uint64 constructId
+    ElementLOD lod
+end
+
+struct EntityId [skipcpp]
+    uint64 playerId
+    uint64 organizationId
+end
+
+struct ItemId [skipcpp]
+    ItemTypeId typeId
+    ItemInstanceId instanceId
+    EntityId ownerId
+end
+
+struct VoxelCell [customPrint,value]
+    int64 x
+    int64 y
+    int64 z
+    int16 h
+
+    // kind is a bitfield with the following meaning
+    // The high order byte represents the kind of cell:
+    //    0 regular OctreeCell
+    //    1 cubemap space
+    //    2 HexOctree
+    // The lower bits represent the face, when appropriate, else it is 0.
+    // The knowledge of this is located in VoxelHelper s2v v2s
+    uint16 kind
+
+    ConstructUid constructId
+end
+
+struct Ray
+    Vec3 start
+    Vec3 end
+end
+
+// RelativeLocation represents the position of a body relative to a construct.
+// TODO: factorize other NQStructs to introduce that when appropriate
+// instead of repeating those 3 fields everytime.
+struct RelativeLocation
+    // the contruct where the body is
+    ConstructUid constructId
+
+    // position in the construct frame
+    Vec3 position
+
+    // rotation in the construct frame
+    Quat rotation
+end
+
+// DeltaSettings is used by the server to update the client's settings
+struct DeltaSettings
+    // yaml representation of the diff to apply
+    string yaml
+end
+
+struct ItemQuantity [skipcpp]
+    int64 quantity
+end
+
+struct Error
+    ErrorCode code
+    string message
+end
+
+// Information about the protocol, exchanged in both direction between the client and the server.
+// Not all the fields are relevant, depending on the direction.
+struct ProtocolInfo
+    // does the server use a strict protocol
+    bool strict
+
+    // does the server perform a strict credential checks.
+    bool authEnabled
+    string protocolVersion
+    string protocolSignature
+    string voxelTag
+    string voxelCommit
+end
+
+struct FrontQueueingPlayerInfo
+    uint32 count
+    uint32 max
+end
+
+// GRPCInfo contains anything needed to contact a grpc server.
+struct GRPCInfo
+    // service address "address:port"
+    string address
+
+    // server certificate
+    data certificate
+
+    # override the expected server name at the ssl level.
+    string overideName
+end
+
+struct FrontConnectionInfo
+    # caf front uri for raknet
+    string frontUri
+
+    # when true, use the real credential, otherwise, use
+    # the shared secret password.
+    bool authEnable
+
+    # Public RakNet encryption key
+    string raknetPubKey
+
+    GRPCInfo grpcInfo
+end
+
+struct FrontQueueingInfo
+    FrontConnectionInfo frontInfo
+    string pingUri
+
+    ProtocolInfo protocol
+    FrontQueueingPlayerInfo playerInfo
+end
+
+struct PlayerQueueingRequest
+    ProtocolInfo protocol
+    string username
+    string password
+    string otp
+    string device
+    optional<string> steamAuthTicket
+    optional<uint32> steamAppId
+end
+
+struct PlayerQueueingResponse
+    string username
+    string encryptionKey
+    string JWToken
+end
+
+struct PlayerCreationRequest
+    string username
+    string password
+    string displayName
+end
+
+struct QueueingStreamedData
+    # Success
+    string token
+    FrontConnectionInfo info
+    uint64 apheliaId
+    bool neverConnected
+
+    # Waiting in Queue
+    int32 queueIndex
+end
+
+struct LoginResponse
+    uint64 playerId
+    string username
+    uint64 communityId
+    string ip
+    TimePoint timeSeconds
+end
+
+struct SteamLinkedAccountsRequest
+    string sessionTicket
+    uint64 steamAppId
+end
+
+struct SteamLinkedAccountsResponse
+    vector<string> accounts
+end
+
+struct PlayerId [value,castable]
+    uint64 id
+end
+
+struct PlayerUpdate
+    uint64   playerId
+    ConstructUid   constructId
+    Vec3        position
+    Quat        rotation
+    Vec3        velocity
+    uint64    elementIdInUse
+    uint64    animationState
+    TimePoint   time
+    bool      isAdmin [server_only]
+end
+
+struct PlayerUpdateList
+    vector<PlayerUpdate> updates
+end
+
+struct PlayerName
+    string name
+end
+
+struct PlayerAdminRights
+    bool isGhost
+end
+
+struct PlayerCreationInfo
+    string colors
+    bool gender
+    uint64 botMagicHash
+end
+
+struct PlayerList
+    vector<PlayerId> ids
+end
+
+struct PlayerDesc
+    uint64 playerId
+    string displayName
+end
+
+struct PlayerDescList
+    vector<PlayerDesc> players
+end
+
+struct ItemType [value,castable]
+    uint64 itemType
+end
+
+struct ToolbarInfo
+    string content
+end
+
+struct ConstructId [value,castable]
+    ConstructUid constructId
+end
+
+struct NamedEntity
+    EntityId id
+    string name
+end
+
+struct ConstructCount
+    uint32 constructCount
+end
+
+struct ConstructCreation
+    uint64 constructId
+    uint64 elementId
+end
+
+struct ConstructControl
+    uint64 constructId
+    bool isStrongControl
+end
+
+
+// CameraKind identifies the type of the camera in a CameraId
+enum CameraKind [enumclass,enumNames]
+    Regular       = 0
+    Radar         = 1
+    Periscope     = 2
+end
+
+
+// CameraId is attached to some events published by the visibility
+// to inform about the origin of the event.
+struct CameraId [value]
+    CameraKind kind
+    uint64 id
+end
+
+struct ConstructDisappear
+    CameraId     camera
+    ConstructUid constructId
+end
+
+enum ConstructDeletionKind [enumclass,enumNames]
+    Normal      = 0
+    DestroyCU   = 1
+    Force       = 2
+end
+
+struct ConstructDeletion
+    ConstructUid constructId
+    ConstructDeletionKind deletionKind
+end
+
+struct ConstructTeleport
+    uint64 constructId
+    Vec3 position
+    Quat rotation
+    uint64 baseId
+end
+
+struct ElementId [value,implicit,castable]
+    uint64 elementId
+end
+
+struct ElementInConstruct
+    uint64 constructId
+    uint64 elementId
+end
+
+// represent a subscriber in the pubsub system.
+// It only exists server side and might be move to a server side specific NQStruct.def
+struct SubscriberId [explicit]
+    uint64 id
+end
+
+struct ElementIds
+    uint64 elementId
+    uint64 localId
+end
+
+// ElementLocation describe the movement of an element in a construct.
+// The element is not allowed to change its parent construct.
+struct ElementLocation
+    uint64 elementId
+    RelativeLocation location
+end
+
+struct ElementUse
+    uint64 playerId
+    uint64 constructId
+    uint64 elementId
+end
+
+struct ElementDamage
+    uint64 elementId
+    double damage // in hp
+end
+
+enum DamageContext
+    KINETIC = 1
+    PVP = 2
+    PVP_ADMIN = 3
+end
+
+struct ElementDamageOperation
+    uint64 constructId
+    vector<ElementDamage> elements
+    DamageContext context
+    uint64 damageSourcePlayerId
+    uint64 damageSourceConstructId
+end
+
+struct LinkInfo
+    uint64 constructId
+    uint64 fromElementId
+    int32 fromPlug
+    uint64 toElementId
+    int32 toPlug
+    PlugType plugType
+end
+
+struct LinkBatchEdit
+   uint64 constructId
+   vector<LinkInfo> toDelete
+   vector<LinkInfo> toCreate
+end
+
+struct ConstructUpdate
+    ConstructUid constructId
+    ConstructUid baseId
+    Vec3 position
+    Quat rotation
+    Vec3 worldRelativeVelocity
+    Vec3 worldAbsoluteVelocity
+    Vec3 worldRelativeAngVelocity
+    Vec3 worldAbsoluteAngVelocity
+    uint64 pilotId
+    bool grounded // resting on support, not falling due to gravity
+    TimePoint time
+end
+
+struct ConstructUpdateList
+    vector<ConstructUpdate> updates
+end
+struct VersionInfo
+    string protocol
+    string git
+    string date
+    uint64 timestamp
+    string voxels
+end
+
+struct CellFieldRequest
+    uint64 identifier
+    uint64 hash
+end
+
+struct CellVersion
+    VoxelCell cell
+    uint64 version
+    TimePoint lastModified
+    vector<CellFieldRequest> fields
+end
+
+struct CellSubsribe
+    CellVersion cellVersion
+    uint32 subscriptionFlags
+end
+
+struct CellRecord
+    uint64 identifier
+    data data
+    uint64 hash
+
+    # This is used in response to a client request to inform him that
+    # he has the correct version.  In this case, [data] is empty.
+    bool same
+end
+
+struct CellList
+    vector<VoxelCell> cells
+end
+
+struct CellVersionList
+    vector<CellVersion> cells
+end
+
+struct CellCopyData
+    # Binary cell data used by the VoxelService to copy cells between constructs
+    VoxelCell cell
+    data data
+end
+
+struct VoxelCellData
+    uint64 version
+    TimePoint lastModified
+    vector<CellRecord> records
+    string url
+end
+
+struct CellInit
+    VoxelCell cell
+    VoxelCellData voxelData
+end
+
+struct VoxelContent
+    VoxelCell cell
+    optional<VoxelCellData> cellData
+end
+
+struct InventoryUpdate
+    uint64 materialId
+    int64 quantity
+end
+
+enum GeometryKind [enumclass,enumNames]
+    Undefined     = 0
+    Octree        = 1
+    HexOctree     = 2
+end
+
+struct ConstructGeometry
+    # must be a power of two, this is the size of a construct
+    int64           size
+
+    # The kind of geometry
+    GeometryKind    kind
+
+    # the smallest lod0
+    # TODO: this match what is in the DB, but the definition
+    # is not very easy to grasp and rely on internal details of
+    # the voxel stack.
+    # we should defined it as the size (as a power of 2) of the smallest
+    # voxel size.
+    int16           voxelLod0
+
+    optional<double> radius    // Reference radius for procedural generation
+    optional<double> minRadius // If set, nothing exists bellow this radius
+    optional<double> maxRadius // If set, nothing exists above this radius
+end
+
+struct VoxelOperation
+	string          documentId
+    UserId          userId
+    ConstructUid    constructId
+    data            content
+    TimePoint       date
+    CellList        cells
+end
+
+struct VoxelOperationsHistory
+    vector<VoxelOperation>   operations
+end
+
+//Same than VoxelList for the moment but maybe we could add filters at some point
+struct VoxelOperationsHistoryRequest
+    vector<VoxelCell>   cells
+end
+
+struct ElementListVoxelServiceInputData
+    uint64 elementId
+    uint64 elementType
+    Vec3 localPosition
+    Quat localRotation
+    double currentHealthPoint
+    Vec3 elementSize
+end
+
+struct WeaponDamageVoxelServiceInputData
+    uint64 constructId
+    Vec3 currentConstructPositionWorld
+    Quat currentConstructRotationWorld
+    Vec3 projectileOriginPositionWorld
+    Vec3 projectileDirectionWorld
+    double projectilePower
+    double explosionRadiusMax
+    vector<ElementListVoxelServiceInputData> elements
+    Vec3 impactPoint // TODO Delete when the impact point is calculated voxelservice-side
+    ConstructGeometry geometry
+end
+
+struct ElementListVoxelServiceOutputData
+    uint64 elementId
+    double healthPointsLost
+end
+
+struct WeaponDamageVoxelServiceOutputData
+    uint64 constructId
+    vector<ElementListVoxelServiceOutputData> elements
+    vector<UserId> deadPlayers
+    float totalDamage // in hp
+end
+
+struct BoundingBox
+    Vec3 min
+    Vec3 max
+end
+
+// A voxel edit contains either a serialized version of a voxel operation,
+// a damageOperation, or a list of cell versions that were replaced in a copy operation
+struct VoxelEdit
+     UserId playerId
+     uint64 sequenceId
+     ConstructUid constructId
+
+     // contains crude informations about the operation. See NQ::VoxelEditFlags
+     uint64 flags
+
+     // the list of cells where the operation will happen.
+     // This is not strictly needed since the operation can compute that list.
+     // The voxelservice ignore that field and recompute its value.
+     // nobody outside the voxel service is supposed to read or write that.
+     // TODO: we need a refacto in the voxel service to stop using that field.
+     vector<VoxelCell> cells
+     uint64 hash
+
+     // serialized voxel operation
+     data operation
+
+     Vec3 snappingNormal
+     BoundingBox boundingBox
+
+     ItemId applyingMaterial
+     vector<InventoryUpdate> quantities
+     bool keepRaw
+     float efficiency
+     string hashContext
+
+     // non-empty if cells were merely copied, in that case the operation stays empty
+     vector<CellVersion> replacedCells
+end
+
+struct ItemRequired
+    uint64 id
+    uint64 quantity
+end
+
+struct Inertia
+    double mass
+    Vec3 gravityCenter
+    double a00
+    double a01
+    double a02
+    double a11
+    double a12
+    double a22
+end
+
+struct VoxelMetadata
+    optional<bool> hasVoxels
+    optional<bool> isModified
+    optional<BoundingBox> boundingBox
+    optional<uint64> hashVoxel
+    optional<uint64> hashDecor
+    optional<Inertia> inertia
+    vector<ItemRequired> materialStats
+end
+
+struct ConstructMeshData
+    // this is a .glb mesh
+    data mesh
+    VoxelMetadata metadata
+end
+
+enum VoxelMaterialKind [enumclass,enumAutoIncrement]
+    Honeycomb
+    Ore
+    Raw
+    Misc
+end
+
+struct VoxelMaterialResistance
+    double hitpoints
+
+    double antimatter
+    double electromagnetic
+    double kinetic
+    double thermic
+end
+
+struct VoxelMaterialProperties
+    uint64 id
+    string debugName
+
+    VoxelMaterialKind kind
+    double volumicMass
+
+    optional<VoxelMaterialResistance> resistance
+end
+
+struct VoxelFixtures
+    vector<VoxelMaterialProperties> materialProperties
+end
+
+struct HeightMapTile
+    int32 width
+    int32 height
+    vector<float> heights
+end
+
+struct VoxelEditResult
+    vector<CellVersion> cells
+    vector<InventoryUpdate> inventoryUpdates
+end
+
+// VoxelInternalEditResults is used in shared but only for server side purposes, inside the voxel service.
+// It is used by the voxel component in c++ to compute the results of a voxel operation.
+// Ideally it should be in NQStruct-server.def, but the generated classes lands in Infra, which
+// is not accessible in the voxel service.
+struct VoxelInternalEditResults
+    # This field is private to the voxel service.  Orleans should not use it.
+    # The meaning of this field depends on the context
+    # It can be the propagation following an edition.  Or an operation to publish.
+    # Inside the voxel service, between the managed code and the c++ code,
+    # it encodes the propagation following an edition.
+    # Between the caf node and the voxel service, it is used to represent what
+    # needs to be published (propagation is an internal aspect of the voxel service, not
+    # exposed outside)
+    optional<VoxelEdit> edit
+    optional<Error> error
+    vector<InventoryUpdate> quantities
+    bool sameQuantities
+    vector<CellVersion> cells
+    optional<WeaponDamageVoxelServiceOutputData> damageOutput
+	bool FakePropagation
+end
+
+// VoxelOperationResult is exchanged between the voxel c++ code and the voxel service.
+// This is the result of the per cell operation.
+// The client does not use that, but sharedExtra does.
+struct VoxelOperationResult
+    data operationResults
+    CellVersion cellVersion
+end
+
+struct StorageDrop
+    uint64 containerId
+    int32 slot
+    uint64 quantity
+    bool onBehalfOfElement
+end
+
+struct StorageMove
+    uint64 fromContainer
+    int32 fromSlot
+    uint64 toContainer
+    int32 toSlot
+    uint64 quantity
+end
+
+struct StorageSwap
+    uint64 fromContainer
+    int32 fromSlot
+    uint64 toContainer
+    int32 toSlot
+end
+
+struct StorageDropProperties
+    uint64 containerId
+    vector<int32> slots
+end
+
+enum ContainerClaimMode
+    ClaimNone = 0
+    ClaimSet = 1
+    ClaimClear = 2
+end
+
+struct ContainerAutoClaim
+    uint64 containerId
+    ContainerClaimMode mode
+end
+
+struct PlayerMass
+    uint64 playerId
+    double mass
+end
+
+struct ConstructPlayerMassList
+    uint64 constructId
+    vector<PlayerMass> playersMass
+    vector<PlayerMass> surrogatesMass
+end
+
+struct GravityInfo
+    Gravity type
+    GravityOrigin origin
+    float acceleration
+    Vec3 parameter
+end
+
+struct AtmosphereParameters
+    float atmosphereBottomRadius
+    float globalIntensity
+    float ambiantIntensity
+
+    float rayleighMeanHeight
+    Vec3 rayleighCustomColor
+    float rayleighCustomCoeff
+    float rayleighExpFactor
+
+    float mieMeanHeight
+    Vec3 mieCustomColor
+    float mieCustomCoeff
+    float mieExpFactor
+    float miePhase
+
+    bool fogEnabled
+    float fogTopHeight
+    Vec3 fogTint
+    float fogDecayThreshold
+    float fogCutoff
+end
+
+struct VolumetricCloudsParameters
+    bool useDefaultParameters
+
+    // Clouds construction parameters
+    float cloudsInnerRadiusDegree
+    float cloudsOuterRadiusDegree
+    float cloudsCoverage
+    float cloudsGlobalDensity
+
+    // Texture access parameters
+    float lowResSampleCoefficient
+    float highResSampleCoefficient
+    float curleySampleCoefficient
+    float curleyDistortionCoefficient
+
+    // Clouds physical(scattering) parameters
+    float cloudsExtinctionCoefficient
+    float cloudsBeerLawCoefficient
+    float cloudsPowderLawCoefficient
+
+    // Wind and weather
+    float weatherSampleCoefficient
+    float windOffsetHeightCoefficient
+    float windSpeed
+    float windDirectionAngle
+
+    // Clouds integration parameters
+    float minIntegrationSteps
+    float maxIntegrationSteps
+    float lightStep
+
+    // Scattering phase function
+    float heyneyGreinsteinPhaseFunctionForward
+    float heyneyGreinsteinPhaseFunctionBackward
+    float heyneyGreinsteinMixCoefficient
+
+    // Ambient lighting
+    Vec3 ambientTop
+    Vec3 ambientBottom
+end
+
+struct PlanetDescription
+    string displayName
+    string discoveredBy
+    string type
+    string biosphere
+    string classification
+    string habitabilityClass
+    string information
+    int32 positionFromSun
+    int32 numSatellites
+end
+
+struct PlanetProperties
+    PlanetDescription description
+    vector<string> ores
+    bool isTutorial
+    bool isSanctuary
+    double territoryTileSize
+    double altitudeReferenceRadius // At this radius, displayed altitude is zero
+    double minGenerationRadiusHint // Generated terrain should be above this radius
+    double maxGenerationRadiusHint // Generated terrain should be bellow this radius
+    optional<float> seaLevelGravity
+    optional<float> seaLevelRadius // If set instantiate an ocean at this radius
+    optional<AtmosphereParameters> atmosphere
+    optional<VolumetricCloudsParameters> clouds
+end
+
+enum ConstructKind // WARNING, the enum value are used in the database, DOT NOT change these values without updating the DB
+    UNIVERSE = 0
+    PLANET = 1
+    ASTEROID = 2
+    STATIC = 3
+    DYNAMIC = 4
+    SPACE = 5
+    SANDBOX = 7
+end
+
+struct ConstructRelativeData
+    ConstructUid constructId
+    ConstructUid parentId
+    Vec3 position
+    Quat rotation
+    ConstructGeometry geometry
+    string name
+    bool isStatic // TODO : remove and use kind
+end
+
+struct ElementColliding
+    ElementInConstruct element
+    vector<ElementId> colliding
+end
+
+struct ElementCollidingList
+    ConstructId construct
+    vector<ElementColliding> elements
+end
+
+struct PlayerSpawnState
+    uint64 playerId
+    RelativeLocation location
+    vector<ConstructRelativeData> constructTree
+end
+
+struct ShieldState
+    bool hasShield
+    double shieldHpRatio
+    bool isActive
+    bool isVenting
+end
+
+struct BaseShieldState
+    bool hasBaseShield
+    bool isActive
+    double baseShieldHpRatio
+    TimePoint lockdownEnd // locked iff now < lockdownEnd
+    TimePoint immunityEnd // on imunity iff now < immunityEnd
+end
+
+struct TransponderState
+    optional<ElementId> activeTransponder
+    vector<uint64> tags
+end
+
+// MeshInfo contains versionned mesh urls for the client.
+struct MeshInfo
+    // url of a .glb file.  It's likely to be deprecated soon.
+    string meshURL
+
+    // url of a ConstructMeshData object.
+    string meshObjectURL
+
+    // version of the mesh.
+    int64 version
+end
+
+// ElementsLODInfo contains a versionned url to load elements of a given LOD.
+struct ElementsLODInfo
+    ElementLOD lod
+
+    int64 version
+end
+
+struct ElementsInfo
+    // this is an array from 0 to MaxLod
+    // It might be the empty list when it is not defined.
+    vector<ElementsLODInfo> infos
+end
+
+
+struct MaxSpeedDebuf
+    double value
+    TimePoint until
+end
+
+struct MaxSpeedDebufList
+    vector<MaxSpeedDebuf> debufs
+end
+
+struct ConstructMutableData
+    EntityId ownerId
+    TimePoint keyExpiration // 0 for non-keyed
+    TimePoint pvpTimerExpiration
+    TimePoint abandonTimer
+    TimePoint abandonedAt
+    TimePoint idleSince
+    optional<ElementInConstruct> repairedBy
+    ShieldState shieldState // construct shield state
+    BaseShieldState baseShieldState // construct base shield state
+    TimePoint  requisitionTime
+
+    optional<MeshInfo> meshInfo
+    ElementsInfo elementsInfo
+
+    TransponderState transponder
+
+    vector<MaxSpeedDebuf> maxSpeedDebufs
+    optional<PlayerId> pilot
+end
+
+struct ConstructInfo
+    ConstructRelativeData rData
+    ConstructMutableData mutableData
+    EntityId creatorId
+    ConstructKind kind
+    optional<uint64> blueprintId // Non reliable hint about the potential blueprint used
+    optional<PlanetProperties> planetProperties
+    optional<string> pipelineURL
+    optional<data> pipeline
+    string elementsInfoFormat
+    bool isNPC
+    bool isUntargetable
+end
+
+
+struct ConstructAppear
+    CameraId     camera
+    ConstructInfo info
+end
+
+struct ConstructBrief
+    ConstructUid constructId
+    string name
+    NamedEntity owner
+end
+
+struct ConstructRepairedBy
+    optional<ElementInConstruct> repairedBy
+end
+
+// if you update this struct you MUST update serv/DotNetServices/NQutils/NQStruct/ConstructInfo.cs
+// and Source/Game/construct/Construct.cpp `updateInfoMutableData`
+// beware of ConstructInfoUpdate.Merge method
+struct ConstructInfoUpdate
+    ConstructUid constructId
+    optional<string> name
+    optional<EntityId> owner
+    optional<TimePoint> keyExpiration
+    optional<ConstructRepairedBy> repairedBy
+    optional<TimePoint> pvpTimerExpiration
+    optional<ShieldState> shieldState
+    optional<BaseShieldState> baseShieldState
+    optional<TimePoint> requisitionTime
+    optional<TimePoint> abandonTimer
+    optional<TimePoint> abandonedAt
+    optional<TimePoint> idleSince
+    optional<TransponderState> transponder
+    optional<MeshInfo> meshInfo
+    optional<ElementsInfo> elementsInfo
+    optional<MaxSpeedDebuf> additionalMaxSpeedDebuf
+    optional<MaxSpeedDebufList> maxSpeedDebufs
+    optional<PlayerId> pilot
+end
+
+// This message is sent to the client when a construct's mesh has been updated.
+struct ConstructMesh
+    ConstructUid constructId
+    string meshURL
+    int64 version
+end
+
+struct SnapshotDetail
+    uint64 createdAt
+end
+
+struct SnapshotsInfo
+   uint64 constructId
+   SnapshotDetail autoSnapshot
+   SnapshotDetail manualSnapshot
+end
+
+struct ConstructRepairSet
+    uint64 constructId
+    optional<ElementInConstruct> repairedBy
+end
+
+struct ConstructOwnerSet
+    uint64 constructId
+    EntityId ownerId
+    TimePoint abandonTimer
+end
+
+struct ConstructTree
+    vector<ConstructRelativeData> constructs
+end
+
+struct OwnedConstructDataList
+    vector<ConstructInfo> constructs
+end
+
+struct ElementPropertyId
+    uint64 constructId
+    uint64 elementId
+    string name
+end
+
+struct Bookmark
+    uint64 playerId
+    string name
+    uint64 constructId
+    string position
+    string description
+end
+
+struct BookmarkId
+    uint64 playerId
+    string name
+end
+
+struct BookmarkList
+    vector<Bookmark> bookmarks
+end
+
+struct BlueprintCreate
+    uint64 constructId
+    BoundingBox box
+    bool enableDRM
+end
+
+struct BlueprintSplit
+    uint64 blueprintId
+    uint64 containerId
+    uint64 blueprintCount // number of blueprints to create
+    uint64 orgWallet // 0 for player wallet
+end
+
+struct SnapshotCreate
+    BlueprintCreate blueprint
+    bool autoSlot
+end
+
+struct BlueprintId [value,castable]
+    uint64 blueprintId
+end
+
+struct IntMap
+    uint64 source
+    uint64 target
+end
+
+struct BlueprintDeploy
+    uint64 blueprintId
+    Vec3 position
+    Quat rotation
+    uint64 parentId
+    uint64 containerId
+    EntityId impersonate
+    string constructName
+    vector<uint64> excludeElements
+    vector<IntMap> honeyCombMap
+end
+
+struct BlueprintProperties
+    uint64 blueprintId
+    string name
+    Vec3u size
+    BoundingBox box
+    bool isStatic // TODO remove and use kind
+    ConstructKind kind
+    vector<ItemRequired> requiredItems
+    bool hasMaterials [server_only]
+    NamedEntity creatorId
+    bool coreDRM
+    MeshInfo meshInfo
+end
+
+struct BlueprintPropertiesUpdate
+    uint64 blueprintId
+    optional<MeshInfo> meshInfo
+end
+
+
+struct EventFactoryRegisterOrder
+    uint64 startTimestamp
+    uint64 endTimestamp
+    uint64 constructId
+    Vec3 position
+    uint64 factoryId
+    uint64 blueprintId
+    Vec3 spawnPosition
+    Quat spawnRotation
+end
+
+struct FactoryUse
+    uint64 factoryId
+    uint64 blueprintId
+    vector<uint64> storagesId
+    Vec3 spawnPosition
+    Quat spawnRotation
+end
+
+struct OrganizationId [value,castable]
+    uint64 organizationId
+end
+
+struct OrganizationMemberId
+    uint64 organizationId
+    uint64 playerId
+end
+
+struct OrganizationMemberStatus
+    uint64 organizationId
+    bool isLegate
+    int64 memberSince
+end
+
+struct OrganizationMembershipDemandResponse
+    uint64 organizationId
+    uint64 playerId
+    bool accept
+end
+
+struct ConstructNameSet
+    uint64 constructId
+    string newName
+end
+
+struct ResurrectionNode
+    uint64 playerId
+    uint64 constructId
+    uint64 elementId
+    Vec3 lastKnownConstructWorldPosition
+    Quat lastKnownConstructWorldRotation
+    Vec3 elementPosition
+    Quat elementRotation
+    string constructName
+end
+
+struct ResurrectionNodeList
+    vector<ResurrectionNode> nodes
+end
+
+struct MarketAccessPoint
+    uint64 podElementId
+    uint64 marketElementId
+    uint64 marketId
+    uint64 impersonateOrganizationId
+end
+
+struct MarketInfo
+    MarketId marketId
+
+    // location of the market element.
+    RelativeLocation relativeLocation
+
+    // deprecated. This was the position of  parent consruct in the grand parent. Use RelativeLocation instead.
+    Vec3 position
+    // deprecated, this is NOT the construct containing the market, but its parent.  Use relativeLocation instead.
+    ConstructUid parentConstruct
+    string name
+    EntityId creatorId
+    string creatorName
+    TimePoint creationDate
+    uint64 capacity
+    double valueTax
+    double dailyStorageFee
+    double orderFee
+    vector<ItemTypeId> allowedItemTypes
+    uint64 updateCooldown
+end
+
+struct MarketTaxes
+    MarketId marketId
+    double valueTax
+    double dailyStorageFee
+    double orderFee
+end
+
+struct MarketList
+    vector<MarketInfo> markets
+end
+
+struct Currency [implicit,castable]
+    int64 amount
+end
+
+struct MarketItemStats
+    ItemTypeId itemType
+    Currency latestBuyPrice
+    Currency latestSellPrice
+end
+
+struct MarketStats
+    MarketId marketId
+    float capacity
+    vector<MarketItemStats> itemStats
+end
+
+struct MarketOrder
+    MarketId marketId
+    OrderId orderId
+    ItemTypeId itemType
+    int64 buyQuantity
+    TimePoint expirationDate
+    TimePoint updateDate
+    EntityId ownerId
+    string ownerName
+    Currency unitPrice
+end
+
+struct MarketOrders
+    vector<MarketOrder> orders
+end
+
+struct MarketOrderResponse
+    vector<MarketOrder> orders
+    Currency receivedMoney
+    Currency wallet
+    int64 receivedQuantity
+    ItemTypeId receivedType
+end
+
+struct MarketSelectRequest
+    vector<MarketId> marketIds
+    vector<ItemTypeId> itemTypes
+    optional<EntityId> ownerId
+end
+
+struct MarketRequest
+    MarketId marketId
+    MarketRequestSource source
+    ItemTypeId itemType
+    EntityId itemOwner  // current owner in inventory for sell orders
+    int64 buyQuantity
+    TimePoint expirationDate
+    Currency unitPrice
+    optional<OrderId> orderId
+    uint64 impersonateOrganizationId
+end
+
+struct MarketStorageSlot
+    MarketId marketId
+    int32 position
+    ItemTypeId itemType
+    ItemQuantity quantity
+    bool purchased
+end
+
+struct MarketStorageInfo
+    vector<MarketStorageSlot> slots
+end
+
+struct MarketStorageMoveInfo
+    MarketId marketId
+    ItemTypeId itemType
+    EntityId itemOwner // only used when moving from inventory
+    int64 quantity
+    int64 impersonateOrganizationId
+end
+
+enum MarketOrderType
+    BUY_ORDER = 1
+    SELL_ORDER = 2
+end
+
+struct DataItemIds
+    uint64 id
+    int32 position
+end
+
+struct Ingredient
+    ItemTypeId itemId
+    ItemQuantity quantity
+end
+
+struct Recipe
+    uint64 id
+    float time
+    bool nanocraftable
+    vector<Ingredient> ingredients
+    vector<Ingredient> products
+    vector<uint64> producers
+end
+
+struct RecipeRequest
+    uint64 id
+    uint32 bulk
+end
+
+struct RecipeStatus
+    RecipeRunningStatus status
+    uint64 id
+    Recipe recipe
+    uint64 start
+    uint64 end
+    uint64 remainingTime
+    uint32 bulk
+end
+
+struct RecipeStatusId [value]
+    uint64 id
+end
+
+struct RecipeMoveAfter
+    uint64 id
+    uint64 afterId
+end
+
+struct RecipeQueue
+    vector<RecipeStatus> queue
+end
+
+struct TerritoryTileIndex
+    uint64 planetId
+    uint32 tileIndex
+end
+
+struct TerritoryClaim
+    uint64 planetId
+    ItemId item
+    Vec3 position
+    EntityId ownerId
+    string name
+    TimePoint buildDate
+    bool welcomesVisitors
+end
+
+struct TerritoryRelease
+    TerritoryTileIndex tile
+    bool destroyTerritoryUnit
+end
+
+struct TerritoryUpdate
+    uint64 planetId
+    uint32 tileIndex
+    string rights
+    EntityId ownerId
+    string name
+    bool welcomesVisitors
+    optional<bool> headquarters
+end
+
+struct TerritoryDetails
+    uint64 planetId
+    uint32 tileIndex
+    EntityId ownerId
+    ItemTypeId itemType
+    Vec3 position
+    string name
+    TimePoint buildDate
+    bool welcomesVisitors
+    uint64 balance
+    TimePoint expiresAt
+    TimePoint keyExpiration // 0 for non-keyed
+    bool headquarters
+end
+
+struct TerritoryDetailsEx
+    uint64 planetId
+    uint32 tileIndex
+    NamedEntity ownerId
+    ItemTypeId itemType
+    Vec3 position
+    string name
+    TimePoint buildDate
+    bool welcomesVisitors
+    uint64 balance
+    TimePoint expiresAt
+    TimePoint keyExpiration // 0 for non-keyed
+    bool headquarters
+end
+
+struct TerritoryOwner
+    uint64 planetId
+    uint32 tileIndex
+    EntityId ownerId
+end
+
+struct TileInfo
+    uint32 tileIndex
+    TimePoint buildDate
+    string name
+    bool welcomesVisitors
+    TimePoint expiresAt
+    bool headquarters
+    TimePoint keyExpiration // 0 for non-keyed
+end
+
+struct TilesPerOwner
+    EntityId ownerId
+    vector<TileInfo> tileInfos
+end
+
+struct TerritoryMap
+    uint64 constructId
+    vector<TilesPerOwner> tilesPerOwner
+end
+
+struct TerritoryList
+    vector<TerritoryDetailsEx> territories
+end
+
+struct TerritoryBalanceUpdate
+    TerritoryTileIndex territory
+    int64 giveAmount // amount to GIVE, can be negative to take
+    EntityId wallet
+end
+
+struct TerritoryKeyConsumption
+    uint64 keyId
+    uint64 containerId // 0 for inventory
+    EntityId newOwner
+    EntityId wallet
+end
+
+struct OwnedTerritoriesInfo
+   int32 headquarters
+end
+
+struct DisconnectionNotification
+    DisconnectionStatus reason
+    uint64 reconnectionDelay
+end
+
+struct PopupMessage
+    string message
+    uint64 target
+end
+
+struct PSTopic
+    string exchange
+    string routingKey
+end
+
+struct TalentAndLevel
+    uint64 talent
+    int32  level
+end
+
+struct TalentAndLevelPoints
+    uint64 talent
+    int32  level
+    uint64 points
+end
+
+struct PlayerTalentState
+    uint64 pointsAcquired
+    uint64 pointsSpent
+    TimePoint startTime
+    vector<TalentAndLevel> talents
+    vector<TalentAndLevel> queue
+    vector<TalentAndLevelPoints> partials
+end
+
+struct TalentQueue
+    vector<TalentAndLevel> queue
+end
+
+struct DeltaQuantity [skipcpp]
+    int64 value
+end
+
+struct StorageSlot [skipcpp]
+    int32 position
+    ItemInfo content
+    ItemQuantity quantity
+end
+
+struct StorageInfo [skipcpp]
+    uint64 containerId
+    vector<StorageSlot> content
+    ItemTypeId itemFilterId
+    double volume
+    double maxVolume
+    double mass
+    ContainerClaimMode claimMode
+end
+
+struct StorageUpdate [skipcpp]
+    uint64 containerId
+    vector<StorageSlot> slots
+    ItemTypeId filterTypeId
+    double maxVolume
+    double volume
+    double mass
+end
+
+struct PackageCreate
+    uint64 containerId
+    string name
+    vector<int32> slots
+end
+
+struct PackageExpand
+    uint64 containerId
+    int32 slot
+end
+
+struct PackageMarketCreate
+    uint64 marketId
+    uint64 impersonateOrganizationId
+    vector<Ingredient> content
+    string name
+end
+
+struct PackageMarketExpand
+    uint64 marketId
+    uint64 impersonateOrganizationId
+    uint64 packageId
+end
+
+struct GameplayModifier
+    string name
+    string action
+    string property
+    string callback
+    double value
+end
+
+struct GameplayModifiers
+    vector<GameplayModifier> modifiers
+end
+
+struct FriendStatus
+    PlayerId player
+    string username
+    bool connected
+end
+
+struct FriendRequest
+    string fromUsername
+    string toUsername
+    PlayerId from
+    PlayerId to
+end
+
+struct FriendList
+    vector<FriendStatus> friends
+    vector<FriendRequest> pending
+end
+
+struct FriendRequestResponse
+    PlayerId from
+    PlayerId to
+    bool accepted
+end
+
+struct FriendResponse
+   bool accepted
+   FriendStatus status
+end
+
+struct PlayerPosition
+    uint64 playerId
+    Vec3 universePosition
+end
+
+struct PlayerPositionUpdate
+    uint64 playerId
+    Vec3 universePosition
+    RelativeLocation localPosition
+end
+
+struct RadarScan
+    PlayerId playerId
+    ConstructId constructId
+    ElementId seatId
+    ElementId radarId
+end
+
+struct RadarIdentifyTarget
+    uint64 playerId
+    uint64 targetConstructId
+    uint64 sourceConstructId
+    uint64 sourceSeatElementId
+    uint64 sourceRadarElementId
+end
+
+struct RadarTransponderTagList
+    uint64 constructId
+    uint64 transponderElementId
+    // Enumerating them to have more control on the size of the tag list
+    // If you change them, make sure to update the RadarService on the LoadBalancer
+    // The number of tag correspond to UC::TransponderTagCount
+    // TODO: support std::array<T, n>
+    string tag1
+    string tag2
+    string tag3
+    string tag4
+    string tag5
+    string tag6
+    string tag7
+    string tag8
+end
+
+struct RadarTransponderActiveState
+    uint64 constructId
+    uint64 transponderElementId
+    bool activeState
+end
+
+struct AttackOrderTarget
+    uint64 playerId
+    uint64 targetConstructId
+    uint64 sourceConstructId
+    uint64 weaponElementId
+end
+
+struct ConstructRadarData
+    uint64 constructId
+    string name
+    EntityId ownerId
+    Vec3 worldPosition
+    Quat worldRotation
+    uint16 size
+    ConstructKind kind
+    vector<uint64> tags
+end
+
+struct ScanResult
+    uint64 constructId
+    uint64 referentConstructId
+    vector<ConstructRadarData> constructs
+end
+
+struct MaintenanceOperation
+    uint64 constructId
+    bool isDismantle
+end
+
+struct RepairUnitScanResult
+    ScanResult scanResult
+    vector<MaintenanceOperation> maintenanceOperations
+end
+
+struct ConstructIdentifyInfo
+    uint64 seatId
+    uint64 radarId
+    ConstructInfo constructInfo
+    Vec3 worldPosition
+    Vec3 worldCenterPosition
+    Quat worldRotation
+    Vec3 worldRelativeVelocity
+    Vec3 worldAbsoluteVelocity
+    Vec3 worldRelativeAngVelocity
+    Vec3 worldAbsoluteAngVelocity
+end
+
+struct ConstructIdentifyInfoList
+    uint64 constructId
+    vector<ConstructIdentifyInfo> targets
+end
+
+struct TargetingConstructData
+    uint64 constructId
+    string constructName
+    EntityId ownerId
+end
+
+struct TargetingAlertInfo
+    TargetingConstructData construct
+    bool isIdentifying
+    bool isAttacking
+end
+
+struct TargetingAlertInfoList
+    vector<TargetingAlertInfo> data
+end
+
+enum IndustryState [enumclass]
+  STOPPED = 1
+  RUNNING = 2
+  JAMMED_MISSING_INGREDIENT = 3
+  JAMMED_OUTPUT_FULL = 4
+  JAMMED_NO_OUTPUT_CONTAINER = 5
+  PENDING = 6
+  JAMMED_MISSING_SCHEMATIC = 7
+end
+
+struct IndustryStart
+  uint64 elementId
+  uint64 numBatches
+  uint64 maintainProductAmount
+end
+
+struct IndustryStatus
+  uint64 constructId
+  uint64 elementId
+  IndustryState state
+  bool stopRequested
+  uint64 recipeId
+  TimePoint activationTime
+  TimePoint start
+  TimePoint end
+  uint64 unitsProduced
+  uint64 remainingTime
+  uint64 nextRecipeId
+  uint64 playerId
+  uint64 nextPlayerId
+  Recipe recipe
+  uint64 batchesRemaining
+  uint64 maintainProductAmount
+  uint64 currentProductAmount
+  uint64 batchesRequested
+  bool claimProducts
+end
+
+struct IndustrySetRecipe
+  uint64 elementId
+  uint64 recipeId
+end
+
+struct IndustryStopRequest
+  uint64 elementId
+  bool allowIngredientLoss
+end
+
+struct IndustryClaimProducts
+  uint64 elementId
+  bool claimProducts
+end
+
+struct IndustrySetNotificationsState
+  uint64 elementId
+  bool enable
+end
+
+struct IndustryBankTransfer
+  uint64 industryId
+  uint64 containerId
+  int32 slot // -1 for don't care on Take
+  uint64 itemTypeId // item to take, unused for put
+end
+
+struct AnticheatMessage
+    data buffer
+    TimePoint timestamp
+end
+
+struct AnticheatAck
+    TimePoint serverSentTime     // Timestamp when server created the AnticheatMessage
+    double clientProcessingTime  // Time taken by the client to process message after network reception (in seconds)
+end
+
+struct WeaponFireFakeShot
+    bool applyDamage             // May disable voxel/element/player damage, only broadcast shot info
+    ItemTypeId weaponTypeId      // Useful if the fake shot was generated purely by script, so no weapon of origin
+    ItemTypeId ammoTypeId        // The ammo type is given directly by the client firing the fake shot
+    Vec3 worldFireOrigin         // Useful if the fake shot was generated purely by script, so no weapon of origin
+end
+
+struct WeaponFire
+    uint64 playerId
+    uint64 weaponId
+    uint64 constructId
+    uint64 seatId
+    uint64 targetId
+    Vec3 impactPoint                        // TODO Delete when the impact point is calculated server-side
+    uint64 impactVoxelMaterialId            // TODO Delete when the VoxelService return this data from the operation
+    uint64 impactElementId                  // TODO Delete when the VoxelService return this data from the operation
+    uint64 impactElementType                // TODO Delete when the VoxelService return this data from the operation
+    Vec3 bboxCenterLocal                    // TODO Delete when construct bounding boxes available server-side
+    Vec3 bboxSizeLocal                      // TODO Delete when construct bounding boxes available server-side
+    double crossSection                     // TODO Delete when construct cross section available server-side
+    optional<WeaponFireFakeShot> fakeShot   // Will ignore any server-side checks
+end
+
+struct WeaponFireResult
+    uint64 constructId              // origin
+    bool hit
+    double coreUnitStressDamage
+    double rawShieldDamage          // Damage taken before resistances
+    double shieldDamage             // Damage taken after resistances
+    double totalDamage              // from voxel operation (no shield)
+    bool coreUnitDestroyed
+    vector<uint64> destroyedElementTypes
+    vector<NamedEntity> playersKilled
+end
+
+struct WeaponShot
+    uint64 id
+    uint64 originConstructId
+    uint64 weaponId
+    ItemTypeId weaponType
+    ItemTypeId ammoType
+    Vec3 originPositionLocal
+    Vec3 originPositionWorld
+    uint64 targetConstructId
+    Vec3 impactPositionLocal
+    Vec3 impactPositionWorld
+    uint64 impactVoxelMaterialId
+    uint64 impactElementId
+    uint64 impactElementType
+    double shieldDamage             // Damage taken after resistances
+    double rawShieldDamage          // Damage taken before resistances
+    bool coreUnitDestroyed    // was the core unit destroyed because of the stress
+end
+
+enum DeathReason [enumclass]
+    Unknown = 0
+    ForceRespawn = 1
+    WeaponShot = 2
+    CoreUnitDestructionKinetic = 3
+    CoreUnitDestructionPVP = 4
+    AnchorElementDestructionKinetic = 5
+    AnchorElementDestructionPVP = 6
+    AnchorElementKicked = 7
+end
+
+struct PlayerDeathInfoPvPData
+    uint64 playerId
+    string playerName
+    uint64 constructId
+    string constructName
+    EntityId ownerId
+    uint64 weaponId
+    uint64 weaponTypeId
+end
+
+struct PlayerDeathInfo
+    DeathReason reason
+    RelativeLocation deathPosition
+    RelativeLocation respawnPosition
+    uint64 respawnElementId
+    bool isPublicResNode // true if respawn point is a public R.N. (no player res node)
+    optional<PlayerDeathInfoPvPData> pvpData // Who killed the player in PvP
+end
+
+struct OrganizationIds
+    vector<uint64> organizationIds
+end
+
+struct JoinRequest
+    uint64 organizationId
+    NamedEntity joiner
+    string message
+    uint64 requestedAt
+end
+
+struct JoinRequests
+    vector<JoinRequest> joinRequests
+end
+
+struct JoinResponse
+    uint64 organizationId
+    EntityId entityId
+    bool   response
+end
+
+struct RecruitingOffer
+    uint64 organizationId
+    NamedEntity recruitee
+    uint64 initiatorId
+    string initiatorName
+    string message
+    uint64 requestedAt
+end
+
+struct RecruitingOffers
+    vector<RecruitingOffer> offers
+end
+
+struct PastEnrolment
+    EntityId entityId
+    string displayName
+    bool isRecruitRequest
+    uint64 requestDate
+    uint64 responseDate
+    bool response
+    string message
+    uint64 initiatorId
+    string initiatorName
+end
+
+struct PastEnrolments
+    vector<PastEnrolment> enrolments
+end
+
+struct OrganizationKickMember
+    uint64 organizationId
+    EntityId entityId
+end
+
+struct Organization
+    uint64 organizationId
+    string name
+    string description
+    string manifest
+    string tag
+    string logo
+    string language
+    string keywords
+    bool recruiting
+    NamedEntity superLegate
+    uint64 effectiveSuperLegate
+    uint64 memberCount
+    vector<NamedEntity> legates
+    uint64 orgMemberCount
+    uint64 createdAt
+    string slug
+    int64 wallet // -1 for unauthorized access
+end
+
+struct OrganizationStateRequest
+    uint64 organizationId
+    bool withWallet
+end
+
+struct OrganizationBrief
+    uint64 organizationId
+    string name
+    string tag
+    string logo
+    string description
+    Currency wallet
+end
+
+struct OrganizationBriefs
+    vector<OrganizationBrief> organizations
+end
+
+struct OrganizationAndRight
+    OrganizationBrief brief
+    bool walletConsult
+    bool walletEdit
+end
+
+struct OrganizationAndRights
+    vector<OrganizationAndRight> organizations
+end
+
+struct OrganizationPendingRequests
+    vector<RecruitingOffer> recruiting
+    vector<JoinRequest> joins
+    vector<Organization> organizations
+end
+
+struct Organizations
+    uint64 total
+    vector<Organization> organizations
+end
+
+enum OrganizationSearchSort
+    ORGANIZATION_SEARCH_SORT_NAME = 1
+    ORGANIZATION_SEARCH_SORT_SIZE = 2
+    ORGANIZATION_SEARCH_SORT_TAG = 3
+    ORGANIZATION_SEARCH_SORT_LANGUAGE = 4
+    ORGANIZATION_SEARCH_SORT_ID = 5
+    ORGANIZATION_SEARCH_SORT_RECRUITING = 6
+end
+
+struct OrganizationSearch
+    string all
+    string name
+    string keywords
+    string language
+    bool onlyRecruiting
+    OrganizationSearchSort sortKey
+    bool reverse
+    uint64 sizeMin
+    uint64 sizeMax
+    uint64 offset
+    uint64 limit
+end
+
+enum OrganizationMemberSortKey
+    ORGANIZATION_MEMBER_SORT_NAME = 1
+    ORGANIZATION_MEMBER_SORT_RANK = 2
+    ORGANIZATION_MEMBER_SORT_STATUS = 3
+    ORGANIZATION_MEMBER_SORT_JOINDATE = 4
+end
+
+enum OrganizationRankFilter
+    ORGANIZATION_RANK_FILTER_NONE = 0
+    ORGANIZATION_RANK_FILTER_MEMBER = 1
+    ORGANIZATION_RANK_FILTER_LEGATE = 2
+    ORGANIZATION_RANK_FILTER_SUPERLEGATE = 4
+end
+
+struct OrganizationMembershipChange
+    uint64 organizationId
+    EntityId target
+    OrganizationRankFilter rank
+end
+
+struct OrganizationAndRole
+    Organization organization
+    OrganizationRankFilter role
+    vector<uint64> reasons
+end
+
+struct OrganizationAndRoles
+    vector<OrganizationAndRole> organizations
+    uint64 votesLiveUnanswered
+    uint64 votesLiveAnswered
+    uint64 votesPastAnswered
+    uint64 votesLiveInitiated
+end
+
+struct OrganizationMembership
+   uint64 organizationId
+   OrganizationRankFilter role
+end
+
+struct OrganizationMemberships
+    vector<OrganizationMembership> memberships
+end
+
+struct OrganizationMemberSearch
+    uint64 organizationId
+    OrganizationMemberSortKey sortKey
+    bool   sortReverse
+    uint32 rankFilter
+    string nameFilter
+    bool   withOnline
+    bool   withOffline
+    uint64 joinedAfter
+    uint64 joinedBefore
+    uint64 offset
+    uint64 limit
+end
+
+struct OrganizationMember
+    EntityId entityId
+    string displayName
+    OrganizationRankFilter rank
+    bool online
+    uint64 joinedAt
+end
+
+struct OrganizationMembers
+    uint64 total
+    vector<OrganizationMember> members
+end
+
+struct OrganizationCreationData
+    uint64 organizationId
+    EntityId ownerId
+    string name
+    string description
+    string manifest
+    string tag
+    string logo
+    string language
+    string keywords
+    bool recruiting
+end
+
+struct OrganizationDescription
+    uint64 organizationId
+    string description
+end
+
+struct OrganizationKickHistoryEntry
+    uint64 date
+    uint64 issuerId
+    string issuerName
+    NamedEntity target
+end
+
+struct OrganizationKickHistory
+    vector<OrganizationKickHistoryEntry> history
+    uint64 total
+end
+
+struct OrganizationKickHistoryRequest
+    uint64 organizationId
+    uint64 limit
+    uint64 offset
+end
+
+enum VoteKind
+    VOTE_CHANGE_SUPERLEGATE = 1
+    VOTE_ELECT_LEGATE = 2
+    VOTE_REVOKE_LEGATE = 3
+    VOTE_ENLIST_ORG_MEMBER = 4
+    VOTE_ENLIST_ORG_VASSAL = 5
+    VOTE_REMOVE_ORG = 6
+    VOTE_KICK_MEMBER = 7
+    VOTE_DISBAND = 8
+end
+
+struct VoteId [value]
+    uint64 voteId
+end
+
+struct VoteCast
+    uint64 voteId
+    EntityId voter
+    bool vote
+end
+
+struct PastVotes
+    uint64 organizationId
+    uint64 limit
+    EntityId viewer
+end
+
+struct VoteParameters
+    float quorum // Ratio of registered voters that must participate
+    float thresholdParticipant
+    float thresholdRegistered
+end
+
+struct VoteDefinition
+    uint64 organizationId
+    uint64 initiatorId
+    string initiatorName
+    VoteKind kind
+    NamedEntity target
+    string message
+    uint64 durationSeconds
+    VoteParameters parameters
+end
+
+struct VoteStatus
+    uint64 voteId
+    VoteDefinition definition
+    uint64 startTime
+    uint64 endTime
+    uint64 remainingTime
+    uint64 numVotesCast
+    uint64 numYes
+    bool open
+    bool result
+    bool hasVoted
+    bool myVote
+end
+
+struct Votes
+    vector<VoteStatus> votes
+end
+
+struct OrganizationNews
+    uint64 id
+    uint64 publishDate
+    string message
+    bool pinned
+end
+
+struct OrganizationNewsList
+    uint64 lastRead
+    uint64 total
+    vector<OrganizationNews> news
+end
+
+struct OrganizationNewsSearch
+    uint64 organizationId
+    uint64 offset
+    uint64 limit
+end
+
+struct OrganizationNewsRead
+    uint64 organizationId
+    uint64 date // 0 for server-now
+end
+
+struct OrganizationNewsPost
+    uint64 organizationId
+    uint64 postId // 0 for new, post id for update
+    string message
+end
+
+struct OrganizationNewsPin
+    uint64 organizationId
+    uint64 postId
+    bool pin
+end
+
+struct OrganizationNewsDelete
+    uint64 organizationId
+    uint64 postId
+end
+
+struct StorageClaim
+    uint64 containerId
+    int32 slot
+    EntityId owner
+end
+
+struct ConstructKeySet
+    ConstructId constructId
+    TimePoint keyExpiration
+end
+
+enum StorageReserveReason
+    RESERVE_EXACT  = 0 // require exact match of ownership
+    RESERVE_CRAFT  = 1 // crafting operation
+    RESERVE_DEPLOY = 2 // deploy operation
+end
+
+struct WeaponLoad
+    uint64 playerId
+    uint64 weaponId
+    uint64 constructId
+    uint64 seatId
+    uint64 ammoContainerId
+    ItemTypeId ammoType       // Reload may change ammo type, 0 for unload-only
+end
+
+// When adding element in it, update 'Infra/include/NQ/PubSub/PropagationEven.hpp' accordingly
+variant PropagationEvent
+    PlayerUpdate    playerUpdate
+    ConstructUpdate constructUpdate
+    WeaponShot      weaponShot
+end
+
+// When adding element in it, update 'Infra/include/NQ/PubSub/PropagationEven.hpp' accordingly
+struct PropagationEventList
+    vector<PropagationEvent> events
+end
+
+struct PvpShieldToggleRequest
+    ConstructId constructId
+    ElementId elementId
+
+    bool shieldOn # does the player want to activate the shield
+end
+
+struct PvpShieldResistance
+    ConstructId constructId
+
+    TimePoint cooldown
+
+    double antimatter
+    double electromagnetic
+    double kinetic
+    double thermic
+end
+
+struct PvpStateUpdate
+    ConstructId constructId
+    TimePoint pvpTimerExpire
+end
+
+struct LockdownExitTime
+    uint64 constructId
+    uint64 minutesFromMidnightUtc
+end
+
+struct MonitorPSA
+    Cell cell
+    string host
+    uint64 maxMessagePhaseMs
+end
+
+struct MonitorPlayer
+    uint64 playerId
+    Vec3 universePosition
+    uint64 constructId
+    Vec3 relativePosition
+    string host
+end
+
+struct MonitorConstruct
+    uint64 constructId
+    uint64 baseId
+    Vec3 pos
+    string host
+end
+
+struct UsedElement
+    uint64 elementId
+    uint64 elementType
+    uint64 userPlayerId
+end
+
+struct UsedElementList
+    vector<UsedElement> usedElements
+end
+
+struct ElementUseQuery
+    uint64 constructId
+    uint64 elementId
+    uint64 elementType
+end
+
+struct UnparentConstructRequest
+    ConstructId construct
+    ConstructId from
+end
+
+struct UnparentPlayerRequest
+    PlayerId player
+    ConstructId from
+    bool kickBody                   // force remove body from surrogate
+end
+
+// Notification Messages related
+///////////////////////////
+
+enum NotificationCategory [enumclass,enumAutoIncrement]
+    Barter
+    Contact
+    Crafting
+    General
+    Industry
+    Objective
+    Organization
+    Ownership
+    PvP
+    Talent
+    Market
+    Community
+    Wallet
+    Mission
+    Territory
+    MiningUnit
+    Death
+    PvEMission
+end
+
+enum EnumNotificationCode [enumclass]
+
+    Invalid = 0
+
+    PlayerDied = 10
+    PlayerDiedForceRespawn = 11
+    PlayerDiedPvP = 12 // playerId, constructId, constructOwnerId, weaponId
+    PlayerDiedCoreUnitPvP = 13 // playerId, constructId, constructOwnerId, weaponId
+    PlayerDiedAnchoredElementKinetic = 14
+    PlayerDiedAnchoredElementPvP = 15 // playerId, constructId, constructOwnerId, weaponId
+    PlayerDiedCoreUnitKinetic = 16 // playerId, constructId
+
+    BarterRequestReceived = 100
+    BarterRequestSent = 101
+    BarterCancelled = 102
+    CraftingComplete = 200 // itemTypeId Quantity
+    ConstructCompacted = 202 // constructId
+    ConstructAbandonedWithBlueprint = 203 // constructId
+    ConstructAbandonedWithoutBlueprint = 204 // constructId
+
+    ObjectiveCompleted = 300
+    TalentUnlocked = 400
+    TalentPurchased = 401
+
+    OrgJoinRequestPlayer = 500  // orgId playerId
+    OrgJoinAccept = 501   // orgId
+    OrgJoinDenied = 502   // orgId
+    OrgRecruitOffer = 503 // orgId, recruitingPlayyerId
+    OrgRecruitPlayerAccepted = 504 // orgId, recruiteePlayerId
+    OrgRecruitPlayerDenied = 505 // orgId, recruiteePlayerId
+    OrgKicked = 506 // orgId
+    OrgOrgKicked = 507 // orgId, kickedOrgId
+    OrgNewVote = 508 // orgId, voteKind
+    OrgSuperLegateChanged = 509 // orgId, newSuperLegatePlayerId
+    OrgLegatePlayerAdded = 510 // orgId, legatePlayerId
+    OrgLegatePlayerRemoved = 511 // orgId, legatePlayerId
+    OrgRecruitOrgAccepted = 512 // orgId, orgId
+    OrgRecruitOrgDenied = 513 // orgId, orgId
+    OrgJoinRequestOrg = 514 // orgId orgId
+    OrgLegateOrgAdded = 515 // orgId, legateOrgId
+    OrgLegateOrgRemoved = 516 // orgId, legateOrgId
+    OrgVoteSucceeded = 517 // orgId, voteKind, numYes, numVoters
+    OrgVoteFailed = 518 // orgId, voteKind, numYes, numVoters
+    OrgReceivedMoney = 519 // orgId sender(player or org) amount
+    OrgConstructOverLimitWarning = 520 // orgId, count, limit, delayDaysBeforeNextCheck
+    OrgConstructOverLimitEnforce = 521 // orgId, count, limit, delayDaysBeforeNextCheck
+    ContactFriendDeclined = 601 // playerId
+    ContactFriendAccepted = 602 // playerId
+
+    ItemStolen = 701 // playerId, itemTypeId, quantity
+
+    IndustryJammed = 801 // elementId, constructId
+    IndustryProduction = 802 // elementId, constructId, producedItemTypeId, count
+
+    PvPDamageTaken = 901 // damagedConstructId, damagingPlayerId, damagingConstructId, damagingConstructOwnerId
+    PvPConstructDestroyed = 902 // destroyedConstructId, damagingPlayerId, damagingConstructId, damagingConstructOwnerId
+    PvPDamageTakenOnSVRSConstruct = 903 //
+    PvPLockdownStart = 904 // constructId, owner, timepoint
+    PvPLockdownEnd = 905 // constructId, owner
+
+    MarketOrderFulfilled = 10001 // marketId, itemTypeId, quantity
+
+    CommunityGotReward = 11001 // money, talentPoints, nItems, nSkins
+
+    WalletReceivedMoney = 12001 // sender(player or org) amount
+
+    MissionCompleted = 13001  // missionId
+    MissionCompletedByYou = 13002 // missionId
+    MissionAbandoned = 13003 // missionId
+    MissionTimeout = 13004 // missionId
+    MissionNewApheliaMission = 13005 // missionId
+
+    // WARNING: hack in code that assumes +20 to go from issuer to respondent
+    FormalMissionIssuerPickedUp = 14001 // fmissionId respondent halfreward collateral
+    FormalMissionIssuerDelivered = 14002
+    FormalMissionIssuerAbandonedByIssuer = 14003
+    FormalMissionIssuerAbandonedByRespondent = 14004
+    FormalMissionIssuerTimedoutPickedUp = 14005
+    FormalMissionIssuerTimedoutNotPickedUp = 14006
+    FormalMissionIssuerTimedoutNoRespondent = 14007
+    FormalMissionIssuerAbandonedPackageOpened = 14008
+    FormalMissionIssuerAbandonedTargetDestroyed = 14009
+    FormalMissionIssuerAbandonedPackageDestroyedMissionTaken = 14010
+    FormalMissionIssuerTaken = 14011
+    FormalMissionIssuerAbandonedPackageDestroyedMissionNotTaken = 14012
+    FormalMissionIssuerAbandonedByIssuerNoRespondent = 14013
+    FormalMissionRespondentPickedUp = 14021 // fmissionId halfreward collateral
+    FormalMissionRespondentDelivered = 14022
+    FormalMissionRespondentAbandonedByIssuer = 14023
+    FormalMissionRespondentAbandonedByRespondent = 14024
+    FormalMissionRespondentTimedout = 14025
+    FormalMissionRespondentTimedoutNotPickedUp = 14026
+    FormalMissionRespondentTimedoutNoRespondent = 14027
+    FormalMissionRespondentAbandonedPackageOpened = 14028
+    FormalMissionRespondentAbandonedTargetDestroyed = 14029
+    FormalMissionRespondentAbandonedPackageDestroyed = 14030
+    FormalMissionRespondentTaken = 14031 // not emited
+    FormalMissionRespondentAbandonedPackageDestroyedMissionNotTaken = 14032
+
+    CrashConstructDestroyed = 15001
+
+    TerritoryLowBalance = 16001 // planet, tile
+    TerritoryAbandoned = 16002 // planet, tile
+    TerritoryConstructOnForeignSoil = 16003 // planet, tile, tileOwner, construct
+    TerritoryForeignConstructOnSoil = 16004 // planet, tile, tileOwner, construct
+    TerritoryRequisitionRequestByYou = 16005 // planet, tile, tileOwner, construct, constructowner
+    TerritoryRequisitionRequestToYou = 16006
+    TerritoryRequisitionActionByYou = 16007
+    TerritoryRequisitionActionToYou = 16008
+    TerritoryRequisitionCancelByYou = 16009
+    TerritoryRequisitionCancelToYou = 16010
+    TerritoryReleased = 16011
+    MiningUnitCalibrated = 17001 // construct, player
+
+    // PvE payload: missionId(name)
+    PvEMissionCompleted = 18001
+    PvEMissionFailed = 18002
+    PvEMissionAbandoned = 18003
+    PvEMissionTimedOut = 18004
+end
+
+
+enum NotificationParameterType [enumclass]
+    PLAYER_ID       = 0
+    CONSTRUCT_ID    = 1
+    ORGANIZATION_ID = 2
+    JOB_ID          = 3
+    MARKET_ID       = 4
+    TALENT_ID       = 5
+    NUMBER          = 6
+    ITEM_TYPE_ID    = 7
+    ELEMENT_ID      = 8
+    VOTE_KIND       = 9
+    ORDER_TYPE      = 10 // MarketOrderType: 1 - buy order, 2 - sell order
+    QUANTA          = 11
+    MISSION_ID      = 12
+    POSITION        = 13 // ::pos{...} string stored in name
+    FORMAL_MISSION_ID = 14
+    TILE_ID         = 15
+    TIMEPOINT       = 16 // u64 networkTime
+    PVE_MISSION_ID  = 17
+    INVALID         = 100
+end
+
+struct NotificationParameter
+    uint64 value
+    string name
+    NotificationParameterType type
+end
+
+struct NotificationId [value]
+    uint64 id
+end
+
+struct NotificationReadState [value]
+    bool read
+end
+
+struct NotificationReadStatus
+    NotificationId notificationId
+    NotificationReadState readState
+end
+
+struct NotificationMessage
+    NotificationCategory category
+    EnumNotificationCode notificationCode	// id used on localization files
+    vector<NotificationParameter> parameters
+end
+
+struct PlayerNotificationState
+    uint64 notificationId
+    TimePoint timeCreation              // useful for user to sort notifications or understand when an event happened
+    bool read                           // if user marked the message as read
+    bool firstTime                      // if this is the first time the notification is sent
+    NotificationMessage notification    // the notification itself
+end
+
+struct PlayerNotificationStateList
+    vector<PlayerNotificationState> notifications
+end
+
+struct RelativeLocations
+    vector<RelativeLocation> locs
+end
+
+struct DetailedLocation
+    string constructName
+    RelativeLocation relative
+    RelativeLocation absolute
+end
+
+struct DetailedLocations
+    vector<DetailedLocation> locations
+end
+
+struct LocationDescriptor
+    string propertyName
+    string propertyValue
+    string algorithm // random, closest or batch:<batchsize>
+    uint64 parentConstructId // 0 to search everywhere
+    uint64 ownerPlayerId
+end
+
+struct LocationRequest
+    LocationDescriptor descriptor
+    RelativeLocation   location
+end
+
+
+struct ConstructCharacteristics
+    ConstructUid constructId
+    ConstructGeometry geometry
+    string name
+    ConstructKind kind
+    optional<uint64> blueprintId // Non reliable hint about the potential blueprint used
+    optional<PlanetProperties> planetProperties
+    optional<string> pipelineURL
+end
+
+struct ConstructState
+    ConstructUid constructId
+    RelativeLocation location
+    EntityId ownerId
+    TimePoint keyExpiration // 0 for non-keyed
+end
+
+struct SandboxEnter
+    RelativeLocation currentLocation
+    string sandboxName
+end
+
+struct SandboxLeave
+    bool completed
+end
+
+struct BusinessConstruct
+    ConstructCharacteristics characteristics
+    ConstructState state
+end
+
+// sent by the server to the client to tell him to go to a different front
+struct PlayerFrontChange
+    GRPCInfo front // the new front to connect to
+end
+
+struct MessageChannel
+    MessageChannelType channel
+    uint64 targetId
+    string channelFilter
+end
+
+struct PlayerRoles
+    bool admin
+    bool communityHelper
+end
+
+struct MessageContent
+    MessageChannel  channel
+    string message
+    uint64 fromPlayerId
+    string fromPlayerName
+    uint64 timestamp
+    PlayerRoles roles
+end
+
+struct ChatJoinInfo
+    MessageChannel channel
+    vector<PlayerDesc> connectedPlayers
+    vector<PlayerDesc> disconnectedPlayers
+end
+
+struct ChatUpdateInfo
+    MessageChannel channel
+    uint64 player
+    ChatUpdateNewState newState
+end
+
+enum CoreType [enumclass]
+    STATIC = 1
+    DYNAMIC = 2
+    SPACE = 3
+end
+
+struct SPSDetail
+    uint64 elementId
+    string elementName
+    CoreType coreType
+    uint64 constructId
+    string constructName
+    NamedEntity constructOwner
+    RelativeLocation absoluteLocation
+    uint64 planet
+    uint64 currentConnections
+    uint64 popularity
+    bool isPublic
+    RelativeLocation landingLocation
+end
+
+enum SPSSearchSortKey [enumclass]
+    Name = 0
+    Distance = 1
+    Popularity = 2
+    CurrentConnections = 3
+end
+
+struct SPSSearch
+    RelativeLocation playerLocation
+    SPSSearchSortKey sortKey
+    bool sortReverse
+    string nameFilter
+    bool onlyUsable
+    uint64 limit
+    uint64 offset
+end
+
+struct SPSSearchResult
+    vector<SPSDetail> result
+    bool more
+end
+
+struct SPSEnter
+    RelativeLocation currentLocation
+    uint64 elementId
+end
+
+struct ElementSkinName [implicit]
+    string name
+end
+
+struct ElementSkins
+    uint64 elementType
+    vector<ElementSkinName> skins
+end
+
+struct PlayerSkins
+    vector<ElementSkins> skins
+end
+
+enum RepairUnitState [enumclass]
+    STOPPED = 0
+    RUNNING = 1
+    READY_FOR_FINALIZATION = 2
+    FINALIZING = 3
+end
+
+enum RepairSnapshot
+    RepairSnapshotManual = 1
+    RepairSnapshotAuto = 2
+    RepairSnapshotNone = 3 // dismantle
+end
+
+struct ElementBrief
+   uint64 elementId
+   uint64 localId
+   uint64 elementType
+   Vec3 relativeLocation
+end
+
+struct RepairUnitOperation
+    uint64 repairUnitId
+    uint64 targetConstructId
+    bool force
+    RepairSnapshot snapshot
+    bool repairVoxels
+    bool repairElements
+    bool useScrap
+    bool ignoreDestroyedElements
+    bool leaveDamagedExtraElements // leave in construct or salvage
+    bool repairDamagedExtraElements // repair and retreive.
+end
+
+struct RepairUnitDiff
+    vector<ItemAndQuantity> honeycomb
+    vector<ItemAndQuantity> extraElements
+    vector<ItemAndQuantity> recyclingResult
+    vector<ItemAndQuantity> missingElements
+    vector<ItemAndQuantity> damagedElements // empty if scrap
+    vector<ItemAndQuantity> destroyedElements // empty if ignored
+    vector<ItemAndQuantity> scrap
+    vector<ItemAndQuantity> damagedExtraElements // will be salvaged
+    uint64 missingScrapHp // if non zero we would need that much extra scrap hp
+    vector<ElementBrief> extraNonEmptyContainers // any type of container that is extra element and non empty
+end
+
+// External scan request sent directly to the LB (e.g. repair unit)
+struct RadarScanRequestExt
+    Vec3 centerPosition
+    uint64 scanRange // TODO: Currently ignored by radar system, uses max atmo/space range
+end
+
+struct SnapshotsInfoRequest
+    uint64 repairUnitId
+    uint64 constructId
+end
+
+struct TalentPoints
+    int64 points
+end
+
+struct ToggleDRM
+    ConstructUid constructId
+    uint64 elementId
+    bool enableDRM
+end
+
+enum LinkedContainerState [enumclass]
+    // No primary container
+    NONE = 0
+    // Linked to a container but not available : broken
+    LINKEDBROKEN = 1
+    // Linked to a container but not available : too far
+    LINKEDTOOFAR = 2
+    // linked to a container and available, use inventory for operations
+    ENABLED = 3
+    // linked to a container and available, use container for operations
+    ACTIVE = 4
+end
+
+struct LinkedContainerStatus
+    uint64 elementId // id of the linked container, is 0 when we are not linked to a container
+    uint64 constructId // construct where the linked container is located (when elementId != 0)
+    uint64 rootId // if we are linked to a container that is linked to a container hub, give the id of the container hub, 0 otherwise (when elementId != 0)
+    Vec3 worldPosition // absolute position of the linked container (when elementId != 0)
+
+    bool isDefault // try to use the container instead of inventory if possible (when elementId != 0)
+
+    bool isBroken // is the container broken (when elementId != 0)
+    bool isTooFar // is the container too far (when elementId != 0)
+    bool hasRight // is the container not within player rights (when elementId != 0)
+end
+
+struct LinkedContainerDefaultState
+    bool isDefault
+end
+
+struct ContainerRootChanged
+    uint64 containerId
+    uint64 rootId // 0 if no root
+end
+
+// DO NOT CHANGE EXISTING VALUES! They are in DB
+enum WalletOperationType [enumclass]
+    Barter = 1
+    MarketInstant = 2
+    MarketBuyOrder = 3 // provision for a buy order
+    MarketSellOrder = 4 // taxes for a sell order
+    MarketSellOrderFulfilled = 5 // a sell order has been fulfilled
+    MarketCancelOrder = 254
+    Transfer = 6 // money transfer between two entities
+    Reward = 7
+    TerritoryFee = 8
+    DispenserUse = 9 // money spent on paying dispenser
+    OwnedDispenserUsed = 10 // money received from owned paying dispenser
+    OrgCreationFee = 11 // fee for creating an org
+    BlueprintSplit = 12
+    MissionFee = 13
+    MissionReward = 14
+    FormalMissionEscrowReward = 15 // might contain markevt order fees
+    FormalMissionEscrowCollateral = 16
+    FormalMissionReward = 17
+    FormalMissionCollateral = 18
+    FormalMissionRefundOrderFee = 19
+    FormalMissionEscrowOrderFee = 20
+    FormalMissionRefundReward = 21
+    FormalMissionRefundHalfReward = 22
+    FormalMissionHalfReward = 23
+    FormalMissionRefundCollateral = 24
+    TerritoryBalanceTransfer = 25
+    ChallengeReward = 26
+    Research = 27
+    ResearchCancel = 28
+    SentinelMissionReward = 30
+end
+
+struct WalletOperationBarter
+
+end
+
+struct WalletOperationMarket
+    MarketId marketId
+    string marketName
+    ConstructUid parentCosntruct
+    RelativeLocation relativeLocation
+    ItemTypeId itemType
+    ItemQuantity quantity
+    NamedEntity initiatingPlayer
+end
+
+struct WalletOperationTransfer
+    string reason
+    NamedEntity initiatingPlayer // for org transfers
+end
+
+struct WalletOperationReward
+    string reason
+end
+
+struct WalletOperationTerritory
+    uint64 planetId
+    uint32 tileIndex
+    string territoryName
+    NamedEntity initiatingPlayer
+end
+
+struct WalletOperationDispenser
+    string constructName
+    string elementName
+    ConstructUid constructId
+    NamedEntity initiatingPlayer
+    NamedEntity constructOwner
+end
+
+struct WalletOperationOrgCreation
+    uint64 organizationId
+    string organizationName
+end
+
+struct WalletOperationBlueprint
+    uint64 count
+    string blueprintName
+    NamedEntity initiatingPlayer // for org operations
+end
+
+struct WalletOperationMission
+    uint64 missionId
+    string missionName
+end
+
+struct WalletOperationFormalMission
+    uint64 missionId
+    string missionName
+    string respondentName
+    uint64 status
+    bool isIssuer
+end
+
+struct WalletOperationResearch
+    uint64 itemTypeId
+    uint64 batchSize
+end
+
+struct WalletOperationSentinel
+    uint64 tier
+    uint64 planetId
+end
+
+struct WalletOperationDetail
+    optional<WalletOperationBarter> barter
+    optional<WalletOperationMarket> market
+    optional<WalletOperationTransfer> transfer
+    optional<WalletOperationReward> reward
+    optional<WalletOperationTerritory> territory
+    optional<WalletOperationDispenser> dispenser
+    optional<WalletOperationOrgCreation> organization
+    optional<WalletOperationBlueprint> blueprint
+    optional<WalletOperationMission> mission
+    optional<WalletOperationFormalMission> formalMission
+    optional<WalletOperationResearch> research
+    optional<WalletOperationSentinel> sentinel
+end
+
+struct WalletOperation
+    NamedEntity peer
+    int64 amount  // amount given (in cent)
+    TimePoint date
+    WalletOperationType type
+    WalletOperationDetail detail
+end
+
+struct WalletOperations
+    EntityId owner
+    vector<WalletOperation> operations
+    bool hasMore
+end
+
+struct WalletOperationsQuery
+    EntityId owner
+    uint64 limit
+    uint64 offset
+end
+
+struct WalletTransfer
+    EntityId fromWallet
+    EntityId toWallet
+    uint64 amount
+    string reason
+end
+
+struct DispenserUse
+    uint64 elementId
+    uint64 orgWallet
+end
+
+struct MiningUnitOre
+    uint64 elementId
+    uint64 ore
+end
+
+struct LocaleString
+    string key
+    string defaultValue
+end
+
+struct StartupBlueprintDescription
+    string blueprintName
+    LocaleString name
+    LocaleString description
+    vector<string> imageUrls
+end
+
+struct StartupChoices
+    vector<StartupBlueprintDescription> outposts
+    vector<StartupBlueprintDescription> speeders
+end
+
+enum ReportTarget [enumclass]
+    OTHER = 0
+    PLAYER = 1
+    ORGANIZATION = 2
+    CONSTRUCT = 3
+    TERRITORY = 4
+    SURROGATE_POD = 5
+end
+
+enum ReportReason [enumclass]
+    OTHER = 0
+    NAME = 1
+    CHEATING = 2
+    BEHAVIOR = 3
+    SHAPE = 4
+    CONTENT = 5
+end
+
+struct AbuseDescription
+    ReportTarget target
+    ReportReason reason
+    optional<uint64> targetId
+    optional<uint64> targetSecondaryId
+    string summary
+    string description
+end
+
+struct MiningUnitCalibrationBonus
+    uint64 elementId
+    double bonus
+end
+
+struct ConstructSlotAllocator
+    NamedEntity player
+    uint64 count
+    OrganizationRankFilter membership
+end
+
+struct OrganizationConstructInfo
+    uint64 organizationId
+    uint64 count
+    uint64 slotLimit
+    uint64 legateLimit
+    vector<ConstructSlotAllocator> allocations
+    TimePoint nextGCCheck
+    bool isInWarningState
+end
+
+struct ConstructSlotAllocationEntry
+    uint64 organizationId
+    uint64 count
+    TimePoint allocationTime
+end
+
+struct ConstructSlotAllocation
+    vector<ConstructSlotAllocationEntry> allocations
+end
+
+struct AlienCore
+    uint64 constructId
+    string constructName
+    Vec3 position
+    NamedEntity owner
+end
+
+struct AlienCoreList
+    vector<AlienCore> cores
+end
+
+struct StartupData
+    string outpost
+    string speeder
+end
+
+struct LanderTouchdown
+    uint64 planetId
+    uint64 landerConstructId
+    Vec3 territoryUnitPosition
+end
+
+struct ConstructSlotAllocationLogEntry
+    NamedEntity allocator
+    int32 countDelta
+    int32 countNew
+    TimePoint changedAt
+end
+
+struct ConstructSlotAllocationLog
+    uint64 organizationId
+    vector<ConstructSlotAllocationLogEntry> log
+end
+
+struct AbandonedConstructInfo
+    uint64 constructId
+    string constructName
+    uint64 parentConstructId
+    Vec3 position
+    Vec3 absolutePosition
+end
+
+struct AbandonedConstructInfoList
+    vector<AbandonedConstructInfo> abandoned
+end
+
+struct MeshMetaData
+    TimePoint updatedAt
+    TimePoint basedOn
+    TimePoint youngestCellDate
+    int32 numberOfLOD
+    int32 codeVersion
+    int64 cellVersion
+end
+
+struct PlayerConnectionReady
+    // empty for now
+end
+
+struct ScrapRepair
+    ElementInConstruct target
+    uint64 scrapItemTypeId
+end
+
+struct ScrapRepairResult
+    ElementInConstruct target
+    double newHitpointsRatio
+end
+
+struct ResearchSlot
+    uint64 itemTypeId
+    uint64  slot
+    TimePoint startedAt
+    uint64 batchSize
+end
+
+struct ResearchState
+    vector<ResearchSlot> slots
+end
+
+struct ActiveTitle
+    string value
+end
+
+struct Titles
+    vector<string> value
+end
+
+enum MessageType [customPrint,skipEnum,skipcs]
+    // needed for python codegen
+    Nothing  = 0
+end
+
+// keep in sync with nqlibs/nqbase/include/nqbase/Serialization.hpp
+// keep in sync with DotNetServices/Orleans/Router/Router/NQPacketFormat.cs
+enum NQStructBlobFormat [enumclass]
+        Undefined = 0,
+
+        JSon = 1
+
+        // binary version implemented today that assumes the exact same data schema when encoding or decoding.
+        CompactBinary = 2
+
+        // unimplemented format à la protobuf that is more agile.
+        SmoothBinary = 3
+
+end
+
+// This is an NQStruct equivalent to NQ::Net::RawMessage.
+// It is used to send a stream of RawMessage onto a publication stream
+struct NQStructBlob [value]
+    // mostly for tracking transmission time
+    TimePoint timestamp
+
+    // for whom is this packet for.  This allows the multiplexing
+    // of several pub stream into one transport stream.
+    uint64 target
+    MessageType type
+    NQStructBlobFormat format
+    data buffer
+
+end
+
+// This is an NQStruct equivalent to NQ::Net::RawMessage.
+// It is used to send a stream of RawMessage onto a publication stream
+struct ClientTrackerMessage [value]
+    NQStructBlob request
+    NQStructBlob answer
+end
+
+struct GeforceNowInfo
+    bool isRunningOnGFN
+end
+
+struct Pet
+    uint64 petId
+end
+
+struct NpcShotParameters
+    uint64 shooterConstructId
+    uint64 targetConstructId
+    uint64 wormholeId
+    uint64 shotId
+    Vec3 originWorldPosition
+    bool isStasis
+end
+
+struct NpcShotResult
+    uint64 wormholeId
+    uint64 shotId
+    double crossSection
+    Vec3 localHitPosition
+    uint64 impactVoxelMaterialId
+    uint64 impactElementId
+    uint64 impactElementType
+end
+
+struct SentinelMissionTier
+    uint64 rewardQuantas
+    double maxShipMass
+    vector<string> forbiddenItems
+    double expirationDelayMinutes // time from acquisition to enter
+    double maxCompletionTime // time to complete once entered
+    uint64 alienPoints
+    uint64 maxCrew
+end
+
+struct SentinelMissionTierList
+    vector<SentinelMissionTier> tiers
+end
+
+struct SentinelMissionParameters
+    int32 tier
+    uint64 planetId
+    string adminForceMission
+end
+
+enum SentinelMissionStatus
+    Acquired = 1
+    Accepted = 2
+    Entered = 3
+    Canceled = 4
+    FinishSuccess = 5
+    FinishFailure = 6
+    Expired = 7
+    Rejected = 8
+end
+
+struct PointOfInterest
+   uint64 id
+   Vec3 position
+end
+
+struct PointOfInterestList
+   vector<PointOfInterest> points
+end
+
+struct SentinelMissionScan
+    uint64 constructId
+    uint64 missionId
+end
+
+struct SentinelMissionBrief
+    uint64 missionId
+    SentinelMissionStatus status
+    int32 tier
+    uint64 planetId
+    uint64 rewardQuantas
+    string name
+    string filename // internal use
+    TimePoint offeredAt
+    TimePoint expiresAt
+    TimePoint takenAt
+    TimePoint enteredAt
+    TimePoint finishedAt
+end
+
+struct SentinelMissionDetails
+    SentinelMissionBrief brief
+    string description
+    double maxCompletionTime
+    double maxShipMass
+    vector<string> forbiddenItems
+    uint64 beaconConstructId
+    Vec3 beaconWorldPosition
+    vector<PointOfInterest> pointsOfInterest
+    uint64 lorePoints
+    uint64 exitBeaconConstructId
+    Vec3 exitBeaconWorldPosition
+end
+
+struct SentinelHistoryStats
+    uint64 completed
+    uint64 failed
+    uint64 timeout
+    uint64 abandoned
+end
+
+struct SentinelMissionBriefList
+    vector<SentinelMissionBrief> missions
+end
+
+struct SentinelScore
+    uint64 globalScore
+    TimePoint bossSpawnDate
+    bool bossDefeated
+end
+
+struct SentinelForbiddenItem
+    uint64 playerId
+    uint64 containerId
+    uint64 constructId
+    uint64 itemTypeId
+end
+
+struct SentinelPointOfInterest
+    uint64 wormholeId
+    uint64 markId
+end
+
+struct SentinelForbiddenItemList
+    vector<SentinelForbiddenItem> items
+end
+
+struct SentinelMissionEnd
+    bool success
+end
+
+struct SentinelMissionId
+   uint64 missionId
+end
+
+struct SentinelCounters
+   uint64 missionOwnerPlayerId
+   uint64 enemiesTotal
+   uint64 enemiesKilled
+   TimePoint missionEnd
+   PointOfInterestList pointsOfInterest
+   uint64 exitBeaconConstructId
+   Vec3 exitBeaconWorldPosition
+end
+
+struct TeleportConstruct
+    uint64 constructId
+    RelativeLocation location
+end

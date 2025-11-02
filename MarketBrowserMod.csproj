@@ -1,0 +1,76 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <Nullable>annotations</Nullable>
+    <!-- Include static web assets in publish -->
+    <EnableDefaultContentItems>true</EnableDefaultContentItems>
+    <!-- Specify main entry point -->
+    <StartupObject>Program</StartupObject>
+
+    <AssemblyVersion>1.0.1.5</AssemblyVersion>
+    <FileVersion>1.0.1.5</FileVersion>
+    <InformationalVersion>1.0.1.5</InformationalVersion>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="NQutils" />
+    <Reference Include="Backend" />
+    <Reference Include="Backend.Telemetry" />
+    <Reference Include="Interfaces" />
+    <Reference Include="BotLib" />
+    <Reference Include="Router.Orleans" />
+  </ItemGroup>
+
+  <!-- Include wwwroot folder and its contents in the published output -->
+  <ItemGroup>
+    <Content Include="wwwroot\**\*" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Include items.yaml file in the published output -->
+  <ItemGroup>
+    <Content Include="items.yaml" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!-- Exclude problematic APIReference files that have compilation issues -->
+  <ItemGroup>
+    <Compile Remove="APIReference\**\*.cs" />
+    <None Include="APIReference\**\*.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Orleans.Core" Version="3.6.5" />
+    <PackageReference Include="Microsoft.Orleans.Core.Abstractions" Version="3.6.5" />
+    <PackageReference Include="prometheus-net" Version="6.0.0" />
+    <PackageReference Include="prometheus-net.AspNetCore" Version="6.0.0" />
+    <PackageReference Include="YamlDotNet" Version="12.0.2" />
+    <PackageReference Include="Serilog" Version="2.12.0" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="3.1.0" />
+    <PackageReference Include="Microsoft.Orleans.Clustering.AdoNet" Version="3.6.5" />
+    <PackageReference Include="Google.Protobuf" Version="3.21.9" />
+    <PackageReference Include="Grpc" Version="2.46.5" />
+    <PackageReference Include="Grpc.Tools" Version="2.50.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.Toolkit.HighPerformance" Version="7.1.2" />
+    <PackageReference Include="Grpc.Net.Common" Version="2.49.0" />
+    <PackageReference Include="Npgsql" Version="6.0.11" />
+    <PackageReference Include="InfluxDB.LineProtocol" Version="1.2.0-dev-00029" />
+    <PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    
+    <!-- Testing Dependencies -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
+    <PackageReference Include="xunit" Version="2.4.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.5" PrivateAssets="all" />
+    <PackageReference Include="Moq" Version="4.20.69" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="8.0.0" />
+    <PackageReference Include="FluentAssertions" Version="6.12.0" />
+  </ItemGroup>
+
+  <!-- https://github.com/dotnet/efcore/issues/15047 -->
+  <Target Name="AddAssemblyAliasToReactiveAsync" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Condition=" '%(FileName)' == 'System.Interactive.Async' ">
+        <Aliases>reactive</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+</Project>
