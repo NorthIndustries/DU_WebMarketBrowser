@@ -67,48 +67,30 @@ The mod runs as a Docker container alongside your MyDU server and automatically 
 
 Before installing, ensure you have:
 
-1. Access to your MyDU server's docker-compose.yml file
+1. Access to your MyDU server root folder and docker-compose.yml file
 2. Bot account credentials created through the MyDU backoffice
 3. Network access to the server's PostgreSQL database and Orleans services
+4. An available IP address in your server's network range (default: 10.5.0.52)
 
-### Quick Start
+### MyDU Server Integration
 
-The easiest way to install is using the provided deployment script:
+This mod integrates directly into your MyDU server installation. Follow these steps to set it up:
+
+#### Step 1: Clone the Repository
+
+Clone this repository into your MyDU server root folder:
 
 ```bash
+cd /path/to/your/mydu/server/root
+git clone <repository-url> MarketBrowserMod
 cd MarketBrowserMod
-./scripts/deploy.sh
 ```
 
-On Windows:
+Stay in the MyDU server root folder for all subsequent commands (not inside the MarketBrowserMod folder).
 
-```bash
-cd MarketBrowserMod
-scripts\deploy.bat
-```
+#### Step 2: Edit docker-compose.yml
 
-The deployment script will:
-
-- Validate your environment and configuration
-- Build the Docker image
-- Deploy the service
-- Test the deployment
-- Provide instructions for accessing the web interface
-
-### Manual Installation
-
-#### Step 1: Configure Environment Variables
-
-The mod requires bot account credentials to connect to your server. Add these to your MyDU server's `.env` file:
-
-```bash
-MARKET_BOT_LOGIN=marketbrowser_bot
-MARKET_BOT_PASSWORD=your_secure_password_here
-```
-
-#### Step 2: Add to Docker Compose
-
-Add the following service to your MyDU server's `docker-compose.yml`:
+Add the following service configuration to your MyDU server's `docker-compose.yml` file:
 
 ```yaml
 marketbrowser:
@@ -127,7 +109,8 @@ marketbrowser:
     QUEUEING: http://queueing:9630
     WEB_PORT: 8080
     REFRESH_INTERVAL_MINUTES: 15
-    LOG_LEVEL: Information
+    MAX_CACHE_AGE_MINUTES: 60
+    LOG_LEVEL: Warning
     ASPNETCORE_ENVIRONMENT: Production
   ports:
     - "8080:8080"
@@ -143,24 +126,58 @@ marketbrowser:
       ipv4_address: 10.5.0.52
 ```
 
-Adjust the network configuration and IP address to match your MyDU server setup.
+**Important notes:**
 
-#### Step 3: Build and Deploy
+- Adjust the `ipv4_address` (10.5.0.52) to match an available IP in your server's network range
+- Ensure the port `8080` is available or change it to another port
+- The network name `vpcbr` should match your MyDU server's network configuration
+
+#### Step 3: Configure Environment Variables
+
+Edit your MyDU server's `.env` file and add the following bot account credentials:
 
 ```bash
-docker-compose build marketbrowser
-docker-compose up -d marketbrowser
+MARKET_BOT_LOGIN=marketbrowser_bot
+MARKET_BOT_PASSWORD=your_secure_password_here
 ```
+
+Replace `your_secure_password_here` with a secure password. You will need to create a bot account in the MyDU backoffice with these exact credentials.
+
+**Note:** Check the `MarketBrowserMod` folder for any example environment files (like `.env.example`) that may contain additional configuration options.
 
 #### Step 4: Create Bot Account
 
-Create a bot account through the MyDU backoffice with:
+Before starting the container, create the bot account through the MyDU backoffice:
 
-- Username matching your `MARKET_BOT_LOGIN` environment variable
-- Password matching your `MARKET_BOT_PASSWORD` environment variable
-- Basic market access permissions (no special privileges required)
+1. Log into your MyDU backoffice
+2. Create a new bot account with:
+   - Username: Must match `MARKET_BOT_LOGIN` from your `.env` file
+   - Password: Must match `MARKET_BOT_PASSWORD` from your `.env` file
+   - Permissions: Basic market access permissions (no special privileges required)
 
-#### Step 5: Verify Installation
+#### Step 5: Build and Start the Container
+
+From your MyDU server root folder, run:
+
+```bash
+docker compose build marketbrowser
+docker compose up -d marketbrowser
+```
+
+The first command builds the Docker image, and the second starts the container in detached mode.
+
+#### Step 6: Auto-Start on Server Restart (Optional)
+
+To automatically start the marketbrowser when your MyDU server starts, edit the `./scripts/up.sh` file and add the following lines at the end:
+
+```bash
+sleep 5
+docker compose up -d marketbrowser
+```
+
+This ensures the marketbrowser container starts automatically after a short delay when the server boots.
+
+#### Step 7: Verify Installation
 
 Check that the container is running:
 
@@ -174,7 +191,7 @@ View logs to verify connection:
 docker logs mod_MarketBrowser
 ```
 
-Access the web interface at `http://your-server-ip:8080`
+Access the web interface at `http://your-server-ip:8080` or `http://localhost:8080` if accessing from the server itself.
 
 ## Configuration
 
